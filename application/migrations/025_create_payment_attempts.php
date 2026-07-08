@@ -1,25 +1,13 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Migration_Create_products extends CI_Migration
+class Migration_Create_payment_attempts extends CI_Migration
 {
     private function column_exists($table, $column)
     {
         $columns = $this->db->query('SHOW COLUMNS FROM `' . $table . '`')->result_array();
         foreach ($columns as $col) {
             if ($col['Field'] === $column) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function index_exists($table, $index_name)
-    {
-        $indexes = $this->db->query('SHOW INDEX FROM `' . $table . '`')->result_array();
-        foreach ($indexes as $index) {
-            if ($index['Key_name'] === $index_name) {
                 return true;
             }
         }
@@ -34,6 +22,18 @@ class Migration_Create_products extends CI_Migration
         }
 
         $this->dbforge->add_column($table, array($column => $definition));
+    }
+
+    private function index_exists($table, $index_name)
+    {
+        $indexes = $this->db->query('SHOW INDEX FROM `' . $table . '`')->result_array();
+        foreach ($indexes as $index) {
+            if ($index['Key_name'] === $index_name) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function add_index_if_missing($table, $index_name, $columns)
@@ -66,7 +66,7 @@ class Migration_Create_products extends CI_Migration
 
     private function add_foreign_key_if_missing($table, $constraint_name, $column, $reference_table, $reference_column, $on_update = 'CASCADE', $on_delete = 'RESTRICT')
     {
-        if ($this->foreign_key_exists($table, $constraint_name)) {
+        if ($this->foreign_key_exists($table, $constraint_name) || !$this->db->table_exists($reference_table)) {
             return;
         }
 
@@ -75,7 +75,7 @@ class Migration_Create_products extends CI_Migration
 
     public function up()
     {
-        if (!$this->db->table_exists('products')) {
+        if (!$this->db->table_exists('payment_attempts')) {
             $this->dbforge->add_field([
                 'id' => [
                     'type'           => 'BIGINT',
@@ -83,54 +83,40 @@ class Migration_Create_products extends CI_Migration
                     'unsigned'       => TRUE,
                     'auto_increment' => TRUE,
                 ],
-                'category_lookup_id' => [
+                'payment_id' => [
                     'type'       => 'BIGINT',
                     'constraint' => 20,
                     'unsigned'   => TRUE,
-                    'null'       => TRUE,
-                ],
-                'status_lookup_id' => [
-                    'type'       => 'BIGINT',
-                    'constraint' => 20,
-                    'unsigned'   => TRUE,
-                    'null'       => TRUE,
-                ],
-                'name' => [
-                    'type'       => 'VARCHAR',
-                    'constraint' => 255,
                     'null'       => FALSE,
                 ],
-                'description' => [
-                    'type' => 'TEXT',
-                    'null' => TRUE,
-                ],
-                'sku' => [
+                'provider' => [
                     'type'       => 'VARCHAR',
-                    'constraint' => 100,
+                    'constraint' => 50,
+                    'null'       => FALSE,
+                ],
+                'provider_reference' => [
+                    'type'       => 'VARCHAR',
+                    'constraint' => 255,
                     'null'       => TRUE,
                 ],
-                'price' => [
+                'status' => [
+                    'type'       => 'VARCHAR',
+                    'constraint' => 50,
+                    'null'       => FALSE,
+                ],
+                'amount' => [
                     'type'       => 'DECIMAL',
                     'constraint' => '12,2',
                     'null'       => FALSE,
                 ],
-                'stock_qty' => [
-                    'type'       => 'INT',
-                    'constraint' => 11,
-                    'default'    => 0,
+                'currency' => [
+                    'type'       => 'VARCHAR',
+                    'constraint' => 10,
                     'null'       => TRUE,
                 ],
-                'version' => [
-                    'type'       => 'INT',
-                    'constraint' => 11,
-                    'default'    => 1,
-                    'null'       => TRUE,
-                ],
-                'created_by' => [
-                    'type'       => 'BIGINT',
-                    'constraint' => 20,
-                    'unsigned'   => TRUE,
-                    'null'       => TRUE,
+                'failure_reason' => [
+                    'type' => 'TEXT',
+                    'null' => TRUE,
                 ],
                 'created_at' => [
                     'type' => 'DATETIME',
@@ -140,56 +126,50 @@ class Migration_Create_products extends CI_Migration
                     'type' => 'DATETIME',
                     'null' => TRUE,
                 ],
-                'deleted_at' => [
-                    'type' => 'DATETIME',
-                    'null' => TRUE,
-                ],
             ]);
 
             $this->dbforge->add_key('id', TRUE);
-            $this->dbforge->add_key('sku');
-            $this->dbforge->add_key('category_lookup_id');
-            $this->dbforge->add_key('status_lookup_id');
-            $this->dbforge->add_key('created_by');
-            $this->dbforge->create_table('products', TRUE);
+            $this->dbforge->add_key('payment_id');
+            $this->dbforge->add_key('provider_reference');
+            $this->dbforge->create_table('payment_attempts', TRUE);
         }
 
-        $this->add_column_if_missing('products', 'version', [
-            'type'       => 'INT',
-            'constraint' => 11,
-            'default'    => 1,
+        $this->add_column_if_missing('payment_attempts', 'provider_reference', [
+            'type'       => 'VARCHAR',
+            'constraint' => 255,
             'null'       => TRUE,
         ]);
-        $this->add_column_if_missing('products', 'created_by', [
-            'type'       => 'BIGINT',
-            'constraint' => 20,
-            'unsigned'   => TRUE,
+        $this->add_column_if_missing('payment_attempts', 'amount', [
+            'type'       => 'DECIMAL',
+            'constraint' => '12,2',
+            'null'       => FALSE,
+        ]);
+        $this->add_column_if_missing('payment_attempts', 'currency', [
+            'type'       => 'VARCHAR',
+            'constraint' => 10,
             'null'       => TRUE,
         ]);
-        $this->add_column_if_missing('products', 'created_at', [
+        $this->add_column_if_missing('payment_attempts', 'failure_reason', [
+            'type' => 'TEXT',
+            'null' => TRUE,
+        ]);
+        $this->add_column_if_missing('payment_attempts', 'created_at', [
             'type' => 'DATETIME',
             'null' => TRUE,
         ]);
-        $this->add_column_if_missing('products', 'updated_at', [
-            'type' => 'DATETIME',
-            'null' => TRUE,
-        ]);
-        $this->add_column_if_missing('products', 'deleted_at', [
+        $this->add_column_if_missing('payment_attempts', 'updated_at', [
             'type' => 'DATETIME',
             'null' => TRUE,
         ]);
 
-        $this->add_index_if_missing('products', 'idx_products_category_lookup_id', array('category_lookup_id'));
-        $this->add_index_if_missing('products', 'idx_products_status_lookup_id', array('status_lookup_id'));
-        $this->add_index_if_missing('products', 'idx_products_created_by', array('created_by'));
-        $this->add_unique_if_missing('products', 'uq_products_sku', array('sku'));
-        $this->add_foreign_key_if_missing('products', 'fk_products_created_by', 'created_by', 'users', 'id', 'CASCADE', 'SET NULL');
-        $this->add_foreign_key_if_missing('products', 'fk_products_category_lookup', 'category_lookup_id', 'lookups', 'id', 'CASCADE', 'SET NULL');
-        $this->add_foreign_key_if_missing('products', 'fk_products_status_lookup', 'status_lookup_id', 'lookups', 'id', 'CASCADE', 'SET NULL');
+        $this->add_index_if_missing('payment_attempts', 'idx_payment_attempts_payment_id', array('payment_id'));
+        $this->add_index_if_missing('payment_attempts', 'idx_payment_attempts_provider_reference', array('provider_reference'));
+        $this->add_unique_if_missing('payment_attempts', 'uq_payment_attempts_provider_reference', array('provider', 'provider_reference'));
+        $this->add_foreign_key_if_missing('payment_attempts', 'fk_payment_attempts_payment', 'payment_id', 'payments', 'id', 'CASCADE', 'RESTRICT');
     }
 
     public function down()
     {
-        $this->dbforge->drop_table('products', TRUE);
+        $this->dbforge->drop_table('payment_attempts', TRUE);
     }
 }

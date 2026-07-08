@@ -3,46 +3,102 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Migration_Create_permissions extends CI_Migration
 {
-    public function up()
+    private function column_exists($table, $column)
     {
-        if ($this->db->table_exists('permissions')) {
+        $columns = $this->db->query('SHOW COLUMNS FROM `' . $table . '`')->result_array();
+        foreach ($columns as $col) {
+            if ($col['Field'] === $column) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function add_column_if_missing($table, $column, array $definition)
+    {
+        if ($this->column_exists($table, $column)) {
             return;
         }
 
-        $this->dbforge->add_field([
-            'id' => [
-                'type'           => 'BIGINT',
-                'constraint'     => 20,
-                'unsigned'       => TRUE,
-                'auto_increment' => TRUE,
-            ],
-            'code' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 100,
-                'null'       => FALSE,
-            ],
-            'name' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 255,
-                'null'       => FALSE,
-            ],
-            'description' => [
-                'type' => 'TEXT',
-                'null' => TRUE,
-            ],
-            'created_at' => [
-                'type' => 'DATETIME',
-                'null' => TRUE,
-            ],
-            'updated_at' => [
-                'type' => 'DATETIME',
-                'null' => TRUE,
-            ],
+        $this->dbforge->add_column($table, array($column => $definition));
+    }
+
+    private function index_exists($table, $index_name)
+    {
+        $indexes = $this->db->query('SHOW INDEX FROM `' . $table . '`')->result_array();
+        foreach ($indexes as $index) {
+            if ($index['Key_name'] === $index_name) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function add_unique_if_missing($table, $index_name, $columns)
+    {
+        if ($this->index_exists($table, $index_name)) {
+            return;
+        }
+
+        $this->db->query('ALTER TABLE `' . $table . '` ADD UNIQUE `' . $index_name . '` (' . implode(', ', array_map(function ($c) {
+            return '`' . $c . '`';
+        }, $columns)) . ')');
+    }
+
+    public function up()
+    {
+        if (!$this->db->table_exists('permissions')) {
+            $this->dbforge->add_field([
+                'id' => [
+                    'type'           => 'BIGINT',
+                    'constraint'     => 20,
+                    'unsigned'       => TRUE,
+                    'auto_increment' => TRUE,
+                ],
+                'code' => [
+                    'type'       => 'VARCHAR',
+                    'constraint' => 100,
+                    'null'       => FALSE,
+                ],
+                'name' => [
+                    'type'       => 'VARCHAR',
+                    'constraint' => 255,
+                    'null'       => FALSE,
+                ],
+                'description' => [
+                    'type' => 'TEXT',
+                    'null' => TRUE,
+                ],
+                'created_at' => [
+                    'type' => 'DATETIME',
+                    'null' => TRUE,
+                ],
+                'updated_at' => [
+                    'type' => 'DATETIME',
+                    'null' => TRUE,
+                ],
+            ]);
+
+            $this->dbforge->add_key('id', TRUE);
+            $this->dbforge->create_table('permissions', TRUE);
+        }
+
+        $this->add_column_if_missing('permissions', 'description', [
+            'type' => 'TEXT',
+            'null' => TRUE,
+        ]);
+        $this->add_column_if_missing('permissions', 'created_at', [
+            'type' => 'DATETIME',
+            'null' => TRUE,
+        ]);
+        $this->add_column_if_missing('permissions', 'updated_at', [
+            'type' => 'DATETIME',
+            'null' => TRUE,
         ]);
 
-        $this->dbforge->add_key('id', TRUE);
-        $this->dbforge->create_table('permissions', TRUE);
-        $this->db->query('ALTER TABLE `permissions` ADD UNIQUE `uq_permissions_code` (`code`)');
+        $this->add_unique_if_missing('permissions', 'uq_permissions_code', array('code'));
     }
 
     public function down()

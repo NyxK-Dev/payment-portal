@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Migration_Create_audit_logs extends CI_Migration
+class Migration_Create_payment_events extends CI_Migration
 {
     private function column_exists($table, $column)
     {
@@ -24,6 +24,40 @@ class Migration_Create_audit_logs extends CI_Migration
         $this->dbforge->add_column($table, array($column => $definition));
     }
 
+    private function index_exists($table, $index_name)
+    {
+        $indexes = $this->db->query('SHOW INDEX FROM `' . $table . '`')->result_array();
+        foreach ($indexes as $index) {
+            if ($index['Key_name'] === $index_name) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function add_index_if_missing($table, $index_name, $columns)
+    {
+        if ($this->index_exists($table, $index_name)) {
+            return;
+        }
+
+        $this->db->query('ALTER TABLE `' . $table . '` ADD INDEX `' . $index_name . '` (' . implode(', ', array_map(function ($c) {
+            return '`' . $c . '`';
+        }, $columns)) . ')');
+    }
+
+    private function add_unique_if_missing($table, $index_name, $columns)
+    {
+        if ($this->index_exists($table, $index_name)) {
+            return;
+        }
+
+        $this->db->query('ALTER TABLE `' . $table . '` ADD UNIQUE `' . $index_name . '` (' . implode(', ', array_map(function ($c) {
+            return '`' . $c . '`';
+        }, $columns)) . ')');
+    }
+
     private function foreign_key_exists($table, $constraint_name)
     {
         $result = $this->db->query('SHOW CREATE TABLE `' . $table . '`')->row_array();
@@ -32,7 +66,7 @@ class Migration_Create_audit_logs extends CI_Migration
 
     private function add_foreign_key_if_missing($table, $constraint_name, $column, $reference_table, $reference_column, $on_update = 'CASCADE', $on_delete = 'RESTRICT')
     {
-        if ($this->foreign_key_exists($table, $constraint_name)) {
+        if ($this->foreign_key_exists($table, $constraint_name) || !$this->db->table_exists($reference_table)) {
             return;
         }
 
@@ -41,7 +75,7 @@ class Migration_Create_audit_logs extends CI_Migration
 
     public function up()
     {
-        if (!$this->db->table_exists('audit_logs')) {
+        if (!$this->db->table_exists('payment_events')) {
             $this->dbforge->add_field([
                 'id' => [
                     'type'           => 'BIGINT',
@@ -49,42 +83,18 @@ class Migration_Create_audit_logs extends CI_Migration
                     'unsigned'       => TRUE,
                     'auto_increment' => TRUE,
                 ],
-                'user_id' => [
+                'payment_id' => [
                     'type'       => 'BIGINT',
                     'constraint' => 20,
                     'unsigned'   => TRUE,
-                    'null'       => TRUE,
+                    'null'       => FALSE,
                 ],
-                'action' => [
+                'event_type' => [
                     'type'       => 'VARCHAR',
                     'constraint' => 100,
-                    'null'       => TRUE,
+                    'null'       => FALSE,
                 ],
-                'entity_type' => [
-                    'type'       => 'VARCHAR',
-                    'constraint' => 100,
-                    'null'       => TRUE,
-                ],
-                'entity_id' => [
-                    'type'       => 'BIGINT',
-                    'constraint' => 20,
-                    'unsigned'   => TRUE,
-                    'null'       => TRUE,
-                ],
-                'old_data' => [
-                    'type' => 'TEXT',
-                    'null' => TRUE,
-                ],
-                'new_data' => [
-                    'type' => 'TEXT',
-                    'null' => TRUE,
-                ],
-                'ip_address' => [
-                    'type'       => 'VARCHAR',
-                    'constraint' => 100,
-                    'null'       => TRUE,
-                ],
-                'user_agent' => [
+                'event_data' => [
                     'type' => 'TEXT',
                     'null' => TRUE,
                 ],
@@ -95,20 +105,27 @@ class Migration_Create_audit_logs extends CI_Migration
             ]);
 
             $this->dbforge->add_key('id', TRUE);
-            $this->dbforge->add_key('user_id');
-            $this->dbforge->create_table('audit_logs', TRUE);
+            $this->dbforge->add_key('payment_id');
+            $this->dbforge->add_key('event_type');
+            $this->dbforge->create_table('payment_events', TRUE);
         }
 
-        $this->add_column_if_missing('audit_logs', 'created_at', [
+        $this->add_column_if_missing('payment_events', 'event_data', [
+            'type' => 'TEXT',
+            'null' => TRUE,
+        ]);
+        $this->add_column_if_missing('payment_events', 'created_at', [
             'type' => 'DATETIME',
             'null' => TRUE,
         ]);
 
-        $this->add_foreign_key_if_missing('audit_logs', 'fk_audit_logs_user', 'user_id', 'users', 'id', 'CASCADE', 'SET NULL');
+        $this->add_index_if_missing('payment_events', 'idx_payment_events_payment_id', array('payment_id'));
+        $this->add_index_if_missing('payment_events', 'idx_payment_events_event_type', array('event_type'));
+        $this->add_foreign_key_if_missing('payment_events', 'fk_payment_events_payment', 'payment_id', 'payments', 'id', 'CASCADE', 'RESTRICT');
     }
 
     public function down()
     {
-        $this->dbforge->drop_table('audit_logs', TRUE);
+        $this->dbforge->drop_table('payment_events', TRUE);
     }
 }

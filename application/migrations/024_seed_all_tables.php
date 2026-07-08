@@ -154,16 +154,45 @@ class Migration_Seed_all_tables extends CI_Migration
         $admin_role_id = $this->ensure_role('admin', 'Administrator with full access to the portal');
         $customer_role_id = $this->ensure_role('customer', 'Standard customer');
 
+        $user_status_group = $this->ensure_lookup_group('user_status', 'User Status', 'Lifecycle status for portal users');
+        $product_status_group = $this->ensure_lookup_group('product_status', 'Product Status', 'Lifecycle status for catalog products');
+        $order_status_group = $this->ensure_lookup_group('order_status', 'Order Status', 'Status values for orders');
+        $payment_status_group = $this->ensure_lookup_group('payment_status', 'Payment Status', 'Status values for payments');
+        $invoice_status_group = $this->ensure_lookup_group('invoice_status', 'Invoice Status', 'Status values for invoices');
+        $receipt_status_group = $this->ensure_lookup_group('receipt_status', 'Receipt Status', 'Status values for receipts');
+
+        $this->ensure_lookup('user_status', 'active', 'Active', 'Active user', 1);
+        $this->ensure_lookup('user_status', 'inactive', 'Inactive', 'Inactive user', 2);
+        $this->ensure_lookup('product_status', 'active', 'Active', 'Active product', 1);
+        $this->ensure_lookup('product_status', 'inactive', 'Inactive', 'Inactive product', 2);
+        $this->ensure_lookup('order_status', 'pending', 'Pending', 'Order is being prepared', 1);
+        $this->ensure_lookup('order_status', 'paid', 'Paid', 'Order is paid', 2);
+        $this->ensure_lookup('order_status', 'cancelled', 'Cancelled', 'Order was cancelled', 3);
+        $this->ensure_lookup('payment_status', 'pending', 'Pending', 'Payment pending', 1);
+        $this->ensure_lookup('payment_status', 'paid', 'Paid', 'Payment complete', 2);
+        $this->ensure_lookup('payment_status', 'refunded', 'Refunded', 'Payment refunded', 3);
+        $this->ensure_lookup('invoice_status', 'issued', 'Issued', 'Invoice issued', 1);
+        $this->ensure_lookup('invoice_status', 'paid', 'Paid', 'Invoice paid', 2);
+        $this->ensure_lookup('receipt_status', 'issued', 'Issued', 'Receipt issued', 1);
+        $this->ensure_lookup('receipt_status', 'void', 'Void', 'Receipt voided', 2);
+
+        $user_status_id = $this->get_lookup_id('user_status', 'active');
+        $product_status_id = $this->get_lookup_id('product_status', 'active');
+        $order_status_id = $this->get_lookup_id('order_status', 'paid');
+        $payment_status_id = $this->get_lookup_id('payment_status', 'paid');
+        $invoice_status_id = $this->get_lookup_id('invoice_status', 'issued');
+        $receipt_status_id = $this->get_lookup_id('receipt_status', 'issued');
+
         $admin_user = $this->get_row('users', array('email' => 'admin@example.com'));
         if (!$admin_user) {
             $this->db->insert('users', $this->filter_data('users', array(
-                'role_id'     => $admin_role_id,
-                'name'        => 'Admin User',
-                'email'       => 'admin@example.com',
-                'password'    => password_hash('password123', PASSWORD_DEFAULT),
-                'status'      => 'active',
-                'created_at'  => $now,
-                'updated_at'  => $now,
+                'role_id'         => $admin_role_id,
+                'name'            => 'Admin User',
+                'email'           => 'admin@example.com',
+                'password'        => password_hash('password123', PASSWORD_DEFAULT),
+                'status_lookup_id'=> $user_status_id,
+                'created_at'      => $now,
+                'updated_at'      => $now,
             )));
             $admin_user = $this->get_row('users', array('email' => 'admin@example.com'));
         }
@@ -171,13 +200,13 @@ class Migration_Seed_all_tables extends CI_Migration
         $customer_user = $this->get_row('users', array('email' => 'customer@example.com'));
         if (!$customer_user) {
             $this->db->insert('users', $this->filter_data('users', array(
-                'role_id'     => $customer_role_id,
-                'name'        => 'Customer User',
-                'email'       => 'customer@example.com',
-                'password'    => password_hash('password123', PASSWORD_DEFAULT),
-                'status'      => 'active',
-                'created_at'  => $now,
-                'updated_at'  => $now,
+                'role_id'         => $customer_role_id,
+                'name'            => 'Customer User',
+                'email'           => 'customer@example.com',
+                'password'        => password_hash('password123', PASSWORD_DEFAULT),
+                'status_lookup_id'=> $user_status_id,
+                'created_at'      => $now,
+                'updated_at'      => $now,
             )));
             $customer_user = $this->get_row('users', array('email' => 'customer@example.com'));
         }
@@ -219,35 +248,6 @@ class Migration_Seed_all_tables extends CI_Migration
             'permission_id'  => $manage_orders,
             'created_at'     => $now,
         ), array('role_id' => $customer_role_id, 'permission_id' => $manage_orders));
-
-        $user_status_group = $this->ensure_lookup_group('user_status', 'User Status', 'Lifecycle status for portal users');
-        $product_status_group = $this->ensure_lookup_group('product_status', 'Product Status', 'Lifecycle status for catalog products');
-        $order_status_group = $this->ensure_lookup_group('order_status', 'Order Status', 'Status values for orders');
-        $payment_status_group = $this->ensure_lookup_group('payment_status', 'Payment Status', 'Status values for payments');
-        $invoice_status_group = $this->ensure_lookup_group('invoice_status', 'Invoice Status', 'Status values for invoices');
-        $receipt_status_group = $this->ensure_lookup_group('receipt_status', 'Receipt Status', 'Status values for receipts');
-
-        $this->ensure_lookup('user_status', 'active', 'Active', 'Active user', 1);
-        $this->ensure_lookup('user_status', 'inactive', 'Inactive', 'Inactive user', 2);
-        $this->ensure_lookup('product_status', 'active', 'Active', 'Active product', 1);
-        $this->ensure_lookup('product_status', 'inactive', 'Inactive', 'Inactive product', 2);
-        $this->ensure_lookup('order_status', 'pending', 'Pending', 'Order is being prepared', 1);
-        $this->ensure_lookup('order_status', 'paid', 'Paid', 'Order is paid', 2);
-        $this->ensure_lookup('order_status', 'cancelled', 'Cancelled', 'Order was cancelled', 3);
-        $this->ensure_lookup('payment_status', 'pending', 'Pending', 'Payment pending', 1);
-        $this->ensure_lookup('payment_status', 'paid', 'Paid', 'Payment complete', 2);
-        $this->ensure_lookup('payment_status', 'refunded', 'Refunded', 'Payment refunded', 3);
-        $this->ensure_lookup('invoice_status', 'issued', 'Issued', 'Invoice issued', 1);
-        $this->ensure_lookup('invoice_status', 'paid', 'Paid', 'Invoice paid', 2);
-        $this->ensure_lookup('receipt_status', 'issued', 'Issued', 'Receipt issued', 1);
-        $this->ensure_lookup('receipt_status', 'void', 'Void', 'Receipt voided', 2);
-
-        $user_status_id = $this->get_lookup_id('user_status', 'active');
-        $product_status_id = $this->get_lookup_id('product_status', 'active');
-        $order_status_id = $this->get_lookup_id('order_status', 'paid');
-        $payment_status_id = $this->get_lookup_id('payment_status', 'paid');
-        $invoice_status_id = $this->get_lookup_id('invoice_status', 'issued');
-        $receipt_status_id = $this->get_lookup_id('receipt_status', 'issued');
 
         $this->insert_unique('settings', array(
             'setting_key'    => 'site_name',
@@ -300,17 +300,13 @@ class Migration_Seed_all_tables extends CI_Migration
         $order = $this->get_row('orders', array('order_no' => $order_no));
         if (!$order) {
             $this->db->insert('orders', $this->filter_data('orders', array(
-                'user_id'           => $customer_user ? $customer_user->id : $admin_user->id,
-                'order_no'          => $order_no,
-                'order_number'      => $order_no,
-                'status'            => 'paid',
-                'status_lookup_id'  => $order_status_id,
-                'subtotal'          => '119.98',
-                'tax_amount'        => '10.00',
-                'total_amount'      => '129.98',
-                'currency'          => 'USD',
-                'created_at'        => $now,
-                'updated_at'        => $now,
+                'user_id'          => $customer_user ? $customer_user->id : $admin_user->id,
+                'order_no'         => $order_no,
+                'status_lookup_id' => $order_status_id,
+                'total_amount'     => '129.98',
+                'version'          => 1,
+                'created_at'       => $now,
+                'updated_at'       => $now,
             )));
             $order = $this->get_row('orders', array('order_no' => $order_no));
         }
@@ -337,56 +333,50 @@ class Migration_Seed_all_tables extends CI_Migration
             ), array('order_id' => $order->id, 'product_id' => $product_2->id));
         }
 
-        $payment = $this->get_row('payments', array('payment_reference' => 'PAY-1001'));
+        $payment = $this->get_row('payments', array('payment_no' => 'PAY-1001'));
         if (!$payment) {
             $this->db->insert('payments', $this->filter_data('payments', array(
-                'order_id'            => $order ? $order->id : null,
-                'payment_reference'   => 'PAY-1001',
-                'provider'            => 'stripe',
-                'provider_reference'  => 'pi_test_1001',
-                'payment_method'      => 'card',
-                'amount'              => '129.98',
-                'currency'            => 'USD',
-                'status'              => 'paid',
-                'status_lookup_id'    => $payment_status_id,
-                'paid_at'             => $now,
-                'created_at'          => $now,
-                'updated_at'          => $now,
+                'order_id'         => $order ? $order->id : null,
+                'payment_no'       => 'PAY-1001',
+                'payment_method'   => 'card',
+                'amount'           => '129.98',
+                'currency'         => 'USD',
+                'status_lookup_id' => $payment_status_id,
+                'version'          => 1,
+                'paid_at'          => $now,
+                'created_at'       => $now,
+                'updated_at'       => $now,
             )));
-            $payment = $this->get_row('payments', array('payment_reference' => 'PAY-1001'));
+            $payment = $this->get_row('payments', array('payment_no' => 'PAY-1001'));
         }
 
         if ($payment) {
             $this->insert_unique('stripe_transactions', array(
-                'payment_id'           => $payment->id,
-                'stripe_event_id'      => 'evt_test_1001',
-                'stripe_payment_intent'=> 'pi_test_1001',
-                'stripe_session_id'     => 'cs_test_1001',
-                'event_type'            => 'checkout.session.completed',
-                'status'                => 'succeeded',
-                'payload'               => '{"status":"succeeded"}',
-                'created_at'            => $now,
-            ), array('stripe_event_id' => 'evt_test_1001'));
+                'payment_id'        => $payment->id,
+                'provider'          => 'stripe',
+                'stripe_session_id' => 'cs_test_1001',
+                'payment_intent_id' => 'pi_test_1001',
+                'currency'          => 'USD',
+                'amount'            => '129.98',
+                'provider_status'   => 'succeeded',
+                'raw_payload'       => '{"status":"succeeded"}',
+                'created_at'        => $now,
+                'updated_at'        => $now,
+            ), array('payment_id' => $payment->id));
 
-            $invoice = $this->get_row('invoices', array('invoice_number' => 'INV-1001'));
+            $invoice = $this->get_row('invoices', array('invoice_no' => 'INV-1001'));
             if (!$invoice) {
                 $this->db->insert('invoices', $this->filter_data('invoices', array(
-                    'payment_id'       => $payment->id,
                     'order_id'         => $order ? $order->id : null,
-                    'user_id'          => $customer_user ? $customer_user->id : null,
-                    'invoice_number'   => 'INV-1001',
                     'invoice_no'       => 'INV-1001',
                     'amount'           => '129.98',
-                    'subtotal'         => '119.98',
-                    'tax_amount'       => '10.00',
-                    'total_amount'     => '129.98',
-                    'currency'         => 'USD',
                     'status_lookup_id' => $invoice_status_id,
                     'issued_at'        => $now,
+                    'issued_by'        => $customer_user ? $customer_user->id : null,
                     'created_at'       => $now,
                     'updated_at'       => $now,
                 )));
-                $invoice = $this->get_row('invoices', array('invoice_number' => 'INV-1001'));
+                $invoice = $this->get_row('invoices', array('invoice_no' => 'INV-1001'));
             }
 
             if ($invoice) {
@@ -400,33 +390,32 @@ class Migration_Seed_all_tables extends CI_Migration
                 ), array('invoice_id' => $invoice->id, 'product_name' => 'Wireless Mouse'));
             }
 
-            $receipt = $this->get_row('receipts', array('receipt_number' => 'RCPT-1001'));
+            $receipt = $this->get_row('receipts', array('receipt_no' => 'RCPT-1001'));
             if (!$receipt) {
                 $this->db->insert('receipts', $this->filter_data('receipts', array(
                     'invoice_id'       => $invoice ? $invoice->id : null,
-                    'payment_id'       => $payment->id,
-                    'order_id'         => $order ? $order->id : null,
-                    'user_id'          => $customer_user ? $customer_user->id : null,
-                    'receipt_number'   => 'RCPT-1001',
                     'receipt_no'       => 'RCPT-1001',
                     'amount'           => '129.98',
-                    'currency'         => 'USD',
                     'status_lookup_id' => $receipt_status_id,
                     'issued_at'        => $now,
+                    'issued_by'        => $customer_user ? $customer_user->id : null,
                     'created_at'       => $now,
                     'updated_at'       => $now,
                 )));
             }
 
             $this->insert_unique('refunds', array(
-                'payment_id'        => $payment->id,
-                'stripe_refund_id'  => 're_test_1001',
-                'amount'            => '10.00',
-                'currency'          => 'USD',
-                'status'            => 'pending',
-                'reason'            => 'Customer requested reversal',
-                'created_at'        => $now,
-            ), array('stripe_refund_id' => 're_test_1001'));
+                'payment_id'       => $payment->id,
+                'refund_no'        => 'RF-1001',
+                'stripe_refund_id' => 're_test_1001',
+                'amount'           => '10.00',
+                'reason'           => 'Customer requested reversal',
+                'status_lookup_id' => null,
+                'created_by'       => $customer_user ? $customer_user->id : null,
+                'approved_by'      => $admin_user ? $admin_user->id : null,
+                'created_at'       => $now,
+                'updated_at'       => $now,
+            ), array('refund_no' => 'RF-1001'));
         }
 
         $this->insert_unique('api_tokens', array(
@@ -500,13 +489,13 @@ class Migration_Seed_all_tables extends CI_Migration
         $this->db->where_in('order_no', array('ORD-1001'));
         $this->db->delete('orders');
 
-        $this->db->where_in('payment_reference', array('PAY-1001'));
+        $this->db->where_in('payment_no', array('PAY-1001'));
         $this->db->delete('payments');
 
-        $this->db->where_in('invoice_number', array('INV-1001'));
+        $this->db->where_in('invoice_no', array('INV-1001'));
         $this->db->delete('invoices');
 
-        $this->db->where_in('receipt_number', array('RCPT-1001'));
+        $this->db->where_in('receipt_no', array('RCPT-1001'));
         $this->db->delete('receipts');
 
         $this->db->where_in('stripe_refund_id', array('re_test_1001'));
