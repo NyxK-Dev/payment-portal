@@ -1,89 +1,425 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
+
 
 class Roles extends MY_Controller
 {
+
+
     public function __construct()
     {
         parent::__construct();
 
-        $this->load->service('Role_service');
 
-        // Enable after authentication is ready
-        // $this->auth->authorize('roles.manage');
+        $this->load->library(
+            'RequestValidator'
+        );
+
+
+        $this->load->service(
+            'RoleService'
+        );
     }
+
+
+
+
 
     public function index()
     {
-        $this->render('admin/roles/index', array(
-            'title'            => 'Role Management',
-            'page_heading'     => 'Roles',
-            'page_description' => 'Manage system roles.',
-            'breadcrumbs'      => array(
-                'Dashboard' => site_url('admin/dashboard'),
-                'Roles'     => NULL,
-            ),
-            'roles' => $this->Role_service->getRoles(),
-        ));
+
+        $data = [
+
+            'title' => 'Roles',
+
+            'page_heading' => 'Roles',
+
+            'page_description' =>
+            'Manage system roles.',
+
+
+            'breadcrumbs' => [
+
+                'Dashboard' =>
+                site_url('admin/dashboard'),
+
+                'Roles' =>
+                NULL,
+
+            ],
+
+
+
+            'roles' =>
+            $this->roleservice
+                ->getRoles()
+
+        ];
+
+
+
+        $this->render(
+            'admin/roles/index',
+            $data
+        );
     }
+
+
+
+
+
+
 
     public function create()
     {
-        $this->render('admin/roles/create', array(
-            'title'            => 'Create Role',
-            'page_heading'     => 'Create Role',
-            'page_description' => 'Add a new role.',
-            'breadcrumbs'      => array(
-                'Dashboard' => site_url('admin/dashboard'),
-                'Roles'     => site_url('admin/roles'),
-                'Create'    => NULL,
-            ),
-        ));
+
+        $this->render(
+            'admin/roles/create',
+            [
+
+                'title' =>
+                'Create Role',
+
+
+                'page_heading' =>
+                'Create Role',
+
+
+                'page_description' =>
+                'Create a new role.',
+
+
+
+                'breadcrumbs' => [
+
+                    'Dashboard' =>
+                    site_url('admin/dashboard'),
+
+                    'Roles' =>
+                    site_url('admin/roles'),
+
+                    'Create' =>
+                    NULL
+
+                ]
+
+            ]
+        );
     }
+
+
+
+
+
+
 
     public function store()
     {
-        $data = array(
-            'name'        => trim($this->input->post('name', TRUE)),
-            'description' => trim($this->input->post('description', TRUE)),
-        );
 
-        $this->Role_service->create($data);
+        if (
+            !$this->requestvalidator
+                ->validate(
+                    'Role',
+                    'create'
+                )
+        ) {
 
-        redirect('admin/roles');
+            $this->render(
+                'admin/roles/create',
+                [
+
+                    'title' => 'Create Role',
+
+
+                    'page_heading' => 'Create Role',
+
+
+                    'errors' =>
+                    $this->form_validation
+                        ->error_array()
+
+                ]
+            );
+
+
+            return;
+        }
+
+
+
+
+
+        $data = [
+
+            'name' =>
+            trim(
+                $this->input->post(
+                    'name',
+                    TRUE
+                )
+            ),
+
+
+            'description' =>
+            trim(
+                $this->input->post(
+                    'description',
+                    TRUE
+                )
+            )
+
+        ];
+
+
+
+
+
+
+        try {
+
+
+            $this->roleservice
+                ->create(
+                    $data
+                );
+
+
+
+
+            $this->session
+                ->set_flashdata(
+                    'success',
+                    'Role created successfully.'
+                );
+
+
+
+            redirect(
+                'admin/roles'
+            );
+        } catch (Exception $e) {
+
+
+            $this->render(
+                'admin/roles/create',
+                [
+
+                    'title' => 'Create Role',
+
+
+                    'page_heading' => 'Create Role',
+
+
+
+                    'errors' => [
+
+                        'name' =>
+                        $e->getMessage()
+
+                    ]
+
+                ]
+            );
+        }
     }
 
     public function edit($id)
     {
-        $this->render('admin/roles/edit', array(
-            'title'            => 'Edit Role',
-            'page_heading'     => 'Edit Role',
-            'page_description' => 'Update role information.',
-            'breadcrumbs'      => array(
-                'Dashboard' => site_url('admin/dashboard'),
-                'Roles'     => site_url('admin/roles'),
-                'Edit'      => NULL,
-            ),
-            'role' => $this->Role_service->getRole($id),
-        ));
+
+        $this->render(
+            'admin/roles/edit',
+            [
+
+                'title' =>
+                'Edit Role',
+
+
+                'page_heading' =>
+                'Edit Role',
+
+
+                'page_description' =>
+                'Update role information.',
+
+
+
+                'breadcrumbs' => [
+
+                    'Dashboard' =>
+                    site_url('admin/dashboard'),
+
+                    'Roles' =>
+                    site_url('admin/roles'),
+
+                    'Edit' =>
+                    NULL
+
+                ],
+
+
+
+                'role' =>
+                $this->roleservice
+                    ->getRole($id)
+
+            ]
+        );
     }
 
-    public function update($id)
+
+   public function update($id)
+{
+
+    if(
+        !$this->requestvalidator
+        ->validate(
+            'Role',
+            'update'
+        )
+    )
     {
-        $data = array(
-            'name'        => trim($this->input->post('name', TRUE)),
-            'description' => trim($this->input->post('description', TRUE)),
+
+        $this->render(
+            'admin/roles/edit',
+            [
+
+                'title' => 'Edit Role',
+
+
+                'role' =>
+                $this->roleservice
+                ->getRole($id),
+
+
+                'errors' =>
+                $this->form_validation
+                ->error_array()
+
+            ]
         );
 
-        $this->Role_service->update($id, $data);
+        return;
 
-        redirect('admin/roles');
     }
 
-    public function delete($id)
+
+
+
+    $data = [
+
+        'name' =>
+            trim(
+                $this->input->post(
+                    'name',
+                    TRUE
+                )
+            ),
+
+
+        'description' =>
+            trim(
+                $this->input->post(
+                    'description',
+                    TRUE
+                )
+            )
+
+    ];
+
+
+
+
+    try
     {
-        $this->Role_service->delete($id);
 
-        redirect('admin/roles');
+        $this->roleservice
+            ->update(
+                $id,
+                $data
+            );
+
+
+        $this->session
+            ->set_flashdata(
+                'success',
+                'Role updated successfully.'
+            );
+
+
+        redirect(
+            'admin/roles'
+        );
+
     }
+    catch(Exception $e)
+    {
+
+        $this->render(
+            'admin/roles/edit',
+            [
+
+                'title' => 'Edit Role',
+
+
+                'role' =>
+                $this->roleservice
+                ->getRole($id),
+
+
+                'errors' => [
+
+                    'name' =>
+                    $e->getMessage()
+
+                ]
+
+            ]
+        );
+
+    }
+
+}
+
+
+      public function delete($id)
+    {
+
+
+        try
+        {
+
+
+            $this->roleservice
+                ->delete(
+                    $id
+                );
+
+
+
+            $this->session
+                ->set_flashdata(
+                    'success',
+                    'Role deleted successfully.'
+                );
+
+
+
+            redirect(
+                'admin/roles'
+            );
+
+
+        }
+        catch(Exception $e)
+        {
+
+            show_error(
+                $e->getMessage()
+            );
+
+        }
+
+
+    }
+   
 }
