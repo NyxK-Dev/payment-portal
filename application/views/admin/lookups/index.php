@@ -169,9 +169,6 @@
                                         Edit
 
                                     </a>
-
-
-
                                     <a href="<?= site_url('admin/lookups/delete/' . $item->id); ?>"
                                         class="btn btn-sm btn-outline-danger"
                                         onclick="return confirm('Are you sure you want to delete this lookup value?');">
