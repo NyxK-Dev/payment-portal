@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 /*
 |--------------------------------------------------------------------------
@@ -25,7 +25,7 @@ $route['login/authenticate'] = 'Auth/Login/authenticate';
 $route['logout'] = 'Auth/Login/logout';
 $route['register'] = 'Auth/Register';
 $route['register/store'] = 'Auth/Register/store';
-
+$route['dashboard'] = 'admin/dashboard/index';
 /*
 |--------------------------------------------------------------------------
 | Reserved Routes

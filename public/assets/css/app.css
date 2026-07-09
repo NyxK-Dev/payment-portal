@@ -1,5 +1,308 @@
-/* Custom application styles */
+:root {
+    --primary-glow: rgba(13, 110, 253, 0.05);
+    --success-glow: rgba(25, 135, 84, 0.05);
+    --warning-glow: rgba(255, 193, 7, 0.05);
+    --danger-glow: rgba(220, 53, 69, 0.05);
+    --secondary-glow: rgba(108, 117, 125, 0.05);
+}
 
-.logo-text {
+html, body {
+    height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.app-wrapper {
+    min-height: 100vh;
+}
+
+.app-main {
+    min-height: calc(100vh - 114px);
+    background-color: #f4f6f9;
+}
+
+.app-content {
+    padding-top: 20px;
+    padding-bottom: 40px;
+}
+
+/* Modern Card Layouts */
+.card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    background: #ffffff;
+    margin-bottom: 24px;
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid #f1f3f5;
+    padding: 18px 24px;
+}
+
+.card-title {
+    font-size: 1.1rem;
     font-weight: 600;
+    color: #212529;
+}
+
+/* Premium Glassmorphism Stat Boxes */
+.stat-box {
+    position: relative;
+    display: block;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #e9ecef;
+    text-decoration: none !important;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.stat-box.stat-primary::before { background: #0d6efd; }
+.stat-box.stat-success::before { background: #198754; }
+.stat-box.stat-warning::before { background: #ffc107; }
+.stat-box.stat-danger::before { background: #dc3545; }
+.stat-box.stat-secondary::before { background: #6c757d; }
+
+.stat-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.05);
+}
+
+.stat-box.stat-primary:hover { background: var(--primary-glow); }
+.stat-box.stat-success:hover { background: var(--success-glow); }
+.stat-box.stat-warning:hover { background: var(--warning-glow); }
+.stat-box.stat-danger:hover { background: var(--danger-glow); }
+.stat-box.stat-secondary:hover { background: var(--secondary-glow); }
+
+.stat-box .stat-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.stat-box .stat-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #212529;
+    line-height: 1;
+}
+
+.stat-box .stat-icon {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2.5rem;
+    transition: all 0.3s ease;
+}
+
+.stat-box.stat-primary .stat-icon { color: rgba(13, 110, 253, 0.15); }
+.stat-box.stat-success .stat-icon { color: rgba(25, 135, 84, 0.15); }
+.stat-box.stat-warning .stat-icon { color: rgba(255, 193, 7, 0.2); }
+.stat-box.stat-danger .stat-icon { color: rgba(220, 53, 69, 0.15); }
+.stat-box.stat-secondary .stat-icon { color: rgba(108, 117, 125, 0.15); }
+
+.stat-box:hover .stat-icon {
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Modernized Tables */
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: #495057;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 12px 16px;
+}
+
+.table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    color: #495057;
+}
+
+/* Badges and System Status styling */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+/* ==========================================================================
+   Premium Sidebar Refinement Layout
+   ========================================================================== */
+.premium-sidebar {
+    background-color: #ffffff !important;
+    border-right: 1px solid #e9ecef;
+}
+
+/* Brand Section Refresh */
+.sidebar-brand-wrapper {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.brand-logo-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none !important;
+}
+
+.brand-icon-box {
+    background: var(--primary-glow);
+    color: #0d6efd;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 1.1rem;
+}
+
+.brand-text-premium {
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: #212529;
+    letter-spacing: -0.3px;
+}
+
+/* Navigation items container padding */
+.sidebar-menu {
+    padding: 0 14px !important;
+}
+
+/* Custom Header Labels */
+.nav-header-premium {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #adb5bd;
+    padding: 20px 12px 8px 12px;
+}
+
+/* Parent Navigation Link Design */
+.sidebar-menu .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 11px 14px !important;
+    border-radius: 10px !important;
+    color: #495057 !important;
+    font-weight: 500;
+    font-size: 0.92rem;
+    margin-bottom: 2px;
+    transition: all 0.2s ease;
+    width: 100%; /* CHANGE: Added to make sure parent link covers full width */
+}
+
+.sidebar-menu .nav-link .nav-icon {
+    font-size: 1.05rem;
+    margin-right: 12px;
+    color: #6c757d;
+    transition: color 0.2s ease;
+    width: 20px;
+    text-align: center;
+}
+
+/* CHANGE: Added a rule to target the paragraph/text element inside the link to let it take up all available horizontal space, pushing the arrow to the right edge */
+.sidebar-menu .nav-link p {
+    margin: 0;
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    
+}
+
+/* Hover States */
+.sidebar-menu .nav-item:not(.menu-open) > .nav-link:hover {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+.sidebar-menu .nav-item:not(.menu-open) > .nav-link:hover .nav-icon {
+    color: #212529;
+}
+
+/* Active Navigation Item Styling */
+.sidebar-menu .nav-link.active {
+    background-color: #e8f1ff !important;
+    color: #0d6efd !important;
+    font-weight: 600;
+}
+
+.sidebar-menu .nav-link.active .nav-icon {
+    color: #0d6efd !important;
+}
+
+/* Submenu Dropdown Tree Alignment */
+.nav-treeview {
+    padding-left: 12px;
+    margin-top: 2px;
+    margin-bottom: 4px;
+}
+
+.nav-treeview .nav-link {
+    padding: 8px 14px !important;
+    font-size: 0.88rem;
+    color: #6c757d !important;
+}
+
+.sub-nav-icon {
+    font-size: 0.5rem !important;
+    margin-right: 12px;
+    opacity: 0.5;
+}
+
+.nav-treeview .nav-link.active {
+    background-color: transparent !important;
+    color: #0d6efd !important;
+}
+
+.nav-treeview .nav-link:hover {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+/* Dropdown Animation Rotator */
+.menu-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+/* CHANGE: Fixed selector nesting path to make sure rotation applies cleanly during multi-level item states */
+.sidebar-menu .menu-open > .nav-link p .menu-arrow {
+    transform: rotate(-90deg);
 }

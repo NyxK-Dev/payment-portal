@@ -20,6 +20,8 @@
     <!-- Application CSS -->
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css'); ?>">
 
+
+
     <?php if (!empty($styles)): ?>
         <?php foreach ($styles as $style): ?>
             <link rel="stylesheet" href="<?= base_url($style); ?>">
@@ -29,4 +31,4 @@
 
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
 
-<div class="app-wrapper">
+    <div class="app-wrapper">
