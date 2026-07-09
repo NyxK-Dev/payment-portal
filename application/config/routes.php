@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 /*
 |--------------------------------------------------------------------------
@@ -33,3 +33,64 @@ $route['register/store'] = 'Auth/Register/store';
 */
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
+
+//roles
+$route['admin/roles']
+    =
+    'admin/Roles/index';
+
+
+$route['admin/roles/create']
+    =
+    'admin/Roles/create';
+
+
+$route['admin/roles/store']
+    =
+    'admin/Roles/store';
+
+
+$route['admin/roles/edit/(:num)']
+    =
+    'admin/Roles/edit/$1';
+
+
+$route['admin/roles/update/(:num)']
+    =
+    'admin/Roles/update/$1';
+
+
+$route['admin/roles/delete/(:num)']
+    =
+    'admin/Roles/delete/$1';
+
+// Permissions
+
+$route['admin/permissions']
+=
+'admin/Permissions/index';
+
+
+$route['admin/permissions/create']
+=
+'admin/Permissions/create';
+
+
+$route['admin/permissions/store']
+=
+'admin/Permissions/store';
+
+
+$route['admin/permissions/edit/(:num)']
+=
+'admin/Permissions/edit/$1';
+
+
+$route['admin/permissions/update/(:num)']
+=
+'admin/Permissions/update/$1';
+
+
+$route['admin/permissions/delete/(:num)']
+=
+'admin/Permissions/delete/$1';
