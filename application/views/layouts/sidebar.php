@@ -51,6 +51,23 @@
 
                 </li>
 
+                <!-- Permission -->
+                  <li class="nav-item">
+
+                    <a href="<?= site_url('admin/role_permissions'); ?>"
+                       class="nav-link">
+
+                        <i class="nav-icon fas fa-user-shield"></i>
+
+                        <p>
+                            Role Permission
+                        </p>
+
+                    </a>
+
+                </li>
+
+
             </ul>
         </nav>
     </div>

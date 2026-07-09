@@ -1,75 +1,128 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Role Management</title>
-    
-    <link rel="stylesheet" href="<?= base_url('assets/bootstrap/css/bootstrap.min.css'); ?>">
-    
-    </head>
-<body class="bg-light">
-
 <div class="container mt-5">
-    
-    <div class="row align-items-center mb-4">
-       
-        <div class=" text-right text-end">
-            <a href="<?= site_url('admin/roles/create'); ?>" class="btn btn-primary">
-                Add Role
-            </a>
-        </div>
+
+
+    <div class="d-flex justify-content-between mb-4">
+
+
+        <a href="<?= site_url('admin/roles/create'); ?>"
+            class="btn btn-primary ms-auto">
+
+            Add Role
+
+        </a>
+
+
     </div>
+
+
 
     <div class="card shadow-sm">
-        <div class="card-header bg-white font-weight-bold">
-            Roles
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-striped table-hover mb-0">
-                <thead class="thead-light table-light">
+
+        <div class="card-body">
+
+
+            <table class="table table-bordered">
+
+
+                <thead>
+
                     <tr>
-                        <th style="width: 15%;">ID</th>
-                        <th style="width: 45%;">Name</th>
-                        <th style="width: 40%; text-align: right;">Action</th>
+
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Action</th>
+
                     </tr>
+
                 </thead>
+
+
+
                 <tbody>
+
+
                     <?php if (!empty($roles)): ?>
+
                         <?php foreach ($roles as $role): ?>
+
+
                             <tr>
-                                <td><?= $role->id; ?></td>
+
+
                                 <td>
-                                    <span class="badge badge-info bg-info text-dark">
-                                        <?= ucfirst($role->name); ?>
+                                    <?= $role->id ?>
+                                </td>
+
+
+
+                                <td>
+
+                                    <span class="badge bg-info">
+
+                                        <?= ucfirst($role->name) ?>
+
                                     </span>
+
                                 </td>
-                                <td style="text-align: right;">
-                                    <a href="<?= site_url('admin/roles/edit/' . $role->id); ?>" class="btn btn-sm btn-warning">
+
+
+
+                                <td>
+
+
+                                    <a href="<?= site_url('admin/roles/edit/' . $role->id); ?>"
+                                        class="btn btn-warning btn-sm">
+
                                         Edit
+
                                     </a>
-                                    <a href="<?= site_url('admin/roles/permissions/' . $role->id); ?>" class="btn btn-sm btn-info">
-                                        Permissions
-                                    </a>
-                                    <a href="<?= site_url('admin/roles/delete/' . $role->id); ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this role?');">
+
+
+
+                                    <a href="<?= site_url('admin/roles/delete/' . $role->id); ?>"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Delete this role?');">
+
                                         Delete
+
                                     </a>
+
+
                                 </td>
+
+
                             </tr>
+
+
                         <?php endforeach; ?>
+
+
                     <?php else: ?>
+
+
                         <tr>
-                            <td colspan="3" class="text-center py-4 text-muted">
+
+                            <td colspan="3" class="text-center">
+
                                 No roles found.
+
                             </td>
+
                         </tr>
+
+
                     <?php endif; ?>
+
+
                 </tbody>
+
+
             </table>
+
+
         </div>
+
     </div>
 
-</div>
 
-</body>
-</html>
+</div>
