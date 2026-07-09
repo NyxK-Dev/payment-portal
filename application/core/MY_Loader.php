@@ -3,31 +3,65 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class MY_Loader extends CI_Loader
 {
-    protected $CI;
-
-    public function __construct()
+    /**
+     * Load Service
+     */
+    public function service($service)
     {
-        parent::__construct();
+        $path = APPPATH . 'services/' . $service . '.php';
 
-        $this->CI =& get_instance();
+        if (!file_exists($path)) {
+            show_error("Unable to load service: {$service}");
+        }
+
+        require_once $path;
+
+        $CI =& get_instance();
+
+        $property = strtolower($service);
+
+        $CI->$property = new $service();
     }
 
 
-    public function service($service_name)
+    /**
+     * Load Repository
+     */
+    public function repository($repository)
     {
-        $file = APPPATH . 'services/' . $service_name . '.php';
+        $path = APPPATH . 'repositories/' . $repository . '.php';
 
-
-        if (!file_exists($file)) {
-            show_error(
-                "Service file not found: " . $file
-            );
+        if (!file_exists($path)) {
+            show_error("Unable to load repository: {$repository}");
         }
 
+        require_once $path;
 
-        require_once($file);
+        $CI =& get_instance();
 
- // Create the service using the same name passed in
-        $this->CI->$service_name = new $service_name();
+        $property = strtolower($repository);
+
+        $CI->$property = new $repository();
+    }
+
+
+    /**
+     * Load Request
+     */
+    public function request($request)
+    {
+        $path = APPPATH . 'requests/' . $request . '.php';
+
+        if (!file_exists($path)) {
+            show_error("Unable to load request: {$request}");
+        }
+
+        require_once $path;
+
+        $CI =& get_instance();
+
+        $property = strtolower($request);
+
+        $CI->$property = new $request();
     }
 }

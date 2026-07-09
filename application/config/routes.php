@@ -25,12 +25,38 @@ $route['login/authenticate'] = 'Auth/Login/authenticate';
 $route['logout'] = 'Auth/Login/logout';
 $route['register'] = 'Auth/Register';
 $route['register/store'] = 'Auth/Register/store';
+$route['dashboard'] = 'admin/dashboard/index';
+/*
+|--------------------------------------------------------------------------
+| Products Routes
+|--------------------------------------------------------------------------
+*/
+
+
+$route['admin/products'] = 'Admin/Products/index';
+
+$route['admin/products/create'] = 'Admin/Products/create';
+
+$route['admin/products/store'] = 'Admin/Products/store';
+
+$route['admin/products/edit/(:num)'] 
+    = 'Admin/Products/edit/$1';
+
+$route['admin/products/update/(:num)']
+    = 'Admin/Products/update/$1';
+
+$route['admin/products/show/(:num)']
+    ='Admin/Products/show/$1';
+
+$route['admin/products/delete/(:num)']
+    = 'Admin/Products/destroy/$1';
 
 /*
 |--------------------------------------------------------------------------
 | Reserved Routes
 |--------------------------------------------------------------------------
 */
+
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
