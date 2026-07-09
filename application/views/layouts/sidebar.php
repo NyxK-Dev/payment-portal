@@ -195,8 +195,7 @@
 
                 <!-- System Logs & Configuration -->
                 <li class="nav-header-premium">System</li>
-                <li
-                    class="nav-item <?= (strpos(current_url(), 'admin/audit_logs') !== false || strpos(current_url(), 'admin/activity_logs') !== false || strpos(current_url(), 'admin/email_logs') !== false) ? 'menu-open' : ''; ?>">
+                <li class="nav-item <?= (strpos(current_url(), 'admin/audit_logs') !== false || strpos(current_url(), 'admin/activity_logs') !== false || strpos(current_url(), 'admin/email_logs') !== false) ? 'menu-open' : ''; ?>">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-shield-alt"></i>
                         <p>
@@ -206,22 +205,19 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/audit_logs'); ?>"
-                                class="nav-link <?= (current_url() == site_url('admin/audit_logs')) ? 'active' : ''; ?>">
+                            <a href="<?= site_url('admin/audit_logs'); ?>" class="nav-link <?= (current_url() == site_url('admin/audit_logs')) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
                                 <p>Audit Logs</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/activity_logs'); ?>"
-                                class="nav-link <?= (current_url() == site_url('admin/activity_logs')) ? 'active' : ''; ?>">
+                            <a href="<?= site_url('admin/activity_logs'); ?>" class="nav-link <?= (current_url() == site_url('admin/activity_logs')) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
                                 <p>Activity Logs</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/email_logs'); ?>"
-                                class="nav-link <?= (current_url() == site_url('admin/email_logs')) ? 'active' : ''; ?>">
+                            <a href="<?= site_url('admin/email_logs'); ?>" class="nav-link <?= (current_url() == site_url('admin/email_logs')) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
                                 <p>Email Logs</p>
                             </a>
@@ -229,48 +225,34 @@
                     </ul>
                 </li>
 
-                <li class="nav-item <?= (strpos(current_url(), 'admin/lookupgroups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'menu-open' : ''; ?>">
-
-                    <a href="#" class="nav-link <?= (strpos(current_url(), 'admin/lookupgroups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'active' : ''; ?>">
                 <!-- Lookups -->
-                <li
-                    class="nav-item <?= (strpos(current_url(), 'admin/lookup_groups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'menu-open' : ''; ?>">
-                    <a href="#" class="nav-link">
+                <li class="nav-item <?= (strpos(current_url(), 'admin/lookupgroups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'menu-open' : ''; ?>">
+                    <a href="#" class="nav-link <?= (strpos(current_url(), 'admin/lookupgroups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'active' : ''; ?>">
                         <i class="nav-icon fas fa-search"></i>
                         <p>
                             Lookups
                             <i class="fas fa-angle-left menu-arrow"></i>
                         </p>
                     </a>
-
                     <ul class="nav nav-treeview">
-
-                        <!-- Lookup Groups Link -->
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/lookupgroups'); ?>"
-                                class="nav-link <?= (strpos(current_url(), 'admin/lookupgroups') !== false) ? 'active' : ''; ?>">
                             <a href="<?= site_url('admin/lookupgroups'); ?>" class="nav-link <?= (strpos(current_url(), 'admin/lookupgroups') !== false) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
                                 <p>Lookup Groups</p>
                             </a>
                         </li>
-
-                        <!-- Lookups Link -->
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/lookups'); ?>"
-                                class="nav-link <?= (strpos(current_url(), 'admin/lookups') !== false) ? 'active' : ''; ?>">
-                                class="nav-link <?= (current_url() == site_url('admin/lookups')) ? 'active' : ''; ?>">
+                            <a href="<?= site_url('admin/lookups'); ?>" class="nav-link <?= (strpos(current_url(), 'admin/lookups') !== false) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
-                                <p>Lookups Values</p>
+                                <p>Lookup Values</p>
                             </a>
                         </li>
-
                     </ul>
                 </li>
 
+                <!-- Settings -->
                 <li class="nav-item">
-                    <a href="<?= site_url('admin/settings'); ?>"
-                        class="nav-link <?= (current_url() == site_url('admin/settings')) ? 'active' : ''; ?>">
+                    <a href="<?= site_url('admin/settings'); ?>" class="nav-link <?= (current_url() == site_url('admin/settings')) ? 'active' : ''; ?>">
                         <i class="nav-icon fas fa-sliders-h"></i>
                         <p>Settings</p>
                     </a>

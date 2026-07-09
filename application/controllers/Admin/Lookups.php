@@ -186,6 +186,7 @@ class Lookups extends CI_Controller
             'Lookup value deleted successfully.'
         );
 
-        redirect('admin/lookups/' . $groupId);
+        // redirect('admin/lookups/' . $groupId);
+        redirect('admin/lookups');
     }
 }
