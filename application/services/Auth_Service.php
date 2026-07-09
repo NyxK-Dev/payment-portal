@@ -41,7 +41,16 @@ class Auth_service
             ];
         }
 
-        if ($user->status !== 'active') {
+        $statusLookup = $this->CI->db
+            ->select('lookups.code')
+            ->from('lookups')
+            ->join('lookup_groups', 'lookup_groups.id = lookups.group_id')
+            ->where('lookup_groups.code', 'user_status')
+            ->where('lookups.id', $user->status_lookup_id)
+            ->get()
+            ->row();
+
+        if (empty($statusLookup) || $statusLookup->code !== 'active') {
             return [
                 'success' => false,
                 'message' => 'Your account is inactive.',
