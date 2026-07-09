@@ -16,10 +16,10 @@
                 data-bs-dismiss="alert">
             </button>
 
-
         </div>
 
     <?php endif; ?>
+
 
 
 
@@ -29,11 +29,12 @@
 
         <div class="card-header">
 
+
             <h5 class="card-title">
 
-                <i class="bi bi-folder-plus me-2"></i>
+                <i class="bi bi-pencil-square me-2"></i>
 
-                Create Lookup Group
+                Update Lookup Group
 
             </h5>
 
@@ -43,10 +44,13 @@
 
 
 
+
         <form method="post"
-            action="<?= site_url('admin/lookupgroups/store'); ?>">
+            action="<?= site_url('admin/lookupgroups/update/' . $lookupgroup->id); ?>">
 
 
+
+            <!-- CSRF -->
 
             <input type="hidden"
                 name="<?= $this->security->get_csrf_token_name(); ?>"
@@ -56,10 +60,13 @@
 
 
 
+
             <div class="card-body">
 
 
                 <div class="row">
+
+
 
 
 
@@ -91,16 +98,12 @@
                                 name="code"
                                 class="form-control"
                                 placeholder="Enter group code"
-                                value="<?= set_value('code'); ?>">
+                                value="<?= set_value('code', $lookupgroup->code); ?>">
 
 
                         </div>
 
                     </div>
-
-
-
-
 
 
                     <!-- Name -->
@@ -131,13 +134,14 @@
                                 name="name"
                                 class="form-control"
                                 placeholder="Enter group name"
-                                value="<?= set_value('name'); ?>">
+                                value="<?= set_value('name', $lookupgroup->name); ?>">
 
 
                         </div>
 
 
                     </div>
+
 
 
 
@@ -159,13 +163,13 @@
 
                         <textarea
                             name="description"
-                            class="form-control"
                             rows="4"
-                            placeholder="Enter group description"><?= set_value('description'); ?></textarea>
-
+                            class="form-control"
+                            placeholder="Enter group description"><?= set_value('description', $lookupgroup->description); ?></textarea>
 
 
                     </div>
+
 
 
 
@@ -181,7 +185,9 @@
 
 
 
+
             <div class="card-footer text-end">
+
 
 
                 <a href="<?= site_url('admin/lookupgroups'); ?>"
@@ -205,7 +211,7 @@
 
                     <i class="bi bi-check-circle"></i>
 
-                    Save
+                    Update
 
 
                 </button>
@@ -213,6 +219,7 @@
 
 
             </div>
+
 
 
 

@@ -1,9 +1,12 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 require_once APPPATH . 'interfaces/LookupGroupRepositoryInterface.php';
 require_once APPPATH . 'repositories/LookupGroupRepository.php';
 
+/**
+ * @property LookupGroup_model $lookupgroup_model
+ */
 class LookupGroupService
 {
     protected $repository;

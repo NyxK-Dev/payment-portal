@@ -229,6 +229,9 @@
                     </ul>
                 </li>
 
+                <li class="nav-item <?= (strpos(current_url(), 'admin/lookupgroups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'menu-open' : ''; ?>">
+
+                    <a href="#" class="nav-link <?= (strpos(current_url(), 'admin/lookupgroups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'active' : ''; ?>">
                 <!-- Lookups -->
                 <li
                     class="nav-item <?= (strpos(current_url(), 'admin/lookup_groups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'menu-open' : ''; ?>">
@@ -239,20 +242,29 @@
                             <i class="fas fa-angle-left menu-arrow"></i>
                         </p>
                     </a>
+
                     <ul class="nav nav-treeview">
+
+                        <!-- Lookup Groups Link -->
                         <li class="nav-item">
+                            <a href="<?= site_url('admin/lookupgroups'); ?>"
+                                class="nav-link <?= (strpos(current_url(), 'admin/lookupgroups') !== false) ? 'active' : ''; ?>">
                             <a href="<?= site_url('admin/lookupgroups'); ?>" class="nav-link <?= (strpos(current_url(), 'admin/lookupgroups') !== false) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
                                 <p>Lookup Groups</p>
                             </a>
                         </li>
+
+                        <!-- Lookups Link -->
                         <li class="nav-item">
                             <a href="<?= site_url('admin/lookups'); ?>"
+                                class="nav-link <?= (strpos(current_url(), 'admin/lookups') !== false) ? 'active' : ''; ?>">
                                 class="nav-link <?= (current_url() == site_url('admin/lookups')) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
-                                <p>Lookups</p>
+                                <p>Lookups Values</p>
                             </a>
                         </li>
+
                     </ul>
                 </li>
 
