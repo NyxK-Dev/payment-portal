@@ -1,7 +1,10 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
+/**
+ * @property LookupGroup_model $lookupgroup_model
+ */
 class LookupGroupService
 {
 
@@ -10,18 +13,35 @@ class LookupGroupService
 
     public function __construct()
     {
-        $this->CI =& get_instance();
+
+        $this->CI = &get_instance();
+
 
         $this->CI->load->model(
-            'LookupGroup_model'
+            'LookupGroup_model',
+            'lookupgroup_model'
         );
     }
+
+
+
     public function getAll()
     {
         return $this->CI
-            ->LookupGroup_model
+            ->lookupgroup_model
             ->getAll();
     }
+
+
+
+    public function find($id)
+    {
+
+        return $this->CI
+            ->lookupgroup_model
+            ->find($id);
+    }
+
 
 
     public function create($data)
@@ -32,14 +52,13 @@ class LookupGroupService
 
 
         return $this->CI
-            ->LookupGroup_model
+            ->lookupgroup_model
             ->create($data);
-
     }
 
 
 
-    public function update($id,$data)
+    public function update($id, $data)
     {
 
         $data['updated_at'] =
@@ -47,12 +66,20 @@ class LookupGroupService
 
 
         return $this->CI
-            ->LookupGroup_model
+            ->lookupgroup_model
             ->update(
                 $id,
                 $data
             );
-
     }
 
+
+
+    public function delete($id)
+    {
+
+        return $this->CI
+            ->lookupgroup_model
+            ->delete($id);
+    }
 }
