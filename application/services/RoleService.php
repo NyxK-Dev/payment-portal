@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 
-class Role_service
+class RoleService
 {
 
     protected $CI;
@@ -15,8 +15,8 @@ class Role_service
         $this->CI =& get_instance();
 
 
-        $this->CI->load->model(
-            'Role_model'
+        $this->CI->load->repository(
+            'RoleRepository'
         );
 
     }
@@ -29,7 +29,7 @@ class Role_service
     {
 
         return $this->CI
-            ->Role_model
+            ->rolerepository
             ->getAll();
 
     }
@@ -42,7 +42,7 @@ class Role_service
     {
 
         return $this->CI
-            ->Role_model
+            ->rolerepository
             ->find($id);
 
     }
@@ -55,18 +55,9 @@ class Role_service
     {
 
 
-        if(empty($data['name']))
-        {
-            throw new Exception(
-                'Role name is required'
-            );
-        }
-
-
-
         if(
             $this->CI
-            ->Role_model
+            ->rolerepository
             ->existsName(
                 $data['name']
             )
@@ -81,14 +72,19 @@ class Role_service
 
 
 
+
         $data['created_at'] =
-            date('Y-m-d H:i:s');
+            date(
+                'Y-m-d H:i:s'
+            );
 
 
 
         return $this->CI
-            ->Role_model
-            ->create($data);
+            ->rolerepository
+            ->create(
+                $data
+            );
 
     }
 
@@ -96,13 +92,16 @@ class Role_service
 
 
 
-    public function update($id,$data)
+    public function update(
+        $id,
+        $data
+    )
     {
 
 
         if(
             $this->CI
-            ->Role_model
+            ->rolerepository
             ->existsName(
                 $data['name'],
                 $id
@@ -120,12 +119,15 @@ class Role_service
 
 
         $data['updated_at'] =
-            date('Y-m-d H:i:s');
+            date(
+                'Y-m-d H:i:s'
+            );
+
 
 
 
         return $this->CI
-            ->Role_model
+            ->rolerepository
             ->update(
                 $id,
                 $data
@@ -140,15 +142,11 @@ class Role_service
     public function delete($id)
     {
 
-        $this->CI
-            ->load->model(
-                'User_model'
-            );
-
-
         return $this->CI
-            ->Role_model
-            ->delete($id);
+            ->rolerepository
+            ->delete(
+                $id
+            );
 
     }
 

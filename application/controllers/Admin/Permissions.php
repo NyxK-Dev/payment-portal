@@ -12,12 +12,13 @@ class Permissions extends MY_Controller
 
 
         $this->load->service(
-            'Permission_service'
+            'PermissionService'
         );
 
 
-        // TODO: Add authorization
-        // $this->auth->authorize('permissions.manage');
+        $this->load->library(
+            'RequestValidator'
+        );
 
     }
 
@@ -28,30 +29,33 @@ class Permissions extends MY_Controller
     public function index()
     {
 
-        $data = array(
 
-            'title' => 'Permissions',
+        $data = [
 
-            'page_heading' => 'Permissions',
+            'title'=>'Permissions',
 
-            'page_description' =>
+            'page_heading'=>'Permissions',
+
+            'page_description'=>
                 'Manage system permissions.',
 
 
-            'permissions' =>
-                $this->Permission_service
+
+            'permissions'=>
+                $this->permissionservice
                 ->getPermissions(),
 
 
-            'breadcrumbs' => array(
 
-                'Home' => '',
+            'breadcrumbs'=>[
 
-                'Permissions' => NULL,
+                'Home'=>'',
 
-            ),
+                'Permissions'=>NULL
 
-        );
+            ]
+
+        ];
 
 
 
@@ -71,31 +75,29 @@ class Permissions extends MY_Controller
     public function create()
     {
 
-        $data = array(
-
-            'title' => 'Create Permission',
-
-            'page_heading' => 'Create Permission',
-
-            'breadcrumbs' => array(
-
-                'Home' => '',
-
-                'Permissions' =>
-                    'admin/permissions',
-
-                'Create' => NULL,
-
-            ),
-
-        );
-
-
 
         $this->render(
             'admin/permissions/create',
-            $data
+            [
+
+                'title'=>'Create Permission',
+
+                'page_heading'=>'Create Permission',
+
+                'breadcrumbs'=>[
+
+                    'Home'=>'',
+
+                    'Permissions'=>
+                        site_url('admin/permissions'),
+
+                    'Create'=>NULL
+
+                ]
+
+            ]
         );
+
 
     }
 
@@ -109,35 +111,88 @@ class Permissions extends MY_Controller
     {
 
 
-        $data = array(
+        if(
+            !$this->requestvalidator
+            ->validate(
+                'Permission',
+                'create'
+            )
+        )
+        {
 
-            'code' =>
+
+            $this->render(
+                'admin/permissions/create',
+                [
+
+                    'title'=>'Create Permission',
+
+                    'errors'=>
+                    $this->form_validation
+                    ->error_array()
+
+                ]
+            );
+
+
+            return;
+
+        }
+
+
+
+
+
+        $data=[
+
+
+            'code'=>
                 trim(
-                    $this->input->post('code')
+                    $this->input->post(
+                        'code',
+                        TRUE
+                    )
                 ),
 
 
-            'name' =>
+
+            'name'=>
                 trim(
-                    $this->input->post('name')
+                    $this->input->post(
+                        'name',
+                        TRUE
+                    )
                 ),
 
 
-            'description' =>
+
+            'description'=>
                 trim(
-                    $this->input->post('description')
-                ),
+                    $this->input->post(
+                        'description',
+                        TRUE
+                    )
+                )
 
-        );
-
-
-
-
-        try {
+        ];
 
 
-            $this->Permission_service
-                ->create($data);
+        try
+        {
+
+
+            $this->permissionservice
+                ->create(
+                    $data
+                );
+
+
+
+            $this->session
+                ->set_flashdata(
+                    'success',
+                    'Permission created successfully.'
+                );
 
 
 
@@ -146,53 +201,50 @@ class Permissions extends MY_Controller
             );
 
 
-        } catch(Exception $e) {
+        }
+        catch(Exception $e)
+        {
 
+            $this->render(
+                'admin/permissions/create',
+                [
 
-            show_error(
-                $e->getMessage()
+                    'title'=>'Create Permission',
+
+                    'errors'=>[
+
+                        'code'=>
+                        $e->getMessage()
+
+                    ]
+
+                ]
             );
-
 
         }
 
 
+
     }
-
-
-
-
-
 
 
     public function edit($id)
     {
 
 
-        $data = array(
+        $data=[
 
-            'title' => 'Edit Permission',
+            'title'=>'Edit Permission',
 
-            'page_heading' => 'Edit Permission',
-
-
-            'permission' =>
-                $this->Permission_service
-                ->getPermission($id),
+            'page_heading'=>'Edit Permission',
 
 
-            'breadcrumbs' => array(
+            'permission'=>
+                $this->permissionservice
+                ->getPermission($id)
 
-                'Home' => '',
 
-                'Permissions' =>
-                    'admin/permissions',
-
-                'Edit' => NULL,
-
-            ),
-
-        );
+        ];
 
 
 
@@ -205,46 +257,99 @@ class Permissions extends MY_Controller
     }
 
 
-
-
-
-
-
     public function update($id)
     {
 
 
-        $data = array(
+        if(
+            !$this->requestvalidator
+            ->validate(
+                'Permission',
+                'update'
+            )
+        )
+        {
 
-            'code' =>
+
+            $this->render(
+                'admin/permissions/edit',
+                [
+
+                    'title'=>'Edit Permission',
+
+
+                    'permission'=>
+                    $this->permissionservice
+                    ->getPermission($id),
+
+
+                    'errors'=>
+                    $this->form_validation
+                    ->error_array()
+
+                ]
+            );
+
+
+            return;
+
+        }
+
+
+
+
+
+        $data=[
+
+
+            'code'=>
                 trim(
-                    $this->input->post('code')
+                    $this->input->post(
+                        'code',
+                        TRUE
+                    )
                 ),
 
 
-            'name' =>
+
+            'name'=>
                 trim(
-                    $this->input->post('name')
+                    $this->input->post(
+                        'name',
+                        TRUE
+                    )
                 ),
 
 
-            'description' =>
+
+            'description'=>
                 trim(
-                    $this->input->post('description')
-                ),
-
-        );
-
-
-
-
-        try {
+                    $this->input->post(
+                        'description',
+                        TRUE
+                    )
+                )
 
 
-            $this->Permission_service
+        ];
+
+
+        try
+        {
+
+
+            $this->permissionservice
                 ->update(
                     $id,
                     $data
+                );
+
+
+
+            $this->session
+                ->set_flashdata(
+                    'success',
+                    'Permission updated successfully.'
                 );
 
 
@@ -254,11 +359,32 @@ class Permissions extends MY_Controller
             );
 
 
-        } catch(Exception $e) {
+        }
+        catch(Exception $e)
+        {
 
 
-            show_error(
-                $e->getMessage()
+            $this->render(
+                'admin/permissions/edit',
+                [
+
+                    'title'=>'Edit Permission',
+
+
+                    'permission'=>
+                    $this->permissionservice
+                    ->getPermission($id),
+
+
+
+                    'errors'=>[
+
+                        'code'=>
+                        $e->getMessage()
+
+                    ]
+
+                ]
             );
 
 
@@ -268,20 +394,26 @@ class Permissions extends MY_Controller
     }
 
 
-
-
-
-
-
     public function delete($id)
     {
 
 
-        try {
+        try
+        {
 
 
-            $this->Permission_service
-                ->delete($id);
+            $this->permissionservice
+                ->delete(
+                    $id
+                );
+
+
+
+            $this->session
+                ->set_flashdata(
+                    'success',
+                    'Permission deleted successfully.'
+                );
 
 
 
@@ -290,18 +422,19 @@ class Permissions extends MY_Controller
             );
 
 
-        } catch(Exception $e) {
-
+        }
+        catch(Exception $e)
+        {
 
             show_error(
                 $e->getMessage()
             );
 
-
         }
 
 
     }
+
 
 
 }

@@ -8,19 +8,22 @@ class Role_model extends CI_Model
     protected $table = 'roles';
 
 
+
     public function getAll()
     {
         return $this->db
+ 
             ->get($this->table)
             ->result();
     }
 
 
 
+
     public function find($id)
     {
         return $this->db
-            ->where('id', $id)
+            ->where('id',$id)
             ->get($this->table)
             ->row();
     }
@@ -28,22 +31,35 @@ class Role_model extends CI_Model
 
 
 
-    public function existsName($name, $ignoreId = null)
+
+    public function existsName(
+        $name,
+        $ignoreId = null
+    )
     {
 
         $this->db
-            ->where('name', $name);
+            ->where('name',$name);
 
 
-        if($ignoreId)
+
+        if($ignoreId !== null)
         {
+
             $this->db
-                ->where('id !=', $ignoreId);
+                ->where(
+                    'id !=',
+                    $ignoreId
+                );
+
         }
 
 
+
         return $this->db
-            ->count_all_results($this->table) > 0;
+            ->count_all_results(
+                $this->table
+            ) > 0;
 
     }
 
@@ -66,11 +82,17 @@ class Role_model extends CI_Model
 
 
 
-    public function update($id, $data)
+    public function update(
+        $id,
+        $data
+    )
     {
 
         return $this->db
-            ->where('id', $id)
+            ->where(
+                'id',
+                $id
+            )
             ->update(
                 $this->table,
                 $data
@@ -86,7 +108,10 @@ class Role_model extends CI_Model
     {
 
         return $this->db
-            ->where('id', $id)
+            ->where(
+                'id',
+                $id
+            )
             ->delete(
                 $this->table
             );
