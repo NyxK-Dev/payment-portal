@@ -53,8 +53,8 @@ class Register extends MY_Controller
         $activeLookup = $this->db
             ->select('lookups.id')
             ->from('lookups')
-            ->join('lookup_groups', 'lookup_groups.id = lookups.group_id')
-            ->where('lookup_groups.code', 'user_status')
+            ->join('lookupgroups', 'lookupgroups.id = lookups.group_id')
+            ->where('lookupgroups.code', 'user_status')
             ->where('lookups.code', 'active')
             ->get()
             ->row();

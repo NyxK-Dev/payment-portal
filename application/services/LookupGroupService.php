@@ -1,58 +1,42 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+require_once APPPATH . 'interfaces/LookupGroupRepositoryInterface.php';
+require_once APPPATH . 'repositories/LookupGroupRepository.php';
 
 class LookupGroupService
 {
-
-    protected $CI;
-
+    protected $repository;
 
     public function __construct()
     {
-        $this->CI =& get_instance();
+        $CI =& get_instance();
+        $CI->load->model('LookupGroup_model');
 
-        $this->CI->load->model(
-            'LookupGroup_model'
-        );
+        $this->repository = new LookupGroupRepository($CI->LookupGroup_model);
     }
+
     public function getAll()
     {
-        return $this->CI
-            ->LookupGroup_model
-            ->getAll();
+        return $this->repository->getAll();
     }
 
-
-    public function create($data)
+    public function find($id)
     {
-
-        $data['created_at'] =
-            date('Y-m-d H:i:s');
-
-
-        return $this->CI
-            ->LookupGroup_model
-            ->create($data);
-
+        return $this->repository->find($id);
     }
 
-
-
-    public function update($id,$data)
+    public function create(array $data)
     {
+        $data['created_at'] = date('Y-m-d H:i:s');
 
-        $data['updated_at'] =
-            date('Y-m-d H:i:s');
-
-
-        return $this->CI
-            ->LookupGroup_model
-            ->update(
-                $id,
-                $data
-            );
-
+        return $this->repository->create($data);
     }
 
+    public function update($id, array $data)
+    {
+        $data['updated_at'] = date('Y-m-d H:i:s');
+
+        return $this->repository->update($id, $data);
+    }
 }
