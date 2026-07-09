@@ -28,8 +28,34 @@ $route['register/store'] = 'Auth/Register/store';
 
 /*
 |--------------------------------------------------------------------------
+| Products Routes
+|--------------------------------------------------------------------------
+*/
+
+
+$route['admin/products'] = 'Admin/Products/index';
+
+$route['admin/products/create'] = 'Admin/Products/create';
+
+$route['admin/products/store'] = 'Admin/Products/store';
+
+$route['admin/products/edit/(:num)'] 
+    = 'Admin/Products/edit/$1';
+
+$route['admin/products/update/(:num)']
+    = 'Admin/Products/update/$1';
+
+$route['admin/products/show/(:num)']
+    ='Admin/Products/show/$1';
+
+$route['admin/products/delete/(:num)']
+    = 'Admin/Products/destroy/$1';
+
+/*
+|--------------------------------------------------------------------------
 | Reserved Routes
 |--------------------------------------------------------------------------
 */
+
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
