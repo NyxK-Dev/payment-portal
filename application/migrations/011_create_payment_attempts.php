@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Migration_Create_email_logs extends CI_Migration
+class Migration_Create_payment_attempts extends CI_Migration
 {
     public function up()
     {
@@ -12,20 +12,35 @@ class Migration_Create_email_logs extends CI_Migration
                 'unsigned' => TRUE,
                 'auto_increment' => TRUE,
             ],
-            'user_id' => [
+            'payment_id' => [
                 'type' => 'BIGINT',
                 'constraint' => 20,
                 'unsigned' => TRUE,
+                'null' => FALSE,
+            ],
+            'attempt_no' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'null' => FALSE,
+            ],
+            'provider' => [
+                'type' => 'VARCHAR',
+                'constraint' => 50,
                 'null' => TRUE,
             ],
-            'email_to' => [
+            'stripe_session_id' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
                 'null' => TRUE,
             ],
-            'subject' => [
+            'payment_intent_id' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
+                'null' => TRUE,
+            ],
+            'amount' => [
+                'type' => 'DECIMAL',
+                'constraint' => '12,2',
                 'null' => TRUE,
             ],
             'status_lookup_id' => [
@@ -34,34 +49,40 @@ class Migration_Create_email_logs extends CI_Migration
                 'unsigned' => TRUE,
                 'null' => TRUE,
             ],
-            'response' => [
+            'failure_reason' => [
                 'type' => 'TEXT',
                 'null' => TRUE,
             ],
-            'sent_at' => [
+            'created_at' => [
+                'type' => 'DATETIME',
+                'null' => TRUE,
+            ],
+            'updated_at' => [
                 'type' => 'DATETIME',
                 'null' => TRUE,
             ],
         ]);
 
         $this->dbforge->add_key('id', TRUE);
-        $this->dbforge->add_key('user_id');
-        $this->dbforge->add_key('status_lookup_id');
+        $this->dbforge->create_table('payment_attempts');
 
-        $this->dbforge->create_table('email_logs');
         $this->db->query("
-    ALTER TABLE email_logs
-    ADD CONSTRAINT fk_email_logs_user
-    FOREIGN KEY(user_id)
-    REFERENCES users(id)
+            ALTER TABLE payment_attempts
+            ADD UNIQUE KEY uq_payment_attempt (payment_id, attempt_no)
+        ");
+        $this->db->query("
+    ALTER TABLE payment_attempts
+    ADD CONSTRAINT fk_payment_attempts_payment
+    FOREIGN KEY(payment_id)
+    REFERENCES payments(id)
     ON UPDATE CASCADE
-    ON DELETE SET NULL
+    ON DELETE CASCADE
 ");
 
 
 $this->db->query("
-    ALTER TABLE email_logs
-    ADD CONSTRAINT fk_email_logs_status_lookup
+    ALTER TABLE payment_attempts
+    ADD CONSTRAINT fk_payment_attempts_status_lookup
     FOREIGN KEY(status_lookup_id)
     REFERENCES lookups(id)
     ON UPDATE CASCADE
@@ -71,6 +92,6 @@ $this->db->query("
 
     public function down()
     {
-        $this->dbforge->drop_table('email_logs');
+        $this->dbforge->drop_table('payment_attempts');
     }
 }

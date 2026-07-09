@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Migration_Create_email_logs extends CI_Migration
+class Migration_Create_orders extends CI_Migration
 {
     public function up()
     {
@@ -16,17 +16,12 @@ class Migration_Create_email_logs extends CI_Migration
                 'type' => 'BIGINT',
                 'constraint' => 20,
                 'unsigned' => TRUE,
-                'null' => TRUE,
+                'null' => FALSE,
             ],
-            'email_to' => [
+            'order_no' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => TRUE,
-            ],
-            'subject' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => TRUE,
+                'constraint' => 100,
+                'null' => FALSE,
             ],
             'status_lookup_id' => [
                 'type' => 'BIGINT',
@@ -34,34 +29,46 @@ class Migration_Create_email_logs extends CI_Migration
                 'unsigned' => TRUE,
                 'null' => TRUE,
             ],
-            'response' => [
-                'type' => 'TEXT',
+            'total_amount' => [
+                'type' => 'DECIMAL',
+                'constraint' => '12,2',
+                'null' => FALSE,
+            ],
+            'version' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'default' => 1,
+            ],
+            'created_at' => [
+                'type' => 'DATETIME',
                 'null' => TRUE,
             ],
-            'sent_at' => [
+            'updated_at' => [
                 'type' => 'DATETIME',
                 'null' => TRUE,
             ],
         ]);
 
         $this->dbforge->add_key('id', TRUE);
+        $this->dbforge->add_key('order_no', FALSE, TRUE);
         $this->dbforge->add_key('user_id');
         $this->dbforge->add_key('status_lookup_id');
 
-        $this->dbforge->create_table('email_logs');
+        $this->dbforge->create_table('orders');
+
         $this->db->query("
-    ALTER TABLE email_logs
-    ADD CONSTRAINT fk_email_logs_user
+    ALTER TABLE orders
+    ADD CONSTRAINT fk_orders_user
     FOREIGN KEY(user_id)
     REFERENCES users(id)
     ON UPDATE CASCADE
-    ON DELETE SET NULL
+    ON DELETE RESTRICT
 ");
 
 
 $this->db->query("
-    ALTER TABLE email_logs
-    ADD CONSTRAINT fk_email_logs_status_lookup
+    ALTER TABLE orders
+    ADD CONSTRAINT fk_orders_status_lookup
     FOREIGN KEY(status_lookup_id)
     REFERENCES lookups(id)
     ON UPDATE CASCADE
@@ -71,6 +78,6 @@ $this->db->query("
 
     public function down()
     {
-        $this->dbforge->drop_table('email_logs');
+        $this->dbforge->drop_table('orders');
     }
 }

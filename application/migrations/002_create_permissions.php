@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Migration_Create_roles extends CI_Migration
+class Migration_Create_permissions extends CI_Migration
 {
     public function up()
     {
@@ -12,14 +12,18 @@ class Migration_Create_roles extends CI_Migration
                 'unsigned' => TRUE,
                 'auto_increment' => TRUE,
             ],
+            'code' => [
+                'type' => 'VARCHAR',
+                'constraint' => 100,
+                'null' => FALSE,
+            ],
             'name' => [
                 'type' => 'VARCHAR',
-                'constraint' => 50,
+                'constraint' => 255,
                 'null' => FALSE,
             ],
             'description' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255,
+                'type' => 'TEXT',
                 'null' => TRUE,
             ],
             'created_at' => [
@@ -33,13 +37,13 @@ class Migration_Create_roles extends CI_Migration
         ]);
 
         $this->dbforge->add_key('id', TRUE);
-        $this->dbforge->add_key('name', FALSE, TRUE);
+        $this->dbforge->add_key('code', FALSE, TRUE);
 
-        $this->dbforge->create_table('roles');
+        $this->dbforge->create_table('permissions');
     }
 
     public function down()
     {
-        $this->dbforge->drop_table('roles');
+        $this->dbforge->drop_table('permissions');
     }
 }

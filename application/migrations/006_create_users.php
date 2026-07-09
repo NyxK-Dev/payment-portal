@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Migration_Create_email_logs extends CI_Migration
+class Migration_Create_users extends CI_Migration
 {
     public function up()
     {
@@ -12,21 +12,26 @@ class Migration_Create_email_logs extends CI_Migration
                 'unsigned' => TRUE,
                 'auto_increment' => TRUE,
             ],
-            'user_id' => [
+            'role_id' => [
                 'type' => 'BIGINT',
                 'constraint' => 20,
                 'unsigned' => TRUE,
-                'null' => TRUE,
+                'null' => FALSE,
             ],
-            'email_to' => [
+            'name' => [
+                'type' => 'VARCHAR',
+                'constraint' => 150,
+                'null' => FALSE,
+            ],
+            'email' => [
+                'type' => 'VARCHAR',
+                'constraint' => 150,
+                'null' => FALSE,
+            ],
+            'password' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
-                'null' => TRUE,
-            ],
-            'subject' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => TRUE,
+                'null' => FALSE,
             ],
             'status_lookup_id' => [
                 'type' => 'BIGINT',
@@ -34,43 +39,56 @@ class Migration_Create_email_logs extends CI_Migration
                 'unsigned' => TRUE,
                 'null' => TRUE,
             ],
-            'response' => [
-                'type' => 'TEXT',
+            'last_login_at' => [
+                'type' => 'DATETIME',
                 'null' => TRUE,
             ],
-            'sent_at' => [
+            'created_at' => [
+                'type' => 'DATETIME',
+                'null' => TRUE,
+            ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => TRUE,
+            ],
+            'deleted_at' => [
                 'type' => 'DATETIME',
                 'null' => TRUE,
             ],
         ]);
 
         $this->dbforge->add_key('id', TRUE);
-        $this->dbforge->add_key('user_id');
+        $this->dbforge->add_key('role_id');
         $this->dbforge->add_key('status_lookup_id');
+        $this->dbforge->add_key('email', FALSE, TRUE);
 
-        $this->dbforge->create_table('email_logs');
+        $this->dbforge->create_table('users');
+
+         // Foreign Key
+
         $this->db->query("
-    ALTER TABLE email_logs
-    ADD CONSTRAINT fk_email_logs_user
-    FOREIGN KEY(user_id)
-    REFERENCES users(id)
+    ALTER TABLE users
+    ADD CONSTRAINT fk_users_role
+    FOREIGN KEY(role_id)
+    REFERENCES roles(id)
     ON UPDATE CASCADE
-    ON DELETE SET NULL
+    ON DELETE RESTRICT
 ");
 
 
 $this->db->query("
-    ALTER TABLE email_logs
-    ADD CONSTRAINT fk_email_logs_status_lookup
+    ALTER TABLE users
+    ADD CONSTRAINT fk_users_status_lookup
     FOREIGN KEY(status_lookup_id)
     REFERENCES lookups(id)
     ON UPDATE CASCADE
     ON DELETE SET NULL
 ");
+
     }
 
     public function down()
     {
-        $this->dbforge->drop_table('email_logs');
+        $this->dbforge->drop_table('users');
     }
 }

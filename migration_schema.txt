@@ -1,0 +1,907 @@
+FILE: 001_create_roles.php
+TABLE: roles
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: name
+    type => 'VARCHAR'
+    constraint => 50
+    null => FALSE
+  FIELD: description
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+---
+FILE: 002_create_permissions.php
+TABLE: permissions
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: code
+    type => 'VARCHAR'
+    constraint => 100
+    null => FALSE
+  FIELD: name
+    type => 'VARCHAR'
+    constraint => 255
+    null => FALSE
+  FIELD: description
+    type => 'TEXT'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+---
+FILE: 003_create_role_permissions.php
+TABLE: role_permissions
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: role_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: permission_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: role_id
+  KEY: permission_id
+---
+FILE: 004_create_lookup_groups.php
+TABLE: lookup_groups
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: code
+    type => 'VARCHAR'
+    constraint => 100
+    null => FALSE
+  FIELD: name
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: description
+    type => 'TEXT'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+---
+FILE: 005_create_lookups.php
+TABLE: lookups
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: group_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: code
+    type => 'VARCHAR'
+    constraint => 100
+    null => TRUE
+  FIELD: value
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: description
+    type => 'TEXT'
+    null => TRUE
+  FIELD: sort_order
+    type => 'INT'
+    constraint => 11
+    default => 0
+  FIELD: is_active
+    type => 'TINYINT'
+    constraint => 1
+    default => 1
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: group_id
+---
+FILE: 006_create_users.php
+TABLE: users
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: role_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: name
+    type => 'VARCHAR'
+    constraint => 150
+    null => FALSE
+  FIELD: email
+    type => 'VARCHAR'
+    constraint => 150
+    null => FALSE
+  FIELD: password
+    type => 'VARCHAR'
+    constraint => 255
+    null => FALSE
+  FIELD: status_lookup_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: last_login_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: deleted_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: role_id
+  KEY: status_lookup_id
+---
+FILE: 007_create_products.php
+TABLE: products
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: category_lookup_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: status_lookup_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: name
+    type => 'VARCHAR'
+    constraint => 255
+    null => FALSE
+  FIELD: description
+    type => 'TEXT'
+    null => TRUE
+  FIELD: sku
+    type => 'VARCHAR'
+    constraint => 100
+    null => TRUE
+  FIELD: price
+    type => 'DECIMAL'
+    constraint => '12
+    null => FALSE
+  FIELD: stock_qty
+    type => 'INT'
+    constraint => 11
+    default => 0
+  FIELD: version
+    type => 'INT'
+    constraint => 11
+    default => 1
+  FIELD: created_by
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: deleted_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: category_lookup_id
+  KEY: status_lookup_id
+  KEY: created_by
+---
+FILE: 008_create_orders.php
+TABLE: orders
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: user_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: order_no
+    type => 'VARCHAR'
+    constraint => 100
+    null => FALSE
+  FIELD: status_lookup_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: total_amount
+    type => 'DECIMAL'
+    constraint => '12
+    null => FALSE
+  FIELD: version
+    type => 'INT'
+    constraint => 11
+    default => 1
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: user_id
+  KEY: status_lookup_id
+---
+FILE: 009_create_order_items.php
+TABLE: order_items
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: order_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: product_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: quantity
+    type => 'INT'
+    constraint => 11
+    null => FALSE
+  FIELD: unit_price
+    type => 'DECIMAL'
+    constraint => '12
+    null => FALSE
+  FIELD: subtotal
+    type => 'DECIMAL'
+    constraint => '12
+    null => FALSE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: order_id
+  KEY: product_id
+---
+FILE: 010_create_payments.php
+TABLE: payments
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: order_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: payment_no
+    type => 'VARCHAR'
+    constraint => 100
+    null => FALSE
+  FIELD: amount
+    type => 'DECIMAL'
+    constraint => '12
+    null => FALSE
+  FIELD: currency
+    type => 'VARCHAR'
+    constraint => 10
+    default => 'USD'
+    null => FALSE
+  FIELD: payment_method
+    type => 'VARCHAR'
+    constraint => 50
+    null => TRUE
+  FIELD: status_lookup_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: version
+    type => 'INT'
+    constraint => 11
+    default => 1
+    null => FALSE
+  FIELD: failure_reason
+    type => 'TEXT'
+    null => TRUE
+  FIELD: paid_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: order_id
+  KEY: status_lookup_id
+---
+FILE: 011_create_payment_attempts.php
+TABLE: payment_attempts
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: payment_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: attempt_no
+    type => 'INT'
+    constraint => 11
+    null => FALSE
+  FIELD: provider
+    type => 'VARCHAR'
+    constraint => 50
+    null => TRUE
+  FIELD: stripe_session_id
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: payment_intent_id
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: amount
+    type => 'DECIMAL'
+    constraint => '12
+    null => TRUE
+  FIELD: status_lookup_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: failure_reason
+    type => 'TEXT'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+---
+FILE: 012_create_stripe_webhook_events.php
+TABLE: stripe_webhook_events
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: event_id
+    type => 'VARCHAR'
+    constraint => 255
+    null => FALSE
+  FIELD: event_type
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: processed
+    type => 'TINYINT'
+    constraint => 1
+    default => 0
+  FIELD: retry_count
+    type => 'INT'
+    constraint => 11
+    default => 0
+  FIELD: processing_started_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: processing_completed_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: error_message
+    type => 'TEXT'
+    null => TRUE
+  FIELD: payload
+    type => 'TEXT'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: processed_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: processed
+  KEY: event_type
+---
+FILE: 013_create_stripe_transactions.php
+TABLE: stripe_transactions
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: payment_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: payment_attempt_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: webhook_event_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: provider
+    type => 'VARCHAR'
+    constraint => 50
+    default => 'stripe'
+  FIELD: stripe_session_id
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: payment_intent_id
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: charge_id
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: currency
+    type => 'VARCHAR'
+    constraint => 10
+    null => TRUE
+  FIELD: amount
+    type => 'DECIMAL'
+    constraint => '12
+    null => TRUE
+  FIELD: provider_status
+    type => 'VARCHAR'
+    constraint => 50
+    null => TRUE
+  FIELD: raw_payload
+    type => 'TEXT'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: payment_id
+  KEY: payment_attempt_id
+  KEY: webhook_event_id
+  KEY: payment_intent_id
+  KEY: stripe_session_id
+  KEY: charge_id
+---
+FILE: 014_create_payment_events.php
+TABLE: payment_events
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: payment_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: event_type
+    type => 'VARCHAR'
+    constraint => 100
+    null => TRUE
+  FIELD: event_source
+    type => 'VARCHAR'
+    constraint => 50
+    null => TRUE
+  FIELD: payload
+    type => 'TEXT'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: payment_id
+  KEY: event_type
+---
+FILE: 015_create_idempotency_keys.php
+TABLE: idempotency_keys
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: user_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: idempotency_key
+    type => 'VARCHAR'
+    constraint => 255
+    null => FALSE
+  FIELD: request_hash
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: response_data
+    type => 'TEXT'
+    null => TRUE
+  FIELD: expires_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: user_id
+---
+FILE: 016_create_refunds.php
+TABLE: refunds
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: payment_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: refund_no
+    type => 'VARCHAR'
+    constraint => 100
+    null => FALSE
+  FIELD: stripe_refund_id
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: amount
+    type => 'DECIMAL'
+    constraint => '12
+    null => FALSE
+  FIELD: reason
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: status_lookup_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: refunded_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: created_by
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: approved_by
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: approved_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: payment_id
+  KEY: status_lookup_id
+  KEY: created_by
+  KEY: approved_by
+---
+FILE: 017_create_invoices.php
+TABLE: invoices
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: order_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: invoice_no
+    type => 'VARCHAR'
+    constraint => 100
+    null => FALSE
+  FIELD: amount
+    type => 'DECIMAL'
+    constraint => '12
+    null => FALSE
+  FIELD: status_lookup_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: issued_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: issued_by
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: status_lookup_id
+  KEY: issued_by
+---
+FILE: 018_create_receipts.php
+TABLE: receipts
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: invoice_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: receipt_no
+    type => 'VARCHAR'
+    constraint => 100
+    null => FALSE
+  FIELD: amount
+    type => 'DECIMAL'
+    constraint => '12
+    null => FALSE
+  FIELD: status_lookup_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: issued_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: issued_by
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: status_lookup_id
+  KEY: issued_by
+---
+FILE: 019_create_api_tokens.php
+TABLE: api_tokens
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: user_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => FALSE
+  FIELD: token_hash
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: expires_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: last_used_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: user_id
+---
+FILE: 020_create_audit_logs.php
+TABLE: audit_logs
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: user_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: action
+    type => 'VARCHAR'
+    constraint => 100
+    null => TRUE
+  FIELD: entity_type
+    type => 'VARCHAR'
+    constraint => 100
+    null => TRUE
+  FIELD: entity_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: old_data
+    type => 'JSON'
+    null => TRUE
+  FIELD: new_data
+    type => 'JSON'
+    null => TRUE
+  FIELD: ip_address
+    type => 'VARCHAR'
+    constraint => 100
+    null => TRUE
+  FIELD: user_agent
+    type => 'TEXT'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: user_id
+  KEY: entity_type
+  KEY: entity_id
+  KEY: action
+---
+FILE: 021_create_activity_logs.php
+TABLE: activity_logs
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: user_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: activity_type
+    type => 'VARCHAR'
+    constraint => 100
+    null => TRUE
+  FIELD: description
+    type => 'TEXT'
+    null => TRUE
+  FIELD: ip_address
+    type => 'VARCHAR'
+    constraint => 100
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: user_id
+  KEY: activity_type
+---
+FILE: 022_create_settings.php
+TABLE: settings
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: setting_key
+    type => 'VARCHAR'
+    constraint => 255
+    null => FALSE
+  FIELD: setting_value
+    type => 'TEXT'
+    null => TRUE
+  FIELD: description
+    type => 'TEXT'
+    null => TRUE
+  FIELD: created_at
+    type => 'DATETIME'
+    null => TRUE
+  FIELD: updated_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+---
+FILE: 023_create_email_logs.php
+TABLE: email_logs
+  FIELD: id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    auto_increment => TRUE
+  FIELD: user_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: email_to
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: subject
+    type => 'VARCHAR'
+    constraint => 255
+    null => TRUE
+  FIELD: status_lookup_id
+    type => 'BIGINT'
+    constraint => 20
+    unsigned => TRUE
+    null => TRUE
+  FIELD: response
+    type => 'TEXT'
+    null => TRUE
+  FIELD: sent_at
+    type => 'DATETIME'
+    null => TRUE
+  KEY: id (PK)
+  KEY: user_id
+  KEY: status_lookup_id
+---
