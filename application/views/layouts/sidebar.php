@@ -241,8 +241,7 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/lookup_groups'); ?>"
-                                class="nav-link <?= (current_url() == site_url('admin/lookup_groups')) ? 'active' : ''; ?>">
+                            <a href="<?= site_url('admin/lookupgroups'); ?>" class="nav-link <?= (strpos(current_url(), 'admin/lookupgroups') !== false) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
                                 <p>Lookup Groups</p>
                             </a>
