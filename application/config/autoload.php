@@ -139,4 +139,9 @@ $autoload['language'] = array();
 |
 |	$autoload['model'] = array('first_model' => 'first');
 */
-$autoload['model'] = array();
+// $autoload['model'] = array();
+$autoload['model'] = array(
+    'User_model',
+    'Role_model',
+    'Permission_model'
+);

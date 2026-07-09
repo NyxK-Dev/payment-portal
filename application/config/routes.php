@@ -54,8 +54,95 @@ $route['admin/lookups/delete/(:num)']
     = 'Admin/Lookups/delete/$1';
 /*
 |--------------------------------------------------------------------------
+| Products Routes
+|--------------------------------------------------------------------------
+*/
+
+
+$route['admin/products'] = 'Admin/Products/index';
+
+$route['admin/products/create'] = 'Admin/Products/create';
+
+$route['admin/products/store'] = 'Admin/Products/store';
+
+$route['admin/products/edit/(:num)'] 
+    = 'Admin/Products/edit/$1';
+
+$route['admin/products/update/(:num)']
+    = 'Admin/Products/update/$1';
+
+$route['admin/products/show/(:num)']
+    ='Admin/Products/show/$1';
+
+$route['admin/products/delete/(:num)']
+    = 'Admin/Products/destroy/$1';
+
+/*
+|--------------------------------------------------------------------------
 | Reserved Routes
 |--------------------------------------------------------------------------
 */
+
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
+
+//roles
+$route['admin/roles']
+    =
+    'admin/Roles/index';
+
+
+$route['admin/roles/create']
+    =
+    'admin/Roles/create';
+
+
+$route['admin/roles/store']
+    =
+    'admin/Roles/store';
+
+
+$route['admin/roles/edit/(:num)']
+    =
+    'admin/Roles/edit/$1';
+
+
+$route['admin/roles/update/(:num)']
+    =
+    'admin/Roles/update/$1';
+
+
+$route['admin/roles/delete/(:num)']
+    =
+    'admin/Roles/delete/$1';
+
+// Permissions
+
+$route['admin/permissions']
+=
+'admin/Permissions/index';
+
+
+$route['admin/permissions/create']
+=
+'admin/Permissions/create';
+
+
+$route['admin/permissions/store']
+=
+'admin/Permissions/store';
+
+
+$route['admin/permissions/edit/(:num)']
+=
+'admin/Permissions/edit/$1';
+
+
+$route['admin/permissions/update/(:num)']
+=
+'admin/Permissions/update/$1';
+
+
+$route['admin/permissions/delete/(:num)']
+=
+'admin/Permissions/delete/$1';
