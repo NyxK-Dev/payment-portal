@@ -5,9 +5,15 @@ $currentValue = set_value(
 );
 ?>
 
-<select name="<?= $name; ?>" class="form-control">
+<?php if (!empty($label)): ?>
+    <label class="form-label">
+        <?= html_escape($label); ?>
+    </label>
+<?php endif; ?>
 
-    <option value="">Select</option>
+<select name="<?= $name; ?>" class="form-control mb-3">
+
+    <option value="">Select <?= html_escape($label ?? 'Option'); ?></option>
 
     <?php foreach ($options as $option): ?>
         <option
@@ -19,3 +25,9 @@ $currentValue = set_value(
     <?php endforeach; ?>
 
 </select>
+
+<?php if (form_error($name)): ?>
+    <small class="text-danger">
+        <?= form_error($name); ?>
+    </small>
+<?php endif; ?>

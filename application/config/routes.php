@@ -155,3 +155,18 @@ $route['admin/permissions/delete/(:num)']
 
 // Audit Logs
 $route['admin/audit-logs'] = 'Admin/AuditLogs/index';
+
+
+
+
+//User Payment
+$route['webhooks/stripe'] = 'webhooks/stripe/index';
+
+$route['checkout'] =
+    'user/checkout/index';
+
+$route['checkout/placeOrder'] =
+    'user/checkout/placeOrder';
+
+$route['payment/success'] = 'User/Payment/success';
+$route['payment/cancel']  = 'User/Payment/cancel';
