@@ -13,7 +13,7 @@ class Products extends MY_Controller
 
         $this->load->service('Product_Service');
 
-        $this->load->request('Product_Request');
+        $this->load->library('RequestValidator');
 
         $this->load->repository('Product_Repository');
     }
@@ -56,47 +56,48 @@ class Products extends MY_Controller
     }
 
     public function store()
-    {
-        if (!$this->product_request->validateCreate()) {
+{
+    if (!$this->requestvalidator->validate('Product', 'create')) {
 
-            $data = $this->product_service
-                ->getCreateData();
+        $data = $this->product_service
+            ->getCreateData();
 
-            $data = array_merge(
-                $data,
-                $this->product_request->errors()
-            );
+        $data['errors'] = $this->requestvalidator->errors();
 
-            $data['title'] = 'Create Product';
-            $data['page_heading'] = 'Create Product';
-            $data['page_description'] = 'Add a new product';
-            $data['breadcrumbs'] = [
-                'Home' => '',
-                'Products' => site_url('admin/products'),
-                'Create' => NULL,
-            ];
+        $data['title'] = 'Create Product';
+        $data['page_heading'] = 'Create Product';
+        $data['page_description'] = 'Add a new product';
 
-            $this->render(
-                'admin/products/create',
-                $data
-            );
+        $data['breadcrumbs'] = [
+            'Home' => '',
+            'Products' => site_url('admin/products'),
+            'Create' => NULL,
+        ];
 
-            return;
+        $this->render(
+            'admin/products/create',
+            $data
+        );
 
-        }
-        $request = $this->product_request
-            ->data();
-
-        $userId = $this->session->userdata('user_id');
-
-
-
-        $this->product_service->create($request, $userId);
-
-        redirect('admin/products');
-
+        return;
     }
 
+
+    $request = $this->input->post();
+
+
+    $userId = $this->session->userdata('user_id');
+
+
+    $this->product_service
+        ->create(
+            $request,
+            $userId
+        );
+
+
+    redirect('admin/products');
+}
 
 
     public function edit($id)
@@ -118,41 +119,54 @@ class Products extends MY_Controller
     }
 
     public function update($id)
-    {
-        if (!$this->product_request->validateUpdate()) {
-            $data = $this->product_service
-                ->getCreateData();
+{
+    if (!$this->requestvalidator->validate('Product', 'update')) {
 
-            $data['product'] =
-                $this->product_repository->find($id);
+        $data = $this->product_service
+            ->getCreateData();
 
-            $data = array_merge(
-                $data,
-                $this->product_request->errors()
-            );
 
-            $data['title'] = 'Edit Product';
-            $data['page_heading'] = 'Edit Product';
-            $data['page_description'] = 'Update product information';
-            $data['breadcrumbs'] = [
-                'Home' => '',
-                'Products' => site_url('admin/products'),
-                'Edit' => NULL,
-            ];
+        $data['product'] =
+            $this->product_repository->find($id);
 
-            $this->render(
-                'admin/products/edit',
-                $data
-            );
 
-            return;
-        }
-        $request = $this->product_request->data();
+        $data['errors'] =
+            $this->requestvalidator->errors();
 
-        $this->product_service->update($id, $request);
 
-        redirect('admin/products');
+        $data['title'] = 'Edit Product';
+        $data['page_heading'] = 'Edit Product';
+        $data['page_description'] = 'Update product information';
+
+
+        $data['breadcrumbs'] = [
+            'Home' => '',
+            'Products' => site_url('admin/products'),
+            'Edit' => NULL,
+        ];
+
+
+        $this->render(
+            'admin/products/edit',
+            $data
+        );
+
+        return;
     }
+
+
+    $request = $this->input->post();
+
+
+    $this->product_service
+        ->update(
+            $id,
+            $request
+        );
+
+
+    redirect('admin/products');
+}
 
     public function show($id)
     {

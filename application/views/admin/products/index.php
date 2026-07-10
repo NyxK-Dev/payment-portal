@@ -30,7 +30,7 @@
                 <th>Price</th>
                 <th>Stock</th>
                 <th>Status</th>
-                <th width="180">
+                <th width="200">
                     Action
                 </th>
             </tr>
