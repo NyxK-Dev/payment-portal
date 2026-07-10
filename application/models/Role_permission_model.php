@@ -1,16 +1,11 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 class Role_permission_model extends CI_Model
 {
 
     protected $table = 'role_permissions';
-
-
-
-
-
 
     public function getAll()
     {
@@ -39,14 +34,7 @@ class Role_permission_model extends CI_Model
 
             ->get()
             ->result();
-
     }
-
-
-
-
-
-
 
 
     public function insert($data)
@@ -57,15 +45,7 @@ class Role_permission_model extends CI_Model
                 $this->table,
                 $data
             );
-
     }
-
-
-
-
-
-
-
 
     public function deleteByRole($role_id)
     {
@@ -78,15 +58,7 @@ class Role_permission_model extends CI_Model
             ->delete(
                 $this->table
             );
-
     }
-
-
-
-
-
-
-
 
     public function getPermissionIdsByRole($role_id)
     {
@@ -106,8 +78,26 @@ class Role_permission_model extends CI_Model
             $result,
             'permission_id'
         );
-
     }
 
 
+    public function hasPermission($role_id, $permission)
+    {
+        return $this->db
+            ->select('permissions.id')
+            ->from('role_permissions')
+            ->join(
+                'permissions',
+                'permissions.id = role_permissions.permission_id'
+            )
+            ->where(
+                'role_permissions.role_id',
+                $role_id
+            )
+            ->where(
+                'permissions.code',
+                $permission
+            )
+            ->count_all_results() > 0;
+    }
 }

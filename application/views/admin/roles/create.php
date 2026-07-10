@@ -38,9 +38,6 @@
         </div>
 
 
-
-
-
         <div class="card-body">
 
 
@@ -56,12 +53,6 @@
                     type="hidden"
                     name="<?= $this->security->get_csrf_token_name(); ?>"
                     value="<?= $this->security->get_csrf_hash(); ?>">
-
-
-
-
-
-
 
                 <!-- Role Name -->
 
@@ -107,12 +98,6 @@
 
 
                 </div>
-
-
-
-
-
-
 
                 <!-- Description -->
 

@@ -6,6 +6,23 @@ class MY_Controller extends CI_Controller
     public function __construct()
     {
         parent::__construct();
+           $this->load->library('auth');
+
+        //    if (!empty($this->permission)) {
+        //     $this->auth->deny($this->permission);
+        // }
+        $this->load->model('Permission_model');
+
+        // Get current controller name
+        $controller = strtolower($this->router->fetch_class());
+
+        // Generate permission code
+        $permission = 'manage_' . $controller;
+
+        // Only check if the permission exists
+        if ($this->Permission_model->exists($permission)) {
+            $this->auth->deny($permission);
+        }
     }
 
     protected function render($content, $data = array())

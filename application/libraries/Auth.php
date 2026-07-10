@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class Auth
 {
@@ -7,7 +7,11 @@ class Auth
 
     public function __construct()
     {
-        $this->CI =& get_instance();
+        $this->CI = &get_instance();
+
+        $this->CI->load->service(
+            'RolePermissionService'
+        );
     }
 
     public function login($user)
@@ -16,6 +20,7 @@ class Auth
             'user_id' => (int) $user->id,
             'user_name' => $user->name,
             'user_email' => $user->email,
+            'role_id' => (int) $user->role_id,
             'role_name' => $user->role_name,
             'logged_in' => TRUE,
         ));
@@ -27,9 +32,11 @@ class Auth
             'user_id',
             'user_name',
             'user_email',
+            'role_id',
             'role_name',
             'logged_in',
         ));
+
         $this->CI->session->sess_regenerate(TRUE);
     }
 
@@ -48,6 +55,13 @@ class Auth
         return $this->CI->session->userdata('role_name');
     }
 
+    public function roleId()
+    {
+        return $this->CI
+            ->session
+            ->userdata('role_id');
+    }
+
     public function isAdmin()
     {
         return $this->role() === 'admin';
@@ -56,5 +70,25 @@ class Auth
     public function isCustomer()
     {
         return $this->role() === 'customer';
+    }
+
+   public function can($permission)
+{
+    return $this->CI
+        ->rolepermissionservice
+        ->hasPermission(
+            $this->roleId(),
+            $permission
+        );
+}
+    public function deny($permission)
+    {
+
+        if (!$this->can($permission)) {
+            show_error(
+                'Unauthorized Access',
+                403
+            );
+        }
     }
 }

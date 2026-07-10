@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 class Permission_model extends CI_Model
@@ -20,7 +20,7 @@ class Permission_model extends CI_Model
     public function find($id)
     {
         return $this->db
-            ->where('id',$id)
+            ->where('id', $id)
             ->get($this->table)
             ->row();
     }
@@ -31,19 +31,17 @@ class Permission_model extends CI_Model
     {
 
         $this->db
-            ->where('code',$code);
+            ->where('code', $code);
 
 
-        if($ignoreId)
-        {
+        if ($ignoreId) {
             $this->db
-                ->where('id !=',$ignoreId);
+                ->where('id !=', $ignoreId);
         }
 
 
         return $this->db
             ->count_all_results($this->table) > 0;
-
     }
 
 
@@ -59,30 +57,31 @@ class Permission_model extends CI_Model
 
 
 
-    public function update($id,$data)
+    public function update($id, $data)
     {
 
         return $this->db
-            ->where('id',$id)
+            ->where('id', $id)
             ->update(
                 $this->table,
                 $data
             );
-
     }
-
-
 
     public function delete($id)
     {
 
         return $this->db
-            ->where('id',$id)
+            ->where('id', $id)
             ->delete(
                 $this->table
             );
-
     }
 
-
+    public function exists($code)
+    {
+        return $this->db
+            ->where('code', $code)
+            ->count_all_results('permissions') > 0;
+    }
 }
