@@ -64,12 +64,7 @@ foreach ($lines as $line)
 		$value = substr($value, 1, -1);
 	}
 
-	// Do not overwrite variables already supplied by the OS/container.
-	if (getenv($name) !== FALSE)
-	{
-		continue;
-	}
-
+	// Always ensure the environment variables defined in .env are loaded.
 	putenv($name . '=' . $value);
 	$_ENV[$name] = $value;
 	$_SERVER[$name] = $value;
