@@ -28,39 +28,67 @@
 
         <ul class="navbar-nav ms-auto">
 
-            <li class="nav-item">
+    <?php
+$cart = $this->session->userdata('cart') ?? [];
 
-                <span class="nav-link">
+$cartCount = count($cart);
+?>
 
-                    <i class="fas fa-user-circle me-1"></i>
+<li class="nav-item ">
 
-                    <?= html_escape($this->session->userdata('user_name')); ?>
+    <a class="nav-link position-relative"
+   href="<?= site_url('user/cart'); ?>">
 
-                    <span class="badge bg-primary ms-1">
+    <i class="fas fa-shopping-cart"></i>
 
-                        <?= html_escape($this->session->userdata('role_name')); ?>
+    <?php if ($cartCount > 0): ?>
+        <span class="position-absolute badge rounded-pill bg-danger"
+              style="
+                  top: 2px;
+                  right: -4px;
+                  font-size: 0.6rem;
+                  padding: 0.2em 0.4em;
+              ">
+            <?= $cartCount; ?>
+        </span>
+    <?php endif; ?>
 
-                    </span>
+</a>
 
-                </span>
+</li>
 
-            </li>
+    <li class="nav-item">
 
-            <li class="nav-item">
+        <span class="nav-link">
 
-                <a class="nav-link text-danger"
+            <i class="fas fa-user-circle me-1"></i>
 
-                    href="<?= site_url('logout'); ?>">
+            <?= html_escape($this->session->userdata('user_name')); ?>
 
-                    <i class="fas fa-sign-out-alt"></i>
+            <span class="badge bg-primary ms-1">
 
-                    Logout
+                <?= html_escape($this->session->userdata('role_name')); ?>
 
-                </a>
+            </span>
 
-            </li>
+        </span>
 
-        </ul>
+    </li>
+
+    <li class="nav-item">
+
+        <a class="nav-link text-danger"
+           href="<?= site_url('logout'); ?>">
+
+            <i class="fas fa-sign-out-alt"></i>
+
+            Logout
+
+        </a>
+
+    </li>
+
+</ul>
 
     </div>
 

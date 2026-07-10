@@ -77,6 +77,12 @@ $route['admin/products/show/(:num)']
 $route['admin/products/delete/(:num)']
     = 'Admin/Products/destroy/$1';
 
+
+
+$route['products'] = 'User/Products/index';
+
+$route['products/(:num)']
+    = 'User/Products/show/$1';
 /*
 |--------------------------------------------------------------------------
 | Reserved Routes
