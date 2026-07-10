@@ -1,12 +1,12 @@
-<nav class="app-header navbar navbar-expand bg-body">
+<nav class="app-header navbar navbar-expand-lg bg-body border-bottom">
 
     <div class="container-fluid">
 
-        <ul class="navbar-nav">
+        <ul class="navbar-nav flex-row align-items-center">
 
             <li class="nav-item">
 
-                <a class="nav-link" data-lte-toggle="sidebar" href="#">
+                <a class="nav-link d-flex align-items-center" data-lte-toggle="sidebar" href="#" aria-label="Toggle sidebar">
 
                     <i class="fas fa-bars"></i>
 
@@ -16,9 +16,15 @@
 
             <li class="nav-item">
 
-                <span class="nav-link fw-semibold">
+                <span class="nav-link fw-semibold d-none d-sm-inline">
 
                     Payment Portal
+
+                </span>
+
+                <span class="nav-link fw-semibold d-sm-none">
+
+                    PP
 
                 </span>
 
@@ -26,18 +32,18 @@
 
         </ul>
 
-        <ul class="navbar-nav ms-auto">
+        <ul class="navbar-nav ms-auto flex-wrap align-items-center justify-content-end gap-2">
 
     <?php
 $cart = $this->session->userdata('cart') ?? [];
 
-$cartCount = count($cart);
-?>
+                <span class="nav-link d-flex align-items-center text-truncate">
 
 <li class="nav-item ">
 
-    <a class="nav-link position-relative"
-   href="<?= site_url('user/cart'); ?>">
+                    <span class="d-none d-md-inline">
+                        <?= html_escape($this->session->userdata('user_name')); ?>
+                    </span>
 
     <i class="fas fa-shopping-cart"></i>
 
@@ -61,13 +67,13 @@ $cartCount = count($cart);
 
         <span class="nav-link">
 
-            <i class="fas fa-user-circle me-1"></i>
+                <a class="nav-link text-danger d-flex align-items-center"
 
             <?= html_escape($this->session->userdata('user_name')); ?>
 
             <span class="badge bg-primary ms-1">
 
-                <?= html_escape($this->session->userdata('role_name')); ?>
+                    <span class="ms-1 d-none d-sm-inline">Logout</span>
 
             </span>
 
