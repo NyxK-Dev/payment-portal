@@ -51,13 +51,13 @@ class Register extends MY_Controller
         $now = date('Y-m-d H:i:s');
 
         $activeLookup = $this->db
-            ->select('lookups.id')
-            ->from('lookups')
-            ->join('lookupgroups', 'lookupgroups.id = lookups.group_id')
-            ->where('lookupgroups.code', 'user_status')
-            ->where('lookups.code', 'active')
-            ->get()
-            ->row();
+    ->select('lookups.id')
+    ->from('lookups')
+    ->join('lookup_groups', 'lookup_groups.id = lookups.group_id')
+    ->where('lookup_groups.code', 'user_status')
+    ->where('lookups.code', 'active')
+    ->get()
+    ->row();
 
         $userId = $this->User_model->create(array(
             'role_id' => $role->id,
