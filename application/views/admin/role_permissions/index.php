@@ -97,17 +97,13 @@
 
 
 
-                          <button 
-    class="btn btn-warning btn-sm change-role"
-    data-id="<?= $user->id ?>"
-    data-name="<?= $user->name ?>"
-    data-role="<?= $user->role_id ?>"
-    data-bs-toggle="modal"
-    data-bs-target="#roleModal">
+                            <a href="<?= site_url('admin/role_permissions/delete_role/' . $item->role_id); ?>"
+                                class="btn btn-danger btn-sm"
+                                onclick="return confirm('Are you sure?')">
 
-    Change Role
+                                Delete
 
-</button>
+                            </a>
 
 
                         </td>
