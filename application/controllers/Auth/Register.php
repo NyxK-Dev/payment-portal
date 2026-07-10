@@ -140,6 +140,6 @@ class Register extends MY_Controller
             return redirect('admin/users');
         }
 
-        return redirect('login');
+        return redirect('user/products');
     }
 }
