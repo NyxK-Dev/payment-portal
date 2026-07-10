@@ -11,7 +11,7 @@
         <div class="card-tools">
 
             <a href="<?= base_url('admin/lookupgroups/create'); ?>"
-               class="btn btn-primary btn-sm">
+                class="btn btn-primary btn-sm">
 
                 Add Lookup Group
 
@@ -54,54 +54,47 @@
             <tbody>
 
 
-            <?php foreach($lookupgroups as $item): ?>
+                <?php foreach ($lookupgroups as $item): ?>
 
 
-                <tr>
+                    <tr>
 
-                    <td>
-                        <?= $item->id; ?>
-                    </td>
-
-
-                    <td>
-                        <?= html_escape($item->code); ?>
-                    </td>
+                        <td>
+                            <?= $item->id; ?>
+                        </td>
 
 
-                    <td>
-                        <?= html_escape($item->name); ?>
-                    </td>
+                        <td>
+                            <?= html_escape($item->code); ?>
+                        </td>
 
 
-                    <td>
-                        <?= html_escape($item->description); ?>
-                    </td>
+                        <td>
+                            <?= html_escape($item->name); ?>
+                        </td>
 
 
-                    <td>
-                        <?= $item->created_at; ?>
-                    </td>
+                        <td>
+                            <?= html_escape($item->description); ?>
+                        </td>
 
 
-                    <td>
+                        <td>
+                            <?= $item->created_at; ?>
+                        </td>
 
 
-                        <a href="<?= base_url('admin/lookupgroups/edit/'.$item->id); ?>"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
-
-
-                    </td>
+                        <td class="text-nowrap">
+                            <a href="<?= site_url('admin/lookups/' . $item->id); ?>" class="btn btn-info btn-sm mr-1">Manage Values</a>
+                            <a href="<?= site_url('admin/lookupgroups/edit/' . $item->id); ?>" class="btn btn-warning btn-sm mr-1">Edit</a>
+                            <a href="<?= site_url('admin/lookupgroups/delete/' . $item->id); ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this lookup group?');">Delete</a>
+                        </td>
 
 
-                </tr>
+                    </tr>
 
 
-            <?php endforeach; ?>
+                <?php endforeach; ?>
 
 
             </tbody>

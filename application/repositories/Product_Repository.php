@@ -1,63 +1,112 @@
 <?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
 
 class Product_Repository
 {
-    protected $CI;
+
+    protected $model;
+
 
     public function __construct()
     {
-        $this->CI =& get_instance();
+        $CI =& get_instance();
 
-        $this->CI->load->model('Product_Model' );
+        $CI->load->model('Product_Model');
 
+
+        $this->model = $CI->Product_Model;
     }
 
 
-    public function all($params)
+
+    /**
+     * Get All Products
+     */
+    public function all($params = [])
     {
-        return $this->CI ->Product_Model ->findAll($params);
-
+        return $this->model
+            ->findAll($params);
     }
 
+
+
+    /**
+     * Find Product
+     */
     public function find($id)
     {
-        return $this->CI ->Product_Model ->find($id);
-
+        return $this->model
+            ->find($id);
     }
 
+
+
+    /**
+     * Create Product
+     */
     public function create($data)
     {
-        return $this->CI ->Product_Model ->insert($data);
-
+        return $this->model
+            ->insert($data);
     }
 
-    public function update($id,$data)
+
+
+    /**
+     * Update Product
+     */
+    public function update($id, $data)
     {
-        return $this->CI  ->Product_Model
-                    ->update(
-                        $id,
-                        $data
-                    );
-
+        return $this->model
+            ->update(
+                $id,
+                $data
+            );
     }
 
 
 
+    /**
+     * Delete Product
+     */
     public function delete($id)
     {
-
-        return $this->CI
-                    ->Product_Model
-                    ->softDelete($id);
-
+        return $this->model
+            ->softDelete($id);
     }
 
-    public function getLookupsByGroup($groupCode)
-{
-    return $this->CI
-        ->Product_Model
-        ->getLookupsByGroup($groupCode);
-}
 
+
+    /**
+     * Lookup Data
+     */
+    public function getLookupsByGroup($groupCode)
+    {
+        return $this->model
+            ->getLookupsByGroup($groupCode);
+    }
+
+
+
+    /**
+     * Active Products
+     */
+    public function getActiveProducts($keyword = null)
+    {
+        return $this->model
+            ->getActiveProducts($keyword);
+    }
+
+
+
+    /**
+     * Find Active Product
+     */
+    public function findActiveProduct($id)
+    {
+        return $this->model
+            ->findActiveProduct($id);
+    }
 
 }

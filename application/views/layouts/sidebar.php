@@ -195,8 +195,7 @@
 
                 <!-- System Logs & Configuration -->
                 <li class="nav-header-premium">System</li>
-                <li
-                    class="nav-item <?= (strpos(current_url(), 'admin/audit_logs') !== false || strpos(current_url(), 'admin/activity_logs') !== false || strpos(current_url(), 'admin/email_logs') !== false) ? 'menu-open' : ''; ?>">
+                <li class="nav-item <?= (strpos(current_url(), 'admin/audit_logs') !== false || strpos(current_url(), 'admin/activity_logs') !== false || strpos(current_url(), 'admin/email_logs') !== false) ? 'menu-open' : ''; ?>">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-shield-alt"></i>
                         <p>
@@ -205,23 +204,30 @@
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
+                        <?php
+                        // Detect current active URI segments to apply the active highlight dynamically
+                        $current_segment = $this->uri->segment(2);
+                        ?>
+
+                        <!-- Add this block inside your sidebar <ul> navigation list -->
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/audit_logs'); ?>"
-                                class="nav-link <?= (current_url() == site_url('admin/audit_logs')) ? 'active' : ''; ?>">
-                                <i class="fas fa-minus sub-nav-icon"></i>
-                                <p>Audit Logs</p>
+                            <a href="<?= site_url('admin/audit-logs'); ?>"
+                                class="nav-link <?= ($current_segment === 'audit-logs') ? 'active' : ''; ?>">
+                                <i class="nav-icon fas fa-shield-alt text-danger"></i>
+                                <p>
+                                    Audit Logs
+                                    <span class="badge badge-info right">Trails</span>
+                                </p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/activity_logs'); ?>"
-                                class="nav-link <?= (current_url() == site_url('admin/activity_logs')) ? 'active' : ''; ?>">
+                            <a href="<?= site_url('admin/activity_logs'); ?>" class="nav-link <?= (current_url() == site_url('admin/activity_logs')) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
                                 <p>Activity Logs</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/email_logs'); ?>"
-                                class="nav-link <?= (current_url() == site_url('admin/email_logs')) ? 'active' : ''; ?>">
+                            <a href="<?= site_url('admin/email_logs'); ?>" class="nav-link <?= (current_url() == site_url('admin/email_logs')) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
                                 <p>Email Logs</p>
                             </a>
@@ -230,9 +236,8 @@
                 </li>
 
                 <!-- Lookups -->
-                <li
-                    class="nav-item <?= (strpos(current_url(), 'admin/lookup_groups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'menu-open' : ''; ?>">
-                    <a href="#" class="nav-link">
+                <li class="nav-item <?= (strpos(current_url(), 'admin/lookupgroups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'menu-open' : ''; ?>">
+                    <a href="#" class="nav-link <?= (strpos(current_url(), 'admin/lookupgroups') !== false || strpos(current_url(), 'admin/lookups') !== false) ? 'active' : ''; ?>">
                         <i class="nav-icon fas fa-search"></i>
                         <p>
                             Lookups
@@ -247,18 +252,17 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/lookups'); ?>"
-                                class="nav-link <?= (current_url() == site_url('admin/lookups')) ? 'active' : ''; ?>">
+                            <a href="<?= site_url('admin/lookups'); ?>" class="nav-link <?= (strpos(current_url(), 'admin/lookups') !== false) ? 'active' : ''; ?>">
                                 <i class="fas fa-minus sub-nav-icon"></i>
-                                <p>Lookups</p>
+                                <p>Lookup Values</p>
                             </a>
                         </li>
                     </ul>
                 </li>
 
+                <!-- Settings -->
                 <li class="nav-item">
-                    <a href="<?= site_url('admin/settings'); ?>"
-                        class="nav-link <?= (current_url() == site_url('admin/settings')) ? 'active' : ''; ?>">
+                    <a href="<?= site_url('admin/settings'); ?>" class="nav-link <?= (current_url() == site_url('admin/settings')) ? 'active' : ''; ?>">
                         <i class="nav-icon fas fa-sliders-h"></i>
                         <p>Settings</p>
                     </a>

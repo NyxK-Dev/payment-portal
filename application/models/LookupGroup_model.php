@@ -1,15 +1,17 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 class LookupGroup_model extends CI_Model
 {
 
     protected $table = 'lookup_groups';
+
+
     public function getAll()
     {
         return $this->db
-            ->order_by('id','DESC')
+            ->order_by('name', 'ASC')
             ->get($this->table)
             ->result();
     }
@@ -18,7 +20,7 @@ class LookupGroup_model extends CI_Model
     public function find($id)
     {
         return $this->db
-            ->where('id',$id)
+            ->where('id', $id)
             ->get($this->table)
             ->row();
     }
@@ -35,14 +37,21 @@ class LookupGroup_model extends CI_Model
     }
 
 
-    public function update($id,$data)
+    public function update($id, $data)
     {
         return $this->db
-            ->where('id',$id)
+            ->where('id', $id)
             ->update(
                 $this->table,
                 $data
             );
     }
 
+
+    public function delete($id)
+    {
+        return $this->db
+            ->where('id', $id)
+            ->delete($this->table);
+    }
 }
