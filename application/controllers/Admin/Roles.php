@@ -5,11 +5,13 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Roles extends MY_Controller
 {
 
-
     public function __construct()
     {
         parent::__construct();
 
+        // $this->auth->deny(
+        //     'manage_roles'
+        // );
 
         $this->load->library(
             'RequestValidator'
@@ -19,14 +21,26 @@ class Roles extends MY_Controller
         $this->load->service(
             'RoleService'
         );
+        
     }
 
 
 
+// public function index()
+// {
+//     echo "<pre>";
 
+//     var_dump(
+//         $this->auth->can('manage_roles')
+//     );
+
+//     echo "</pre>";
+//     exit;
+// }
 
     public function index()
     {
+        
 
         $data = [
 
@@ -64,12 +78,6 @@ class Roles extends MY_Controller
         );
     }
 
-
-
-
-
-
-
     public function create()
     {
 
@@ -106,11 +114,6 @@ class Roles extends MY_Controller
             ]
         );
     }
-
-
-
-
-
 
 
     public function store()
@@ -267,47 +270,45 @@ class Roles extends MY_Controller
     }
 
 
-   public function update($id)
-{
-
-    if(
-        !$this->requestvalidator
-        ->validate(
-            'Role',
-            'update'
-        )
-    )
+    public function update($id)
     {
 
-        $this->render(
-            'admin/roles/edit',
-            [
+        if (
+            !$this->requestvalidator
+                ->validate(
+                    'Role',
+                    'update'
+                )
+        ) {
 
-                'title' => 'Edit Role',
+            $this->render(
+                'admin/roles/edit',
+                [
 
-
-                'role' =>
-                $this->roleservice
-                ->getRole($id),
-
-
-                'errors' =>
-                $this->form_validation
-                ->error_array()
-
-            ]
-        );
-
-        return;
-
-    }
+                    'title' => 'Edit Role',
 
 
+                    'role' =>
+                    $this->roleservice
+                        ->getRole($id),
 
 
-    $data = [
+                    'errors' =>
+                    $this->form_validation
+                        ->error_array()
 
-        'name' =>
+                ]
+            );
+
+            return;
+        }
+
+
+
+
+        $data = [
+
+            'name' =>
             trim(
                 $this->input->post(
                     'name',
@@ -316,7 +317,7 @@ class Roles extends MY_Controller
             ),
 
 
-        'description' =>
+            'description' =>
             trim(
                 $this->input->post(
                     'description',
@@ -324,69 +325,62 @@ class Roles extends MY_Controller
                 )
             )
 
-    ];
+        ];
 
 
 
 
-    try
-    {
+        try {
 
-        $this->roleservice
-            ->update(
-                $id,
-                $data
+            $this->roleservice
+                ->update(
+                    $id,
+                    $data
+                );
+
+
+            $this->session
+                ->set_flashdata(
+                    'success',
+                    'Role updated successfully.'
+                );
+
+
+            redirect(
+                'admin/roles'
             );
+        } catch (Exception $e) {
+
+            $this->render(
+                'admin/roles/edit',
+                [
+
+                    'title' => 'Edit Role',
 
 
-        $this->session
-            ->set_flashdata(
-                'success',
-                'Role updated successfully.'
-            );
+                    'role' =>
+                    $this->roleservice
+                        ->getRole($id),
 
 
-        redirect(
-            'admin/roles'
-        );
+                    'errors' => [
 
-    }
-    catch(Exception $e)
-    {
+                        'name' =>
+                        $e->getMessage()
 
-        $this->render(
-            'admin/roles/edit',
-            [
-
-                'title' => 'Edit Role',
-
-
-                'role' =>
-                $this->roleservice
-                ->getRole($id),
-
-
-                'errors' => [
-
-                    'name' =>
-                    $e->getMessage()
+                    ]
 
                 ]
-
-            ]
-        );
-
+            );
+        }
     }
 
-}
 
-
-      public function delete($id)
+    public function delete($id)
     {
 
 
-        try
-        {
+        try {
 
 
             $this->roleservice
@@ -407,19 +401,11 @@ class Roles extends MY_Controller
             redirect(
                 'admin/roles'
             );
-
-
-        }
-        catch(Exception $e)
-        {
+        } catch (Exception $e) {
 
             show_error(
                 $e->getMessage()
             );
-
         }
-
-
     }
-   
 }

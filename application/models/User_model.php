@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class User_model extends CI_Model
 {
@@ -63,5 +63,45 @@ class User_model extends CI_Model
             ->where('name', $name)
             ->get('roles')
             ->row();
+    }
+
+    public function getAll()
+    {
+        return $this->db
+            ->select('
+            users.id,
+            users.name,
+            users.email,
+            users.status_lookup_id,
+            users.role_id,
+            users.created_at,
+            roles.name AS role_name
+        ')
+            ->from($this->table)
+            ->join(
+                'roles',
+                'roles.id = users.role_id'
+            )
+            ->where(
+                'users.deleted_at',
+                NULL
+            )
+            ->get()
+            ->result();
+    }
+
+
+
+    public function updateRole($id, $roleId)
+    {
+        return $this->db
+            ->where('id', $id)
+            ->update(
+                'users',
+                [
+                    'role_id' => $roleId,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]
+            );
     }
 }

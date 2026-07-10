@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class RolePermissionRepository
 {
@@ -7,7 +7,7 @@ class RolePermissionRepository
 
     public function __construct()
     {
-        $this->CI =& get_instance();
+        $this->CI = &get_instance();
 
         $this->CI->load->model('Role_permission_model');
     }
@@ -30,5 +30,15 @@ class RolePermissionRepository
     public function getPermissionIdsByRole($role_id)
     {
         return $this->CI->Role_permission_model->getPermissionIdsByRole($role_id);
+    }
+
+    public function hasPermission($role_id, $permission)
+    {
+        return $this->CI
+            ->Role_permission_model
+            ->hasPermission(
+                $role_id,
+                $permission
+            );
     }
 }

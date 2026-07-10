@@ -80,6 +80,30 @@
                 <button type="submit" class="btn btn-primary w-100">Create Account</button>
             <?= form_close(); ?>
 
+                <?php $recaptchaKey = getenv('RECAPTCHA_SITE_KEY') ?: ''; ?>
+                <?php if (!empty($recaptchaKey)): ?>
+                    <script src="https://www.google.com/recaptcha/api.js?render=<?= $recaptchaKey; ?>"></script>
+                    <script>
+                        (function(){
+                            var form = document.querySelector('.js-validate-form');
+                            if (!form) return;
+                            form.addEventListener('submit', function(e){
+                                e.preventDefault();
+                                grecaptcha.ready(function(){
+                                    grecaptcha.execute('<?= $recaptchaKey; ?>', {action: 'register'}).then(function(token){
+                                        var input = document.createElement('input');
+                                        input.type = 'hidden';
+                                        input.name = 'g-recaptcha-response';
+                                        input.value = token;
+                                        form.appendChild(input);
+                                        form.submit();
+                                    });
+                                });
+                            });
+                        })();
+                    </script>
+                <?php endif; ?>
+
             <p class="mb-0 mt-3 text-center">
                 <a href="<?= site_url('login'); ?>">I already have an account</a>
             </p>

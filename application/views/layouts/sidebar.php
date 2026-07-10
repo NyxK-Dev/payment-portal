@@ -204,10 +204,20 @@
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
+                        <?php
+                        // Detect current active URI segments to apply the active highlight dynamically
+                        $current_segment = $this->uri->segment(2);
+                        ?>
+
+                        <!-- Add this block inside your sidebar <ul> navigation list -->
                         <li class="nav-item">
-                            <a href="<?= site_url('admin/audit_logs'); ?>" class="nav-link <?= (current_url() == site_url('admin/audit_logs')) ? 'active' : ''; ?>">
-                                <i class="fas fa-minus sub-nav-icon"></i>
-                                <p>Audit Logs</p>
+                            <a href="<?= site_url('admin/audit-logs'); ?>"
+                                class="nav-link <?= ($current_segment === 'audit-logs') ? 'active' : ''; ?>">
+                                <i class="nav-icon fas fa-shield-alt text-danger"></i>
+                                <p>
+                                    Audit Logs
+                                    <span class="badge badge-info right">Trails</span>
+                                </p>
                             </a>
                         </li>
                         <li class="nav-item">

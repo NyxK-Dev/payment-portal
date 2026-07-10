@@ -65,14 +65,14 @@ $route['admin/products/create'] = 'Admin/Products/create';
 
 $route['admin/products/store'] = 'Admin/Products/store';
 
-$route['admin/products/edit/(:num)'] 
+$route['admin/products/edit/(:num)']
     = 'Admin/Products/edit/$1';
 
 $route['admin/products/update/(:num)']
     = 'Admin/Products/update/$1';
 
 $route['admin/products/show/(:num)']
-    ='Admin/Products/show/$1';
+    = 'Admin/Products/show/$1';
 
 $route['admin/products/delete/(:num)']
     = 'Admin/Products/destroy/$1';
@@ -125,30 +125,33 @@ $route['admin/roles/delete/(:num)']
 // Permissions
 
 $route['admin/permissions']
-=
-'admin/Permissions/index';
+    =
+    'admin/Permissions/index';
 
 
 $route['admin/permissions/create']
-=
-'admin/Permissions/create';
+    =
+    'admin/Permissions/create';
 
 
 $route['admin/permissions/store']
-=
-'admin/Permissions/store';
+    =
+    'admin/Permissions/store';
 
 
 $route['admin/permissions/edit/(:num)']
-=
-'admin/Permissions/edit/$1';
+    =
+    'admin/Permissions/edit/$1';
 
 
 $route['admin/permissions/update/(:num)']
-=
-'admin/Permissions/update/$1';
+    =
+    'admin/Permissions/update/$1';
 
 
 $route['admin/permissions/delete/(:num)']
-=
-'admin/Permissions/delete/$1';
+    =
+    'admin/Permissions/delete/$1';
+
+// Audit Logs
+$route['admin/audit-logs'] = 'Admin/AuditLogs/index';
