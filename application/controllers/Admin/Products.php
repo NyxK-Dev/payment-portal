@@ -28,7 +28,7 @@ class Products extends MY_Controller
             'keyword' => $keyword
         ]);
 
-        $data['title'] = 'Products';
+        $data['title'] = '';
         $data['page_heading'] = 'Products';
         $data['page_description'] = 'Manage products';
         $data['breadcrumbs'] = [
@@ -43,7 +43,7 @@ class Products extends MY_Controller
     {
         $data = $this->product_service->getCreateData();
 
-        $data['title'] = 'Create Product';
+        $data['title'] = '';
         $data['page_heading'] = 'Create Product';
         $data['page_description'] = 'Add a new product';
         $data['breadcrumbs'] = [
@@ -64,7 +64,7 @@ class Products extends MY_Controller
 
         $data['errors'] = $this->requestvalidator->errors();
 
-        $data['title'] = 'Create Product';
+        $data['title'] = '';
         $data['page_heading'] = 'Create Product';
         $data['page_description'] = 'Add a new product';
 
@@ -106,7 +106,7 @@ class Products extends MY_Controller
 
         $data['product'] = $this->product_repository->find($id);
 
-        $data['title'] = 'Edit Product';
+        $data['title'] = '';
         $data['page_heading'] = 'Edit Product';
         $data['page_description'] = 'Update product information';
         $data['breadcrumbs'] = [
@@ -134,7 +134,7 @@ class Products extends MY_Controller
             $this->requestvalidator->errors();
 
 
-        $data['title'] = 'Edit Product';
+        $data['title'] = '';
         $data['page_heading'] = 'Edit Product';
         $data['page_description'] = 'Update product information';
 
@@ -173,7 +173,7 @@ class Products extends MY_Controller
         $product = $this->product_repository->find($id);
 
         $this->render('admin/products/show', [
-            'title' => 'Product Details',
+            'title' => '',
             'page_heading' => 'Product Details',
             'page_description' => 'View product information',
             'breadcrumbs' => [
