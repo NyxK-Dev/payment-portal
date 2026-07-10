@@ -1,12 +1,12 @@
-<nav class="app-header navbar navbar-expand-lg bg-body border-bottom">
+<nav class="app-header navbar navbar-expand bg-body">
 
     <div class="container-fluid">
 
-        <ul class="navbar-nav flex-row align-items-center">
+        <ul class="navbar-nav">
 
             <li class="nav-item">
 
-                <a class="nav-link d-flex align-items-center" data-lte-toggle="sidebar" href="#" aria-label="Toggle sidebar">
+                <a class="nav-link" data-lte-toggle="sidebar" href="#">
 
                     <i class="fas fa-bars"></i>
 
@@ -16,15 +16,9 @@
 
             <li class="nav-item">
 
-                <span class="nav-link fw-semibold d-none d-sm-inline">
+                <span class="nav-link fw-semibold">
 
                     Payment Portal
-
-                </span>
-
-                <span class="nav-link fw-semibold d-sm-none">
-
-                    PP
 
                 </span>
 
@@ -32,18 +26,18 @@
 
         </ul>
 
-        <ul class="navbar-nav ms-auto flex-wrap align-items-center justify-content-end gap-2">
+        <ul class="navbar-nav ms-auto">
 
     <?php
 $cart = $this->session->userdata('cart') ?? [];
 
-                <span class="nav-link d-flex align-items-center text-truncate">
+$cartCount = count($cart);
+?>
 
 <li class="nav-item ">
 
-                    <span class="d-none d-md-inline">
-                        <?= html_escape($this->session->userdata('user_name')); ?>
-                    </span>
+    <a class="nav-link position-relative"
+   href="<?= site_url('user/cart'); ?>">
 
     <i class="fas fa-shopping-cart"></i>
 
@@ -67,13 +61,13 @@ $cart = $this->session->userdata('cart') ?? [];
 
         <span class="nav-link">
 
-                <a class="nav-link text-danger d-flex align-items-center"
+            <i class="fas fa-user-circle me-1"></i>
 
             <?= html_escape($this->session->userdata('user_name')); ?>
 
             <span class="badge bg-primary ms-1">
 
-                    <span class="ms-1 d-none d-sm-inline">Logout</span>
+                <?= html_escape($this->session->userdata('role_name')); ?>
 
             </span>
 
