@@ -14,14 +14,17 @@ class MY_Controller extends CI_Controller
         $this->load->model('Permission_model');
 
         // Get current controller name
-        $controller = strtolower($this->router->fetch_class());
+        $directory = strtolower($this->router->fetch_directory());
 
-        // Generate permission code
-        $permission = 'manage_' . $controller;
+        if ($directory === 'admin') {
 
-        // Only check if the permission exists
-        if ($this->Permission_model->exists($permission)) {
-            $this->auth->deny($permission);
+            $controller = strtolower($this->router->fetch_class());
+
+            $permission = 'manage_' . $controller;
+
+            if ($this->Permission_model->exists($permission)) {
+                $this->auth->deny($permission);
+            }
         }
     }
 
