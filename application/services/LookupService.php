@@ -3,17 +3,72 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 require_once APPPATH . 'interfaces/LookupRepositoryInterface.php';
 require_once APPPATH . 'repositories/LookupRepository.php';
+require_once APPPATH . 'services/BaseService.php';
 
-class LookupService
+class LookupService extends BaseService
 {
-    /**
-     * @var LookupRepositoryInterface
-     */
-    protected $repository;
-
     public function __construct()
     {
-        $this->repository = new LookupRepository();
+        parent::__construct(new LookupRepository(), 'LOOKUP');
+    }
+
+    public function create(array $data)
+    {
+        // Explicit payload compilation
+        $payload = [
+            'group_id'    => $data['group_id'] ?? null,
+            'code'        => $data['code'] ?? null,
+            'value'       => $data['value'] ?? null,
+            'description' => $data['description'] ?? null,
+            'sort_order'  => $data['sort_order'] ?? 0,
+            'is_active'   => $data['is_active'] ?? 1,
+            'created_at'  => date('Y-m-d H:i:s')
+        ];
+
+        $insertId = $this->repository->create($payload);
+
+        if ($insertId) {
+            $this->logAction('CREATE', $insertId, null, $payload);
+        }
+
+        return $insertId;
+    }
+
+    public function update($id, array $data)
+    {
+        $oldRecord = $this->repository->find($id);
+        if (!$oldRecord) return false;
+
+        $payload = [
+            'code'        => $data['code'] ?? $oldRecord->code,
+            'value'       => $data['value'] ?? $oldRecord->value,
+            'description' => $data['description'] ?? $oldRecord->description,
+            'sort_order'  => $data['sort_order'] ?? $oldRecord->sort_order,
+            'is_active'   => $data['is_active'] ?? $oldRecord->is_active,
+            'updated_at'  => date('Y-m-d H:i:s')
+        ];
+
+        $result = $this->repository->update($id, $payload);
+
+        if ($result) {
+            $this->logAction('UPDATE', $id, $oldRecord, $payload);
+        }
+
+        return $result;
+    }
+
+    public function delete($id)
+    {
+        $oldRecord = $this->repository->find($id);
+        if (!$oldRecord) return false;
+
+        $result = $this->repository->delete($id);
+
+        if ($result) {
+            $this->logAction('DELETE', $id, $oldRecord, null);
+        }
+
+        return $result;
     }
 
     public function getByGroup($groupId)
@@ -29,23 +84,6 @@ class LookupService
     public function find($id)
     {
         return $this->repository->find($id);
-    }
-
-    public function create(array $data)
-    {
-        $data['created_at'] = date('Y-m-d H:i:s');
-        return $this->repository->create($data);
-    }
-
-    public function update($id, array $data)
-    {
-        $data['updated_at'] = date('Y-m-d H:i:s');
-        return $this->repository->update($id, $data);
-    }
-
-    public function delete($id)
-    {
-        return $this->repository->delete($id);
     }
 
     public function countByGroup($groupId)
