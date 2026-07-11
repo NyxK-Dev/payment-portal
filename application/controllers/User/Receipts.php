@@ -1,57 +1,123 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class Receipts extends MY_Controller
 {
-    public function index()
+    /**
+     * Logged in customer ID.
+     *
+     * @var int
+     */
+    protected $userId;
+
+    public function __construct()
     {
-        $this->load->library('auth');
-        $this->load->model('Receipt_model');
+        parent::__construct();
 
-        $receipts = $this->Receipt_model->getAllForUser((int) $this->auth->id());
+        // Require authentication
+        if (!$this->session->userdata('user_id')) {
+            redirect('auth/login');
+        }
 
-        $this->render('user/placeholder', array(
-            'title' => 'Receipts',
-            'page_heading' => 'Receipts',
-            'page_description' => empty($receipts)
-                ? 'No receipts yet. Completed purchases will appear here.'
-                : 'You have ' . count($receipts) . ' receipt(s). Open one with /user/receipts/show/{id}.',
-            'breadcrumbs' => array(
-                'Home' => '',
-                'Receipts' => NULL,
-            ),
-        ));
+        $this->userId = (int) $this->session->userdata('user_id');
+
+        $this->load->service('ReceiptService');
+
+        $this->load->library('PdfDocument');
     }
 
     /**
-     * View a single receipt with ownership authorization.
+     * -------------------------------------------------------------
+     * My Receipts
      *
-     * @param int $id
+     * GET:
+     * user/receipts
+     * -------------------------------------------------------------
+     */
+    public function index()
+    {
+        $data = [
+
+            'title' => 'My Receipts',
+
+            'receipts' => $this->receiptservice
+                ->getCustomerReceipts($this->userId)
+
+        ];
+
+        $this->render(
+            'user/receipts/index',
+            $data
+        );
+    }
+
+    /**
+     * -------------------------------------------------------------
+     * Receipt Details
+     *
+     * GET:
+     * user/receipts/show/{id}
+     * -------------------------------------------------------------
      */
     public function show($id)
     {
-        $this->load->model('Receipt_model');
-        $this->load->library('auth');
-
-        if ($this->auth->isAdmin()) {
-            $receipt = $this->Receipt_model->findById((int) $id);
-        } else {
-            $receipt = $this->Receipt_model->findByIdForUser((int) $id, (int) $this->auth->id());
-        }
+        $receipt = $this->receiptservice
+            ->getCustomerReceipt(
+                $id,
+                $this->userId
+            );
 
         if (!$receipt) {
-            $this->deny_resource_access();
-            return;
+            show_404();
         }
 
-        $this->render('user/placeholder', array(
-            'title' => 'Receipt ' . $receipt->receipt_number,
-            'page_heading' => 'Receipt ' . html_escape($receipt->receipt_number),
-            'page_description' => 'Amount: ' . html_escape($receipt->currency) . ' ' . html_escape($receipt->amount),
-            'breadcrumbs' => array(
-                'Home' => 'user/receipts',
-                'Receipt Details' => NULL,
-            ),
-        ));
+        $this->render(
+            'user/receipts/show',
+            [
+
+                'title' => 'Receipt #' . $receipt->receipt_no,
+
+                'receipt' => $receipt
+
+            ]
+        );
+    }
+
+    /**
+     * -------------------------------------------------------------
+     * Download Receipt PDF
+     *
+     * GET:
+     * user/receipts/download/{id}
+     * -------------------------------------------------------------
+     */
+    public function download($id)
+    {
+        $receipt = $this->receiptservice
+            ->getCustomerReceipt(
+                $id,
+                $this->userId
+            );
+
+        if (!$receipt) {
+            show_404();
+        }
+
+        $this->pdfdocument->streamFromView(
+
+            'shared/pdf/receipt',
+
+            [
+
+                'receipt' => $receipt
+
+            ],
+
+            'Receipt-' .
+                $receipt->receipt_no .
+                '.pdf'
+
+        );
     }
 }

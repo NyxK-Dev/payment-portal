@@ -1,57 +1,132 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class Invoices extends MY_Controller
 {
-    public function index()
+    /**
+     * Logged in customer id
+     *
+     * @var int
+     */
+    protected $userId;
+
+    public function __construct()
     {
-        $this->load->library('auth');
-        $this->load->model('Invoice_model');
+        parent::__construct();
 
-        $invoices = $this->Invoice_model->getAllForUser((int) $this->auth->id());
+        // Must be logged in
+        if (!$this->session->userdata('user_id')) {
+            redirect('auth/login');
+        }
 
-        $this->render('user/placeholder', array(
-            'title' => 'Invoices',
-            'page_heading' => 'Invoices',
-            'page_description' => empty($invoices)
-                ? 'No invoices yet. Completed purchases will appear here.'
-                : 'You have ' . count($invoices) . ' invoice(s). Open one with /user/invoices/show/{id}.',
-            'breadcrumbs' => array(
-                'Home' => '',
-                'Invoices' => NULL,
-            ),
-        ));
+        $this->userId = (int) $this->session->userdata('user_id');
+
+        $this->load->service('InvoiceService');
+
+        $this->load->library('PdfDocument');
     }
 
     /**
-     * View a single invoice with ownership authorization.
+     * ---------------------------------------------------------
+     * My Invoices
      *
-     * @param int $id
+     * GET:
+     * user/invoices
+     * ---------------------------------------------------------
+     */
+    public function index()
+    {
+        $data = [
+
+            'title' => 'My Invoices',
+
+            'invoices' =>
+            $this->invoiceservice
+                ->getCustomerInvoices(
+                    $this->userId
+                )
+
+        ];
+
+        $this->render(
+            'user/invoices/index',
+            $data
+        );
+    }
+
+    /**
+     * ---------------------------------------------------------
+     * Invoice Details
+     *
+     * GET:
+     * user/invoices/show/{id}
+     * ---------------------------------------------------------
      */
     public function show($id)
     {
-        $this->load->model('Invoice_model');
-        $this->load->library('auth');
-
-        if ($this->auth->isAdmin()) {
-            $invoice = $this->Invoice_model->findById((int) $id);
-        } else {
-            $invoice = $this->Invoice_model->findByIdForUser((int) $id, (int) $this->auth->id());
-        }
+        $invoice =
+            $this->invoiceservice
+            ->getCustomerInvoice(
+                $id,
+                $this->userId
+            );
 
         if (!$invoice) {
-            $this->deny_resource_access();
-            return;
+            show_404();
         }
 
-        $this->render('user/placeholder', array(
-            'title' => 'Invoice ' . $invoice->invoice_number,
-            'page_heading' => 'Invoice ' . html_escape($invoice->invoice_number),
-            'page_description' => 'Total: ' . html_escape($invoice->currency) . ' ' . html_escape($invoice->total_amount),
-            'breadcrumbs' => array(
-                'Home' => 'user/invoices',
-                'Invoice Details' => NULL,
-            ),
-        ));
+        $this->render(
+            'user/invoices/show',
+            [
+
+                'title' => 'Invoice #' . $invoice->invoice_no,
+
+                'invoice' => $invoice,
+
+                'items' => $invoice->items
+
+            ]
+        );
+    }
+
+    /**
+     * ---------------------------------------------------------
+     * Download Invoice PDF
+     *
+     * GET:
+     * user/invoices/download/{id}
+     * ---------------------------------------------------------
+     */
+    public function download($id)
+    {
+        $invoice =
+            $this->invoiceservice
+            ->getCustomerInvoice(
+                $id,
+                $this->userId
+            );
+
+        if (!$invoice) {
+            show_404();
+        }
+
+        $this->pdfdocument->streamFromView(
+
+            'shared/pdf/invoice',
+
+            [
+
+                'invoice' => $invoice,
+
+                'items' => $invoice->items
+
+            ],
+
+            'Invoice-' .
+                $invoice->invoice_no .
+                '.pdf'
+
+        );
     }
 }

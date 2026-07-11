@@ -27,19 +27,20 @@ class Invoice_model extends CI_Model
     public function getOrderItems($orderId)
     {
         return $this->db
-            ->select('
+            ->select("
             order_items.*,
             products.name AS product_name,
             products.description AS product_description,
-            products.sku
-        ')
+            products.sku,
+            (order_items.quantity * order_items.unit_price) AS line_total
+        ")
             ->from('order_items')
-            ->join('products', 'products.id = order_items.product_id', 'inner')
+            ->join('products', 'products.id = order_items.product_id')
             ->where('order_items.order_id', $orderId)
+            ->order_by('order_items.id')
             ->get()
             ->result();
     }
-
     public function findByInvoiceNo($invoiceNo)
     {
         return $this->db->where('invoice_no', $invoiceNo)->get($this->table)->row();
@@ -102,5 +103,50 @@ class Invoice_model extends CI_Model
     public function delete($id)
     {
         return $this->db->where('id', $id)->delete($this->table);
+    }
+    /**
+     * Get all invoices for a customer.
+     */
+    public function getByUser($userId)
+    {
+        return $this->db
+            ->select("
+            invoices.*,
+            orders.order_no,
+            lookups.code AS status_code,
+            lookups.value AS status_name,
+            lookups.badge_class
+        ")
+            ->from('invoices')
+            ->join('orders', 'orders.id = invoices.order_id')
+            ->join('lookups', 'lookups.id = invoices.status_lookup_id', 'left')
+            ->where('orders.user_id', $userId)
+            ->order_by('invoices.created_at', 'DESC')
+            ->get()
+            ->result();
+    }
+
+    /**
+     * Get one invoice that belongs to a customer.
+     */
+    public function findByUser($invoiceId, $userId)
+    {
+        return $this->db
+            ->select("
+            invoices.*,
+            orders.order_no,
+            users.email AS customer_email,
+            lookups.code AS status_code,
+            lookups.value AS status_name,
+            lookups.badge_class
+        ")
+            ->from('invoices')
+            ->join('orders', 'orders.id = invoices.order_id')
+            ->join('users', 'users.id = orders.user_id')
+            ->join('lookups', 'lookups.id = invoices.status_lookup_id', 'left')
+            ->where('invoices.id', $invoiceId)
+            ->where('orders.user_id', $userId)
+            ->get()
+            ->row();
     }
 }

@@ -7,14 +7,14 @@ class Products extends MY_Controller
     {
         parent::__construct();
 
-        $this->load->repository('Product_Repository');
+        $this->load->repository('ProductRepository');
     }
 
     public function index()
     {
         $keyword = $this->input->get('keyword');
 
-        $products = $this->product_repository
+        $products = $this->productrepository
             ->getActiveProducts($keyword);
 
         $this->render(
@@ -28,7 +28,7 @@ class Products extends MY_Controller
 
     public function show($id)
     {
-        $product = $this->product_repository
+        $product = $this->productrepository
             ->findActiveProduct($id);
 
         if (!$product)

@@ -1,17 +1,5 @@
 <div class="container mt-5">
 
-
-    <div class="d-flex justify-content-between mb-4">
-
-        <h4>
-            Users
-        </h4>
-
-    </div>
-
-
-
-
     <div class="card shadow-sm">
 
 
