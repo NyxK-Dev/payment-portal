@@ -78,9 +78,9 @@ $adminGroups = [
         'label' => 'System',
         'icon'  => 'fa-shield-alt',
         'items' => [
-            [null, 'admin/audit-logs',    'fa-shield-alt', 'Audit Logs'],
-            [null, 'admin/activity_logs', 'fa-history',    'Activity Logs'],
-            [null, 'admin/email_logs',    'fa-envelope',   'Email Logs'],
+            [null, 'admin/auditlogs',    'fa-shield-alt', 'Audit Logs'],
+            [null, 'admin/activitylogs', 'fa-history',    'Activity Logs'],
+            [null, 'admin/emaillogs',    'fa-envelope',   'Email Logs'],
         ],
     ],
     [
@@ -224,10 +224,6 @@ function cx_group_has_active($group)
                     <span class="cx-link__label">My Profile</span>
                 </a>
 
-                <a href="<?= site_url('logout'); ?>" class="cx-link cx-link--danger">
-                    <span class="cx-link__icon"><i class="fas fa-sign-out-alt"></i></span>
-                    <span class="cx-link__label">Logout</span>
-                </a>
 
             <?php endif; ?>
 

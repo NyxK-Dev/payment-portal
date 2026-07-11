@@ -153,12 +153,6 @@ $route['admin/permissions/delete/(:num)']
     =
     'admin/Permissions/delete/$1';
 
-// Audit Logs
-$route['admin/audit-logs'] = 'Admin/AuditLogs/index';
-
-
-
-
 //User Payment
 $route['webhooks/stripe'] = 'webhooks/stripe/index';
 
