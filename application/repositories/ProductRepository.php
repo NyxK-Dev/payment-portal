@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 
-class Product_Repository
+class ProductRepository
 {
 
     protected $model;
@@ -109,4 +109,12 @@ class Product_Repository
             ->findActiveProduct($id);
     }
 
+
+public function decreaseStock($productId, $quantity)
+{
+    return $this->model->decreaseStock(
+        $productId,
+        $quantity
+    );
+}
 }
