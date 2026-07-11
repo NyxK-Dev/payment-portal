@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class UserService
 {
@@ -8,7 +8,7 @@ class UserService
 
     public function __construct()
     {
-        $this->CI =& get_instance();
+        $this->CI = &get_instance();
 
 
         $this->CI->load->repository(
@@ -25,6 +25,11 @@ class UserService
     }
 
 
+    public function getRoleByName($name)
+    {
+        return $this->userRepository
+            ->getRoleByName($name);
+    }
 
     public function getUser($id)
     {
@@ -42,5 +47,4 @@ class UserService
                 $roleId
             );
     }
-
 }

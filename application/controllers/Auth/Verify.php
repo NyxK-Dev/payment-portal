@@ -11,7 +11,7 @@ class Verify extends MY_Controller
 
         $this->load->library('session');
         $this->load->library('auth');
-        $this->load->model('User_model');
+        $this->load->repository('UserRepository');
 
         require_once APPPATH . 'services/Verification_service.php';
         $this->verificationService = new Verification_service();
@@ -24,7 +24,7 @@ class Verify extends MY_Controller
             return;
         }
 
-        $user = $this->User_model->findById($userId);
+        $user = $this->userrepository->findById($userId);
         if (! $user) {
             show_404();
             return;
@@ -61,7 +61,7 @@ class Verify extends MY_Controller
         $this->verificationService->resetAttempts($userId, $this->input->ip_address());
 
         // log the user in
-        $user = $this->User_model->findById($userId);
+        $user = $this->userrepository->findById($userId);
         if ($user) {
             $this->auth->login($user);
         }

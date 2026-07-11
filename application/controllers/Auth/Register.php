@@ -16,7 +16,7 @@ class Register extends MY_Controller
         $this->load->library('email');
         $this->load->library('auth');
         $this->load->helper('form');
-        $this->load->model('User_model');
+        $this->load->repository('UserRepository');
         $this->load->file(APPPATH . 'services/Auth_Service.php', true);
 
         $this->authService = new Auth_service();
@@ -49,7 +49,7 @@ class Register extends MY_Controller
             return $this->redirect_with_validation_errors('register');
         }
 
-        $role = $this->User_model->getRoleByName('customer');
+        $role = $this->userrepository->getRoleByName('customer');
 
         if (!$role) {
             $this->session->set_flashdata('error', 'Customer role is missing. Please run the role migration/seed first.');
@@ -68,7 +68,7 @@ class Register extends MY_Controller
             ->get()
             ->row();
 
-        $userId = $this->User_model->create(array(
+        $userId = $this->userrepository->create(array(
             'role_id' => $role->id,
             'name' => $this->input->post('name', TRUE),
             'email' => $this->input->post('email', TRUE),
@@ -78,7 +78,7 @@ class Register extends MY_Controller
             'updated_at' => $now,
         ));
 
-        $user = $this->User_model->findById($userId);
+        $user = $this->userrepository->findById($userId);
 
         // verify reCAPTCHA if configured
         $recaptchaToken = $this->input->post('g-recaptcha-response', TRUE);
