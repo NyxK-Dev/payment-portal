@@ -6,6 +6,7 @@ class Register extends MY_Controller
     protected $authService;
     protected $recaptchaService;
     protected $verificationService;
+    protected $emailLogService;
 
     public function __construct()
     {
@@ -25,6 +26,11 @@ class Register extends MY_Controller
         require_once APPPATH . 'services/Verification_service.php';
         $this->recaptchaService = new Recaptcha_service();
         $this->verificationService = new Verification_service();
+
+       require_once APPPATH . 'services/EmailLogService.php';
+       $this->emailLogService = new EmailLogService();
+
+        
     }
 
     public function index()
@@ -116,7 +122,13 @@ class Register extends MY_Controller
         $body = $this->load->view('emails/verification', ['code' => $code, 'user' => $user], true);
         $this->email->message($body);
         $this->email->set_mailtype('html');
-        $sent = $this->email->send();
+        // $sent = $this->email->send();
+        $sent = $this->emailLogService->sendHtmlEmail(
+            $user->email,
+            'Verify your email address',
+            $body,
+            $userId
+        );
 
         // Log generated code and email send result in development
         if (getenv('APP_ENV') !== 'production') {
