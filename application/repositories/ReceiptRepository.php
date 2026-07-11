@@ -13,6 +13,12 @@ class ReceiptRepository implements ReceiptRepositoryInterface
         $this->CI->load->model('Receipt_model');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin
+    |--------------------------------------------------------------------------
+    */
+
     public function getAllWithRelations()
     {
         return $this->CI->Receipt_model->getAllWithRelations();
@@ -27,6 +33,28 @@ class ReceiptRepository implements ReceiptRepositoryInterface
     {
         return $this->CI->Receipt_model->findWithRelations($id);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Customer
+    |--------------------------------------------------------------------------
+    */
+
+    public function findByUser($receiptId, $userId)
+    {
+        return $this->CI->Receipt_model->findByUser($receiptId, $userId);
+    }
+
+    public function getByUser($userId)
+    {
+        return $this->CI->Receipt_model->getByUser($userId);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Shared
+    |--------------------------------------------------------------------------
+    */
 
     public function create(array $data)
     {

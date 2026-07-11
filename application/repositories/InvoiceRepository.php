@@ -13,6 +13,12 @@ class InvoiceRepository implements InvoiceRepositoryInterface
         $this->CI->load->model('Invoice_model');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin
+    |--------------------------------------------------------------------------
+    */
+
     public function find($id)
     {
         return $this->CI->Invoice_model->find($id);
@@ -21,10 +27,6 @@ class InvoiceRepository implements InvoiceRepositoryInterface
     public function findByInvoiceNo($invoiceNo)
     {
         return $this->CI->Invoice_model->findByInvoiceNo($invoiceNo);
-    }
-    public function getOrderItems($orderId)
-    {
-        return $this->CI->Invoice_model->getOrderItems($orderId);
     }
 
     public function findByOrderId($orderId)
@@ -35,6 +37,33 @@ class InvoiceRepository implements InvoiceRepositoryInterface
     public function getFilteredInvoices(array $filters)
     {
         return $this->CI->Invoice_model->getFilteredInvoices($filters);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Customer
+    |--------------------------------------------------------------------------
+    */
+
+    public function findByUser($invoiceId, $userId)
+    {
+        return $this->CI->Invoice_model->findByUser($invoiceId, $userId);
+    }
+
+    public function getByUser($userId)
+    {
+        return $this->CI->Invoice_model->getByUser($userId);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Shared
+    |--------------------------------------------------------------------------
+    */
+
+    public function getOrderItems($orderId)
+    {
+        return $this->CI->Invoice_model->getOrderItems($orderId);
     }
 
     public function create(array $data)
