@@ -104,6 +104,9 @@ $customerGroups = [
             ['view_products',     'user/products', 'fa-store',         'Products'],
             ['purchase_products', 'user/cart',      'fa-shopping-cart', 'My Cart'],
             ['purchase_products', 'orders/history', 'fa-shopping-bag', 'My Orders'],
+            [null, 'user/products', 'fa-store',         'Products'],
+            [null, 'user/cart',     'fa-shopping-cart', 'My Cart'],
+            [null, 'user/orders',    'fa-shopping-bag',  'My Orders'],
         ],
     ],
     [
@@ -111,8 +114,8 @@ $customerGroups = [
         'label' => 'Documents',
         'icon'  => 'fa-file-invoice',
         'items' => [
-            ['view_invoices', 'user/invoices', 'fa-file-invoice', 'My Invoices'],
-            ['view_receipts', 'user/receipts', 'fa-receipt',      'My Receipts'],
+            [null, 'user/invoices', 'fa-file-invoice', 'My Invoices'],
+            [null, 'user/receipts', 'fa-receipt',      'My Receipts'],
         ],
     ],
 ];
