@@ -6,6 +6,7 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
-        "predis/predis": "^3.2"
+        "predis/predis": "^3.2",
+        "dompdf/dompdf": "^1.2"
     }
 }

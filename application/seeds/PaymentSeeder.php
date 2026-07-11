@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class PaymentSeeder
 {
@@ -7,7 +7,7 @@ class PaymentSeeder
 
     public function __construct()
     {
-        $this->CI =& get_instance();
+        $this->CI = &get_instance();
         $this->CI->load->database();
     }
 
@@ -30,6 +30,14 @@ class PaymentSeeder
             ->join('lookup_groups', 'lookup_groups.id = lookups.group_id')
             ->where('lookup_groups.code', 'refund_status')
             ->where('lookups.code', 'succeeded')
+            ->get()
+            ->row();
+        $invoiceStatus = $this->CI->db
+            ->select('lookups.id')
+            ->from('lookups')
+            ->join('lookup_groups', 'lookup_groups.id = lookups.group_id')
+            ->where('lookup_groups.code', 'invoice_status')
+            ->where('lookups.code', 'paid')
             ->get()
             ->row();
 
@@ -123,7 +131,7 @@ class PaymentSeeder
             'order_id' => $order->id,
             'invoice_no' => 'INV-20260709-0001',
             'amount' => 179.98,
-            'status_lookup_id' => null,
+            'status_lookup_id' => $invoiceStatus ? $invoiceStatus->id : null,
             'issued_at' => $now,
             'issued_by' => $adminUser->id,
             'created_at' => $now,

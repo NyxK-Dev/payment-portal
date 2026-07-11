@@ -89,4 +89,23 @@ class Lookup_model extends CI_Model
             ->where('group_id', $groupId)
             ->count_all_results($this->table);
     }
+    public function getByGroupCode($groupCode)
+    {
+        return $this->db
+            ->select('
+            lookups.*,
+            lookup_groups.name AS group_name
+        ')
+            ->from($this->table)
+            ->join(
+                'lookup_groups',
+                'lookup_groups.id = lookups.group_id',
+                'inner'
+            )
+            ->where('lookup_groups.code', $groupCode)
+            ->order_by('lookups.sort_order', 'ASC')
+            ->order_by('lookups.value', 'ASC')
+            ->get()
+            ->result();
+    }
 }
