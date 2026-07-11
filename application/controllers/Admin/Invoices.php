@@ -54,7 +54,7 @@ class Invoices extends CI_Controller
         }
 
         $this->pdfdocument->streamFromView(
-            'admin/invoices/printable_pdf',
+            'shared/pdf/invoice',
             [
                 'invoice' => $invoice,
                 'items'   => $invoice->items

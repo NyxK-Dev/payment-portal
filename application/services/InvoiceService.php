@@ -9,20 +9,82 @@ class InvoiceService extends BaseService
 {
     public function __construct()
     {
-        parent::__construct(new InvoiceRepository(), 'INVOICE');
+        parent::__construct(
+            new InvoiceRepository(),
+            'INVOICE'
+        );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin
+    |--------------------------------------------------------------------------
+    */
+
+    public function getFilteredInvoices(array $filters = [])
+    {
+        $invoices = $this->repository->getFilteredInvoices($filters);
+
+        foreach ($invoices as $invoice) {
+            $this->decorateInvoice($invoice);
+        }
+
+        return $invoices;
+    }
+
+    public function getInvoiceDetailsWithItems($id)
+    {
+        $invoice = $this->repository->find($id);
+
+        return $this->buildInvoiceDetails($invoice);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Customer
+    |--------------------------------------------------------------------------
+    */
+
+    public function getCustomerInvoices($userId)
+    {
+        $invoices = $this->repository->getByUser($userId);
+
+        foreach ($invoices as $invoice) {
+            $this->decorateInvoice($invoice);
+        }
+
+        return $invoices;
+    }
+
+    public function getCustomerInvoice($invoiceId, $userId)
+    {
+        $invoice = $this->repository->findByUser(
+            $invoiceId,
+            $userId
+        );
+
+        return $this->buildInvoiceDetails($invoice);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CRUD
+    |--------------------------------------------------------------------------
+    */
 
     public function create(array $data)
     {
         $payload = [
+
             'order_id'         => $data['order_id'],
             'invoice_no'       => $data['invoice_no'],
             'amount'           => $data['amount'],
-            'status_lookup_id' => $data['status_lookup_id'] ?? null,
+            'status_lookup_id' => $data['status_lookup_id'],
             'issued_at'        => $data['issued_at'] ?? date('Y-m-d H:i:s'),
-            'issued_by'        => $data['issued_by'] ?? null,
+            'issued_by'        => $data['issued_by'],
             'created_at'       => date('Y-m-d H:i:s'),
             'updated_at'       => date('Y-m-d H:i:s')
+
         ];
 
         return $this->repository->create($payload);
@@ -30,16 +92,17 @@ class InvoiceService extends BaseService
 
     public function update($id, array $data)
     {
-        $payload = [
-            'status_lookup_id' => $data['status_lookup_id'] ?? null,
-            'amount'           => $data['amount'] ?? null,
-            'updated_at'       => date('Y-m-d H:i:s')
-        ];
+        $payload = [];
 
-        // Clean out nulls so we only update provided fields
-        $payload = array_filter($payload, function ($value) {
-            return !is_null($value);
-        });
+        if (isset($data['amount'])) {
+            $payload['amount'] = $data['amount'];
+        }
+
+        if (isset($data['status_lookup_id'])) {
+            $payload['status_lookup_id'] = $data['status_lookup_id'];
+        }
+
+        $payload['updated_at'] = date('Y-m-d H:i:s');
 
         return $this->repository->update($id, $payload);
     }
@@ -49,56 +112,66 @@ class InvoiceService extends BaseService
         return $this->repository->delete($id);
     }
 
-    public function find($id)
+    /*
+    |--------------------------------------------------------------------------
+    | Shared
+    |--------------------------------------------------------------------------
+    */
+
+    protected function buildInvoiceDetails($invoice)
     {
-        return $this->repository->find($id);
-    }
-
-    public function getFilteredInvoices(array $filters)
-    {
-        $invoices = $this->repository->getFilteredInvoices($filters);
-
-        foreach ($invoices as $invoice) {
-
-            // Default badge if lookup has no badge_class
-            $invoice->badge_class = $invoice->badge_class ?: 'bg-secondary';
-
-            $invoice->formatted_amount = number_format($invoice->amount, 2);
-            $invoice->formatted_created_at = date('Y-m-d H:i', strtotime($invoice->created_at));
-        }
-
-        return $invoices;
-    }
-
-    public function getInvoiceDetailsWithItems($id)
-    {
-        $invoice = $this->repository->find($id);
         if (!$invoice) {
             return null;
         }
 
-        // Securely pull the items via the repository chain
-        $items = $this->repository->getOrderItems($invoice->order_id);
+        $items = $this->repository->getOrderItems(
+            $invoice->order_id
+        );
 
-        $subtotal_aggregate = 0;
+        $subtotal = 0;
 
         foreach ($items as $item) {
-            // Calculate raw line item total (Quantity x Unit Price)
-            $item->line_total = $item->quantity * $item->unit_price;
 
-            // Accumulate total aggregate
-            $subtotal_aggregate += $item->line_total;
+            if (!isset($item->line_total)) {
+                $item->line_total =
+                    $item->quantity *
+                    $item->unit_price;
+            }
 
-            // Formatted properties for view presentation
-            $item->formatted_unit_price = number_format($item->unit_price, 2);
-            $item->formatted_line_total = number_format($item->line_total, 2);
+            $subtotal += $item->line_total;
+
+            $item->formatted_unit_price =
+                number_format($item->unit_price, 2);
+
+            $item->formatted_line_total =
+                number_format($item->line_total, 2);
         }
 
-        // Attach processed data directly to the invoice domain object
         $invoice->items = $items;
-        $invoice->subtotal_aggregate = number_format($subtotal_aggregate, 2);
-        $invoice->formatted_total_due = number_format($invoice->amount, 2);
+
+        $invoice->subtotal_aggregate =
+            number_format($subtotal, 2);
+
+        $invoice->formatted_total_due =
+            number_format($invoice->amount, 2);
+
+        $this->decorateInvoice($invoice);
 
         return $invoice;
+    }
+
+    protected function decorateInvoice(&$invoice)
+    {
+        $invoice->badge_class =
+            $invoice->badge_class ?: 'bg-secondary';
+
+        $invoice->formatted_amount =
+            number_format($invoice->amount, 2);
+
+        $invoice->formatted_created_at =
+            date(
+                'Y-m-d H:i',
+                strtotime($invoice->created_at)
+            );
     }
 }

@@ -2,11 +2,11 @@
 <section class="content pt-4">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-            <a href="<?= site_url('admin/invoices'); ?>" class="text-secondary text-decoration-none small fw-medium d-inline-flex align-items-center">
-                <i class="fas fa-arrow-left me-2 text-muted"></i> Back to Invoices
+            <a href="<?= site_url('user/invoices'); ?>" class="text-secondary text-decoration-none small fw-medium d-inline-flex align-items-center">
+                <i class="fas fa-arrow-left me-2 text-muted"></i> My Invoices
             </a>
             <div>
-                <a href="<?= site_url('admin/invoices/download/' . $invoice->id); ?>" class="btn btn-sm btn-outline-dark px-3 rounded-pill fw-medium" style="font-size: 0.85rem;">
+                <a href="<?= site_url('user/invoices/download/' . $invoice->id); ?>" class="btn btn-sm btn-outline-dark px-3 rounded-pill fw-medium" style="font-size: 0.85rem;">
                     <i class="fas fa-file-pdf me-1"></i> Download PDF
                 </a>
             </div>
