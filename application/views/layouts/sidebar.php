@@ -103,7 +103,7 @@ $customerGroups = [
         'items' => [
             ['view_products',     'user/products', 'fa-store',         'Products'],
             ['purchase_products', 'user/cart',      'fa-shopping-cart', 'My Cart'],
-            ['purchase_products', 'user/orders',    'fa-shopping-bag',  'My Orders'],
+            ['purchase_products', 'orders/history', 'fa-shopping-bag', 'My Orders'],
         ],
     ],
     [
@@ -218,6 +218,11 @@ function cx_group_has_active($group)
                 <?php endforeach; ?>
 
                 <div class="cx-divider"></div>
+
+                <a href="<?= site_url('user/orders/history'); ?>" class="cx-link <?= cx_is_active('profile') ? 'is-active' : ''; ?>">
+                    <span class="cx-link__icon"><i class="fas fa-shopping-bag"></i></span>
+                    <span class="cx-link__label">My Orders</span>
+                </a>
 
                 <a href="<?= site_url('profile'); ?>" class="cx-link <?= cx_is_active('profile') ? 'is-active' : ''; ?>">
                     <span class="cx-link__icon"><i class="fas fa-user-circle"></i></span>

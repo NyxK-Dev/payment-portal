@@ -1,107 +1,31 @@
 <?php
-defined('BASEPATH') or exit('No direct script access allowed');
+defined('BASEPATH') OR exit('No direct script access allowed');
 
-class User_model extends CI_Model
+
+class User_model
 {
-    protected $table = 'users';
+    public $id;
+    public $name;
+    public $email;
+    public $password;
+    public $role_id;
+    public $role_name;
+    public $status_lookup_id;
+    public $created_at;
+    public $updated_at;
+    public $deleted_at;
+    public $last_login_at;
 
-    public function findById($id)
+
+
+    public function __construct(array $data = [])
     {
-        return $this->db
-            ->select('users.*, roles.name AS role_name')
-            ->from($this->table)
-            ->join('roles', 'roles.id = users.role_id')
-            ->where('users.id', $id)
-            ->get()
-            ->row();
-    }
+        foreach ($data as $key => $value) {
 
-    public function findByEmail($email)
-    {
-        return $this->db
-            ->select('users.*, roles.name AS role_name')
-            ->from($this->table)
-            ->join('roles', 'roles.id = users.role_id')
-            ->where('users.email', $email)
-            ->get()
-            ->row();
-    }
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
+            }
 
-    public function create(array $data)
-    {
-        $this->db->insert($this->table, $data);
-
-        return $this->db->insert_id();
-    }
-
-    public function update($id, array $data)
-    {
-        return $this->db
-            ->where('id', $id)
-            ->update($this->table, $data);
-    }
-
-    public function softDelete($id)
-    {
-        return $this->update($id, array(
-            'deleted_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ));
-    }
-
-    public function updateLastLogin($id)
-    {
-        return $this->update($id, array(
-            'last_login_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ));
-    }
-
-    public function getRoleByName($name)
-    {
-        return $this->db
-            ->where('name', $name)
-            ->get('roles')
-            ->row();
-    }
-
-    public function getAll()
-    {
-        return $this->db
-            ->select('
-            users.id,
-            users.name,
-            users.email,
-            users.status_lookup_id,
-            users.role_id,
-            users.created_at,
-            roles.name AS role_name
-        ')
-            ->from($this->table)
-            ->join(
-                'roles',
-                'roles.id = users.role_id'
-            )
-            ->where(
-                'users.deleted_at',
-                NULL
-            )
-            ->get()
-            ->result();
-    }
-
-
-
-    public function updateRole($id, $roleId)
-    {
-        return $this->db
-            ->where('id', $id)
-            ->update(
-                'users',
-                [
-                    'role_id' => $roleId,
-                    'updated_at' => date('Y-m-d H:i:s')
-                ]
-            );
+        }
     }
 }

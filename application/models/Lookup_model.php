@@ -89,4 +89,11 @@ class Lookup_model extends CI_Model
             ->where('group_id', $groupId)
             ->count_all_results($this->table);
     }
+    public function findByCode($code)
+    {
+        return $this->db
+            ->where('code', $code)
+            ->get($this->table)
+            ->row();
+    }
 }

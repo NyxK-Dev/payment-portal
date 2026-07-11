@@ -1,6 +1,6 @@
 <?php
 
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 class OrderService
@@ -12,48 +12,51 @@ class OrderService
     public function __construct()
     {
 
-        $this->CI =& get_instance();
+        $this->CI = &get_instance();
 
 
         $this->CI->load->repository(
-        'OrderRepository'
-    );
+            'OrderRepository'
+        );
 
 
-    $this->CI->load->repository(
-        'OrderItemRepository'
-    );
-
+        $this->CI->load->repository(
+            'OrderItemRepository'
+        );
     }
 
 
 
 
+    public function getAllOrders()
+    {
+        return $this->CI
+            ->orderrepository
+            ->getAll();
+    }
+
     public function createOrder(
         $userId,
         array $cart
-    )
-    {
+    ) {
 
 
         $total = 0;
 
 
-        foreach($cart as $item)
-        {
+        foreach ($cart as $item) {
 
             $total +=
                 $item['price']
                 *
                 $item['quantity'];
-
         }
 
 
 
         $orderNo =
             'ORD-'
-            .date('YmdHis');
+            . date('YmdHis');
 
 
 
@@ -62,17 +65,17 @@ class OrderService
             ->orderrepository
             ->create([
 
-                'user_id'=>$userId,
+                'user_id' => $userId,
 
-                'order_no'=>$orderNo,
+                'order_no' => $orderNo,
 
-                'status_lookup_id'=>1,
+                'status_lookup_id' => 5,
 
-                'total_amount'=>$total,
+                'total_amount' => $total,
 
-                'version'=>1,
+                'version' => 1,
 
-                'created_at'=>date(
+                'created_at' => date(
                     'Y-m-d H:i:s'
                 )
 
@@ -82,57 +85,106 @@ class OrderService
 
 
 
-        $items=[];
+        $items = [];
 
 
-        foreach($cart as $item)
-        {
+        foreach ($cart as $item) {
 
-            $items[]=[
+            $items[] = [
 
-                'order_id'=>$orderId,
+                'order_id' => $orderId,
 
-                'product_id'=>$item['product_id'],
+                'product_id' => $item['product_id'],
 
-                'quantity'=>$item['quantity'],
+                'quantity' => $item['quantity'],
 
-                'unit_price'=>$item['price'],
+                'unit_price' => $item['price'],
 
-                'subtotal'=>
-                    $item['price']
+                'subtotal' =>
+                $item['price']
                     *
                     $item['quantity'],
 
-                'created_at'=>date(
+                'created_at' => date(
                     'Y-m-d H:i:s'
                 )
 
             ];
-
         }
 
 
 
         $this->CI
-        ->orderitemrepository
-        ->createBatch(
-            $items
-        );
+            ->orderitemrepository
+            ->createBatch(
+                $items
+            );
 
 
 
 
         return [
 
-            'id'=>$orderId,
+            'id' => $orderId,
 
-            'order_no'=>$orderNo,
+            'order_no' => $orderNo,
 
-            'total'=>$total
+            'total' => $total
 
         ];
-
     }
 
 
+    public function getOrderHistory($userId, $filters = [])
+    {
+
+
+        $orders = $this->CI
+            ->orderrepository
+            ->getByUser(
+                $userId,
+                $filters
+            );
+
+
+        foreach ($orders as $order) {
+
+            $order->items =
+                $this->CI
+                ->orderitemrepository
+                ->getByOrderId($order->id);
+        }
+
+
+        return $orders;
+    }
+
+    public function getOrderDetail($id)
+    {
+        $order = $this->CI
+            ->orderrepository
+            ->findWithItems($id);
+
+        if ($order) {
+
+            $order->items = $this->CI
+                ->orderitemrepository
+                ->getByOrderId($id);
+        }
+
+        return $order;
+    }
+    public function updateStatus(
+        $id,
+        $statusId
+    ) {
+        return $this->CI
+            ->orderrepository
+            ->update(
+                $id,
+                [
+                    'status_lookup_id' => $statusId
+                ]
+            );
+    }
 }

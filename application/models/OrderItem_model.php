@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class OrderItem_model extends CI_Model
 {
@@ -19,11 +19,31 @@ class OrderItem_model extends CI_Model
         );
     }
 
-    public function getByOrderId($orderId)
+    
+       public function getByOrderId(
+        $orderId
+    )
     {
+
+
         return $this->db
-            ->where('order_id', $orderId)
-            ->get($this->table)
+            ->select('
+                order_items.*,
+                products.name as product_name
+            ')
+            ->from('order_items')
+            ->join(
+                'products',
+                'products.id = order_items.product_id',
+                'left'
+            )
+            ->where(
+                'order_items.order_id',
+                $orderId
+            )
+            ->get()
             ->result();
+
+
     }
 }
