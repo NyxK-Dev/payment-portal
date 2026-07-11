@@ -12,7 +12,9 @@ class Auth_service
     {
         $this->CI =& get_instance();
 
-        $this->CI->load->model('User_model');
+            $this->CI->load->repository(
+            'UserRepository'
+        );
         $this->CI->load->library('auth');
     }
 
@@ -25,7 +27,7 @@ class Auth_service
      */
     public function attempt($email, $password)
     {
-        $user = $this->CI->User_model->findByEmail($email);
+        $user = $this->CI->userrepository->findByEmail($email);
 
         if (!$user) {
             return [
@@ -64,7 +66,7 @@ class Auth_service
             ];
         }
 
-        $this->CI->User_model->updateLastLogin($user->id);
+        $this->CI->userrepository->updateLastLogin($user->id);
 
         $this->CI->auth->login($user);
 

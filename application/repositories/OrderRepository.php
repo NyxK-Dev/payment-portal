@@ -1,6 +1,6 @@
 <?php
 
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class OrderRepository
 {
@@ -8,7 +8,7 @@ class OrderRepository
 
     public function __construct()
     {
-        $this->CI =& get_instance();
+        $this->CI = &get_instance();
 
         $this->CI->load->model('Order_model');
     }
@@ -33,8 +33,26 @@ class OrderRepository
         return $this->CI->Order_model->update($id, $data);
     }
 
-    public function getByUser($userId)
+    public function getByUser($userId, $filters = [])
     {
-        return $this->CI->Order_model->getByUser($userId);
+        return $this->CI
+            ->Order_model
+            ->getByUser(
+                $userId,
+                $filters
+            );
+    }
+    public function getAll()
+    {
+        return $this->CI
+            ->Order_model
+            ->getAll();
+    }
+
+    public function findWithItems($id)
+    {
+        return $this->CI
+            ->Order_model
+            ->findWithItems($id);
     }
 }

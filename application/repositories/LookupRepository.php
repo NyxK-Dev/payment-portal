@@ -47,6 +47,14 @@ class LookupRepository implements LookupRepositoryInterface
     {
         return $this->CI->Lookup_model->countByGroup($groupId);
     }
+    public function findOrderStatusByCode($code)
+    {
+        return $this->CI
+            ->Lookup_model
+            ->findByCode(
+                $code,
+                'order_status'
+            );
     public function getByGroupCode($groupCode)
     {
         return $this->CI->Lookup_model->getByGroupCode($groupCode);
