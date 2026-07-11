@@ -11,7 +11,7 @@ class Verification_service
     public function __construct()
     {
         $this->CI =& get_instance();
-        $this->CI->load->model('User_model');
+        $this->CI->load->repository('UserRepository');
         $this->CI->load->library('email');
 
         $this->repo = new VerificationRepository();
@@ -56,7 +56,7 @@ class Verification_service
         $this->repo->recordResend($userId, $cooldown);
 
         // send email
-        $user = $this->CI->User_model->findById($userId);
+        $user = $this->CI->userrepository->findById($userId);
         if (! $user) return [false, 'no_user'];
 
         $from = getenv('SUPPORT_EMAIL') ?: 'support@example.com';
@@ -124,7 +124,7 @@ class Verification_service
             ->row();
 
         if ($activeLookup) {
-            $this->CI->User_model->update($userId, ['status_lookup_id' => $activeLookup->id, 'updated_at' => date('Y-m-d H:i:s')]);
+            $this->CI->userrepository->update($userId, ['status_lookup_id' => $activeLookup->id, 'updated_at' => date('Y-m-d H:i:s')]);
         }
 
         return true;
