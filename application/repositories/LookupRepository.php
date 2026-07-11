@@ -47,4 +47,8 @@ class LookupRepository implements LookupRepositoryInterface
     {
         return $this->CI->Lookup_model->countByGroup($groupId);
     }
+    public function getByGroupCode($groupCode)
+    {
+        return $this->CI->Lookup_model->getByGroupCode($groupCode);
+    }
 }

@@ -28,6 +28,11 @@ class Migration_Create_lookups extends CI_Migration
                 'constraint' => 255,
                 'null' => TRUE,
             ],
+            'badge_class' => [
+                'type' => 'VARCHAR',
+                'constraint' => 50,
+                'null' => TRUE,
+            ],
             'description' => [
                 'type' => 'TEXT',
                 'null' => TRUE,
