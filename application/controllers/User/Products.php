@@ -20,7 +20,7 @@ class Products extends MY_Controller
         $this->render(
             'user/products/index',
             [
-                'title' => 'Products',
+                'title' => '',
                 'products' => $products
             ]
         );

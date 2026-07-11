@@ -18,7 +18,7 @@ class Cart extends MY_Controller
     $this->render(
         'user/products/cart',
         [
-            'title' => 'Shopping Cart',
+            'title' => '',
             'cart'  => $cart
         ]
     );
@@ -140,7 +140,7 @@ public function decrease($productId)
     }
 
     $this->render(
-        'user/products/checkout',
+        'user/checkout/index',
         [
             'title' => 'Checkout',
             'cart'  => $cart
