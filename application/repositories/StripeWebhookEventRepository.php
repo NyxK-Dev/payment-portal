@@ -2,40 +2,64 @@
 
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+
 class StripeWebhookEventRepository
 {
+
     protected $CI;
+
 
     public function __construct()
     {
+
         $this->CI =& get_instance();
 
+
         $this->CI->load->model(
-            'StripeWebhookEvent_model'
+            'Stripe_webhook_event_model',
+            'stripeWebhookEventModel'
         );
+
     }
 
-    public function create(array $data)
+
+
+    public function existsByEventId($eventId)
     {
-        return $this->CI->StripeWebhookEvent_model
+
+        return $this->CI
+            ->stripeWebhookEventModel
+            ->where(
+                'event_id',
+                $eventId
+            )
+            ->count_all_results() > 0;
+
+    }
+
+
+
+    public function create($data)
+    {
+
+        return $this->CI
+            ->stripeWebhookEventModel
             ->insert($data);
+
     }
 
-    public function find($id)
+
+
+    public function update($id,$data)
     {
-        return $this->CI->StripeWebhookEvent_model
-            ->find($id);
+
+        return $this->CI
+            ->stripeWebhookEventModel
+            ->update(
+                $id,
+                $data
+            );
+
     }
 
-    public function findByEventId($eventId)
-    {
-        return $this->CI->StripeWebhookEvent_model
-            ->findByEventId($eventId);
-    }
-
-    public function markProcessed($id)
-    {
-        return $this->CI->StripeWebhookEvent_model
-            ->markProcessed($id);
-    }
 }
