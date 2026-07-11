@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 /*
 |--------------------------------------------------------------------------
@@ -53,7 +53,7 @@ $config['index_page'] = '';
 |
 | WARNING: If you set this to 'PATH_INFO', URIs will always be URL-decoded!
 */
-$config['uri_protocol']	= 'REQUEST_URI';
+$config['uri_protocol']    = 'REQUEST_URI';
 
 /*
 |--------------------------------------------------------------------------
@@ -79,7 +79,7 @@ $config['url_suffix'] = '';
 | than english.
 |
 */
-$config['language']	= 'english';
+$config['language']    = 'english';
 
 /*
 |--------------------------------------------------------------------------
@@ -139,7 +139,9 @@ $config['subclass_prefix'] = 'MY_';
 | Note: This will NOT disable or override the CodeIgniter-specific
 |	autoloading (application/config/autoload.php)
 */
-$config['composer_autoload'] = TRUE;
+// $config['composer_autoload'] = TRUE;
+$config['composer_autoload'] = FCPATH . 'vendor/autoload.php';
+// $config['composer_autoload'] = FCPATH . '../vendor/autoload.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -226,7 +228,7 @@ $config['allow_get_array'] = TRUE;
 | your log files will fill up very fast.
 |
 */
-$config['log_threshold'] = 0;
+$config['log_threshold'] = 4;
 
 /*
 |--------------------------------------------------------------------------
@@ -410,12 +412,12 @@ $config['sess_regenerate_destroy'] = TRUE;
 |       'cookie_httponly') will also affect sessions.
 |
 */
-$config['cookie_prefix']	= '';
-$config['cookie_domain']	= '';
-$config['cookie_path']		= '/';
-$config['cookie_secure']	= (defined('ENVIRONMENT') && ENVIRONMENT === 'production');
-$config['cookie_httponly'] 	= TRUE;
-$config['cookie_samesite'] 	= 'Lax';
+$config['cookie_prefix']    = '';
+$config['cookie_domain']    = '';
+$config['cookie_path']        = '/';
+$config['cookie_secure']    = (defined('ENVIRONMENT') && ENVIRONMENT === 'production');
+$config['cookie_httponly']     = TRUE;
+$config['cookie_samesite']     = 'Lax';
 
 /*
 |--------------------------------------------------------------------------
@@ -464,7 +466,10 @@ $config['csrf_token_name'] = 'csrf_test_name';
 $config['csrf_cookie_name'] = 'csrf_cookie_name';
 $config['csrf_expire'] = 7200;
 $config['csrf_regenerate'] = TRUE;
-$config['csrf_exclude_uris'] = array('admin/lookupgroups/store');
+$config['csrf_exclude_uris'] = array(
+    'admin/lookupgroups/store',
+    'webhooks/stripe'
+);
 
 /*
 |--------------------------------------------------------------------------

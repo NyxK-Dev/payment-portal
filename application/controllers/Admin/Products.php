@@ -15,7 +15,7 @@ class Products extends MY_Controller
 
         $this->load->library('RequestValidator');
 
-        $this->load->repository('Product_Repository');
+        $this->load->repository('ProductRepository');
     }
 
 
@@ -24,7 +24,7 @@ class Products extends MY_Controller
     {
         $keyword = $this->input->get('keyword');
 
-        $data['products'] = $this->product_repository->all([
+        $data['products'] = $this->productrepository->all([
             'keyword' => $keyword
         ]);
 
@@ -104,7 +104,7 @@ class Products extends MY_Controller
     {
         $data = $this->product_service->getCreateData();
 
-        $data['product'] = $this->product_repository->find($id);
+        $data['product'] = $this->productrepository->find($id);
 
         $data['title'] = '';
         $data['page_heading'] = 'Edit Product';
@@ -127,7 +127,7 @@ class Products extends MY_Controller
 
 
         $data['product'] =
-            $this->product_repository->find($id);
+            $this->productrepository->find($id);
 
 
         $data['errors'] =
@@ -170,7 +170,7 @@ class Products extends MY_Controller
 
     public function show($id)
     {
-        $product = $this->product_repository->find($id);
+        $product = $this->productrepository->find($id);
 
         $this->render('admin/products/show', [
             'title' => '',

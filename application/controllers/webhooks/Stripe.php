@@ -31,213 +31,173 @@ class Stripe extends CI_Controller
 
 
         $this->stripeService =
-            $this->StripeService;
+            $this->stripeservice;
 
 
         $this->paymentService =
-            $this->PaymentService;
+            $this->paymentservice;
 
     }
 
 
 
 
-    public function index()
+public function index()
+{
+    log_message(
+        'error',
+        'WEBHOOK RECEIVED'
+    );
+
+
+    $payload = file_get_contents(
+        'php://input'
+    );
+
+
+    if(!isset($_SERVER['HTTP_STRIPE_SIGNATURE']))
+    {
+        http_response_code(400);
+        echo 'Missing Stripe Signature';
+        return;
+    }
+
+
+    try
     {
 
-        /**
-         * Stripe payload
-         */
-        $payload =
-            file_get_contents(
-                'php://input'
-            );
-
-
-        $signature =
-            $_SERVER[
-                'HTTP_STRIPE_SIGNATURE'
-            ];
-
-
-
-
-        try
-        {
-
-
-            /**
-             * Verify webhook
-             */
-            $event =
-                $this->stripeService
-                     ->constructWebhookEvent(
-                        $payload,
-                        $signature
-                     );
-
-
-
-
-        }
-        catch(Exception $e)
-        {
-
-
-            http_response_code(
-                400
-            );
-
-
-            echo $e->getMessage();
-
-            return;
-
-        }
-
-
-
-
-
-
-        /**
-         * Event ID
-         */
-
-        $eventId =
-            $event->id;
-
-
-
-        /**
-         * Idempotency check
-         */
-
-        if(
-            $this->paymentService
-                ->webhookExists(
-                    $eventId
-                )
-        )
-        {
-
-            http_response_code(
-                200
-            );
-
-            return;
-
-        }
-
-
-
-
-
-
-        /**
-         * Save webhook event
-         */
-
-        $webhookId =
-            $this->paymentService
-                 ->saveWebhookEvent(
-                    $event
+        $event =
+            $this->stripeService
+                 ->constructWebhookEvent(
+                    $payload,
+                    $_SERVER['HTTP_STRIPE_SIGNATURE']
                  );
 
-
-
-
-
-
-        try
-        {
-
-
-            switch(
-                $event->type
-            )
-            {
-
-
-                case
-                'checkout.session.completed':
-
-
-                    $this->paymentService
-                         ->handleSuccessfulPayment(
-                            $event
-                         );
-
-                    break;
-
-
-
-                case
-                'payment_intent.payment_failed':
-
-
-                    $this->paymentService
-                         ->handleFailedPayment(
-                            $event
-                         );
-
-
-                    break;
-
-
-
-                default:
-
-                    log_message(
-                        'info',
-                        'Stripe event ignored: '
-                        .$event->type
-                    );
-
-            }
-
-
-
-
-
-            /**
-             * Mark webhook processed
-             */
-
-            $this->paymentService
-                 ->markWebhookProcessed(
-                    $webhookId
-                 );
-
-
-
-
-
-            http_response_code(
-                200
-            );
-
-
-
-        }
-        catch(Exception $e)
-        {
-
-
-            log_message(
-                'error',
-                $e->getMessage()
-            );
-
-
-            http_response_code(
-                500
-            );
-
-
-        }
 
     }
+    catch(\Exception $e)
+    {
+
+        http_response_code(400);
+
+        log_message(
+            'error',
+            $e->getMessage()
+        );
+
+        echo $e->getMessage();
+
+        return;
+    }
+
+
+
+    log_message(
+        'error',
+        'STRIPE EVENT: '.$event->type
+    );
+
+
+    $eventId = $event->id;
+
+
+
+    if(
+        $this->paymentService
+             ->webhookExists($eventId)
+    )
+    {
+        http_response_code(200);
+        return;
+    }
+
+
+
+    $webhookId =
+        $this->paymentService
+             ->saveWebhookEvent(
+                $event
+             );
+
+
+
+    try
+    {
+
+        switch($event->type)
+{
+
+    case 'checkout.session.completed':
+
+        log_message(
+            'error',
+            'CHECKOUT SESSION COMPLETED RECEIVED'
+        );
+
+        $this->paymentService
+             ->handleSuccessfulPayment(
+                $event,
+                $webhookId
+             );
+
+        break;
+
+
+    case 'payment_intent.payment_failed':
+
+        $this->paymentService
+             ->handleFailedPayment(
+                $event
+             );
+
+        break;
+
+
+    default:
+
+        log_message(
+            'info',
+            'Stripe ignored: '.$event->type
+        );
+
+}
+
+
+
+        $this->paymentService
+             ->markWebhookProcessed(
+                $webhookId
+             );
+
+
+
+        http_response_code(200);
+
+        echo json_encode([
+            'status'=>'success'
+        ]);
+
+    }
+    catch(\Throwable $e)
+    {
+
+        log_message(
+            'error',
+            'WEBHOOK ERROR: '.$e->getMessage()
+        );
+
+
+        log_message(
+            'error',
+            'FILE: '.$e->getFile()
+            .' LINE: '.$e->getLine()
+        );
+
+
+        http_response_code(500);
+
+    }
+}
 
 
 }

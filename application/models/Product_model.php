@@ -252,4 +252,28 @@ class Product_Model extends CI_Model
             ->row();
     }
 
+
+public function decreaseStock($productId, $quantity)
+{
+    $this->db->set(
+        'stock_qty',
+        'stock_qty - ' . (int)$quantity,
+        false
+    );
+
+    $this->db->where(
+        'id',
+        $productId
+    );
+
+    // prevent negative stock
+    $this->db->where(
+        'stock_qty >=',
+        $quantity
+    );
+
+    return $this->db->update(
+        $this->table
+    );
+}
 }

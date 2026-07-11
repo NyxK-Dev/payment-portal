@@ -90,4 +90,8 @@ class LookupService extends BaseService
     {
         return $this->repository->countByGroup($groupId);
     }
+    public function getByGroupCode($groupCode)
+    {
+        return $this->repository->getByGroupCode($groupCode);
+    }
 }

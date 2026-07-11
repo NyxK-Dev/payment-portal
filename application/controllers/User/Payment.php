@@ -19,25 +19,37 @@ class Payment extends MY_Controller
     /**
      * Stripe success URL
      */
+    // public function success()
+    // {
+
+
+    //     $sessionId =
+    //         $this->input
+    //              ->get('session_id');
+
+
+
+    //     $this->render(
+    //         'user/checkout/success',
+    //         [
+    //             'title'=>'Payment Successful',
+    //             'session_id'=>$sessionId
+    //         ]
+    //     );
+
+    // }
     public function success()
-    {
+{
+    // Clear the cart item from session now that they are checking out successfully
+    $this->session->unset_userdata('cart');
+
+    // Render your beautiful success page
+    $this->render('user/checkout/success', [
+        'title' => 'Thank you for your order!'
+    ]);
+}
 
 
-        $sessionId =
-            $this->input
-                 ->get('session_id');
-
-
-
-        $this->render(
-            'user/checkout/success',
-            [
-                'title'=>'Payment Successful',
-                'session_id'=>$sessionId
-            ]
-        );
-
-    }
 
 
 

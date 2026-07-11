@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class LookupSeeder
 {
@@ -7,7 +7,7 @@ class LookupSeeder
 
     public function __construct()
     {
-        $this->CI =& get_instance();
+        $this->CI = &get_instance();
         $this->CI->load->database();
     }
 
@@ -21,9 +21,12 @@ class LookupSeeder
             ['code' => 'order_status', 'name' => 'Order status', 'description' => 'Order lifecycle states'],
             ['code' => 'payment_status', 'name' => 'Payment status', 'description' => 'Payment lifecycle states'],
             ['code' => 'refund_status', 'name' => 'Refund status', 'description' => 'Refund lifecycle states'],
+
+            // NEW
+            ['code' => 'invoice_status', 'name' => 'Invoice status', 'description' => 'Invoice lifecycle states'],
+
             ['code' => 'product_category', 'name' => 'Product category', 'description' => 'Catalog product categories'],
         ];
-
         $this->CI->db->insert_batch('lookup_groups', array_map(function ($group) use ($now) {
             return [
                 'code' => $group['code'],
@@ -60,6 +63,51 @@ class LookupSeeder
             ['group_id' => $groupMap['refund_status'], 'code' => 'cancelled', 'value' => 'Cancelled', 'description' => 'Refund was cancelled', 'sort_order' => 4, 'is_active' => 1],
             ['group_id' => $groupMap['product_category'], 'code' => 'software', 'value' => 'Software', 'description' => 'Software and SaaS products', 'sort_order' => 1, 'is_active' => 1],
             ['group_id' => $groupMap['product_category'], 'code' => 'hardware', 'value' => 'Hardware', 'description' => 'Hardware and physical goods', 'sort_order' => 2, 'is_active' => 1],
+            [
+                'group_id' => $groupMap['invoice_status'],
+                'code' => 'pending',
+                'value' => 'Pending',
+                'badge_class' => 'bg-warning text-dark',
+                'description' => 'Invoice is pending',
+                'sort_order' => 1,
+                'is_active' => 1,
+            ],
+            [
+                'group_id' => $groupMap['invoice_status'],
+                'code' => 'paid',
+                'value' => 'Paid',
+                'badge_class' => 'bg-success',
+                'description' => 'Invoice has been paid',
+                'sort_order' => 2,
+                'is_active' => 1,
+            ],
+            [
+                'group_id' => $groupMap['invoice_status'],
+                'code' => 'partial_paid',
+                'value' => 'Partial Paid',
+                'badge_class' => 'bg-info text-dark',
+                'description' => 'Invoice is partially paid',
+                'sort_order' => 3,
+                'is_active' => 1,
+            ],
+            [
+                'group_id' => $groupMap['invoice_status'],
+                'code' => 'cancelled',
+                'value' => 'Cancelled',
+                'badge_class' => 'bg-dark',
+                'description' => 'Invoice has been cancelled',
+                'sort_order' => 4,
+                'is_active' => 1,
+            ],
+            [
+                'group_id' => $groupMap['invoice_status'],
+                'code' => 'refunded',
+                'value' => 'Refunded',
+                'badge_class' => 'bg-danger',
+                'description' => 'Invoice has been refunded',
+                'sort_order' => 5,
+                'is_active' => 1,
+            ],
         ];
 
         $this->CI->db->insert_batch('lookups', array_map(function ($lookup) use ($now) {
@@ -67,6 +115,7 @@ class LookupSeeder
                 'group_id' => $lookup['group_id'],
                 'code' => $lookup['code'],
                 'value' => $lookup['value'],
+                'badge_class'  => $lookup['badge_class'] ?? null,
                 'description' => $lookup['description'],
                 'sort_order' => $lookup['sort_order'],
                 'is_active' => $lookup['is_active'],

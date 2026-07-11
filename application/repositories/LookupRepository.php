@@ -55,5 +55,8 @@ class LookupRepository implements LookupRepositoryInterface
                 $code,
                 'order_status'
             );
+    public function getByGroupCode($groupCode)
+    {
+        return $this->CI->Lookup_model->getByGroupCode($groupCode);
     }
 }

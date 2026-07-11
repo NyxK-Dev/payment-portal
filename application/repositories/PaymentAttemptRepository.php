@@ -17,6 +17,7 @@ class PaymentAttemptRepository
     {
         return $this->CI->PaymentAttempt_model->insert($data);
     }
+    
 
     public function update($id, array $data)
     {
@@ -39,4 +40,10 @@ class PaymentAttemptRepository
         return $this->CI->PaymentAttempt_model
             ->getLatestAttempt($paymentId);
     }
+    public function findByPaymentId($paymentId)
+{
+    return $this->CI
+        ->PaymentAttempt_model
+        ->findByPaymentId($paymentId);
+}
 }

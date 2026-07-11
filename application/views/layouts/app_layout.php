@@ -11,7 +11,6 @@ $this->load->view('layouts/header', [
 
 <!-- Control Sidebar Navigation Component -->
 <?php $this->load->view('layouts/sidebar'); ?>
-
 <main class="app-main">
     <div class="app-content-header">
         <div class="container-fluid">
