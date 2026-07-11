@@ -59,32 +59,9 @@ class InvoiceService extends BaseService
         $invoices = $this->repository->getFilteredInvoices($filters);
 
         foreach ($invoices as $invoice) {
-            // Enhanced visual framework based on explicit invoice lifecycles
-            switch (strtolower($invoice->status_code)) {
-                case 'paid':
-                    $invoice->badge_class = 'bg-success';
-                    break;
 
-                case 'partial_paid':
-                    $invoice->badge_class = 'bg-info text-dark';
-                    break;
-
-                case 'pending':
-                    $invoice->badge_class = 'bg-warning text-dark';
-                    break;
-
-                case 'refunded':
-                    $invoice->badge_class = 'bg-danger';
-                    break;
-
-                case 'cancelled':
-                    $invoice->badge_class = 'bg-dark';
-                    break;
-
-                default:
-                    $invoice->badge_class = 'bg-secondary';
-                    break;
-            }
+            // Default badge if lookup has no badge_class
+            $invoice->badge_class = $invoice->badge_class ?: 'bg-secondary';
 
             $invoice->formatted_amount = number_format($invoice->amount, 2);
             $invoice->formatted_created_at = date('Y-m-d H:i', strtotime($invoice->created_at));
