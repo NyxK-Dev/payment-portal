@@ -19,6 +19,7 @@
 
     <!-- Application CSS -->
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css'); ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/custom-auth.css'); ?>">
 
 
 
