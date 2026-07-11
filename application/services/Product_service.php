@@ -8,9 +8,9 @@ class Product_Service extends BaseService
     public function __construct()
     {
         $CI = &get_instance();
-        $CI->load->repository('Product_Repository');
+        $CI->load->repository('ProductRepository');
 
-        parent::__construct($CI->product_repository, 'PRODUCT');
+        parent::__construct($CI->productrepository, 'PRODUCT');
     }
 
     public function create($request, $userId)

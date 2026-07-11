@@ -23,8 +23,22 @@ class OrderItemRepository
         return $this->CI->OrderItem_model->insertBatch($items);
     }
 
-    public function getByOrderId($orderId)
-    {
-        return $this->CI->OrderItem_model->getByOrderId($orderId);
-    }
+    // public function getByOrderId($orderId)
+    // {
+    //     return $this->CI->OrderItem_model->getByOrderId($orderId);
+    // }
+
+    // Add this
+    public function findByOrderId($orderId)
+{
+    return $this->CI
+        ->OrderItem_model
+        ->getByOrderId($orderId);
+}
+public function getByOrderId($orderId)
+{
+    return $this->CI
+        ->OrderItem_model
+        ->getByOrderId($orderId);
+}
 }

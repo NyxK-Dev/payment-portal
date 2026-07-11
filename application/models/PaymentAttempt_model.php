@@ -43,4 +43,13 @@ class PaymentAttempt_model extends CI_Model
             ->get($this->table)
             ->row();
     }
+    public function findByPaymentId($paymentId)
+{
+    return $this->db
+        ->where('payment_id', $paymentId)
+        ->order_by('attempt_no', 'DESC')
+        ->limit(1)
+        ->get($this->table)
+        ->row();
+}
 }
