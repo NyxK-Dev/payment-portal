@@ -12,6 +12,7 @@ class Invoice_model extends CI_Model
     invoices.*,
     lookups.code AS status_code,
     lookups.value AS status_name,
+    lookups.badge_class,
     orders.order_no,
     users.email AS customer_email
 ')
@@ -55,6 +56,7 @@ class Invoice_model extends CI_Model
         invoices.*,
         lookups.code AS status_code,
         lookups.value AS status_name,
+        lookups.badge_class,
         orders.order_no,
         users.name AS customer_name,
         issuer.name AS issuer_name
