@@ -180,6 +180,12 @@
 name="<?= $this->security->get_csrf_token_name(); ?>"
 value="<?= $this->security->get_csrf_hash(); ?>">
 
+<input
+    type="hidden"
+    name="idempotency_key"
+    value="<?= bin2hex(random_bytes(16)); ?>"
+>
+
 
 
                         <button class="btn btn-primary w-100">

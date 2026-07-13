@@ -22,94 +22,169 @@ class StripeService
     /**
      * Create Stripe Checkout Session
      */
-    public function createCheckoutSession(
-        array $order,
-        array $payment,
-        array $items
-    )
-    {
-        try {
+    /**
+ * Create Stripe Checkout Session
+ */
+public function createCheckoutSession(
+    array $order,
+    array $payment,
+    array $items,
+    string $idempotencyKey
+)
+{
+    try {
 
-            $lineItems = [];
+        $lineItems = [];
 
-            foreach ($items as $item)
-            {
-                $lineItems[] = [
-                    'price_data' => [
-                        'currency' => getenv('STRIPE_CURRENCY') ?: 'usd',
 
-                        'product_data' => [
-                            'name' => $item['name']
-                        ],
+        foreach ($items as $item)
+        {
 
-                        'unit_amount' =>
-                            (int) round(
-                                $item['price'] * 100
-                            )
+            $lineItems[] = [
+
+                'price_data' => [
+
+                    'currency' =>
+                        getenv('STRIPE_CURRENCY') ?: 'usd',
+
+
+                    'product_data' => [
+
+                        'name' =>
+                            $item['name']
+
                     ],
 
-                    'quantity' =>
-                        (int) $item['quantity']
-                ];
-            }
 
-            $session = Session::create([
+                    'unit_amount' =>
+
+                        (int) round(
+                            $item['price'] * 100
+                        )
+
+                ],
+
+
+                'quantity' =>
+                    (int)$item['quantity']
+
+            ];
+
+        }
+
+
+
+        $session = Session::create(
+
+            [
 
                 'mode' => 'payment',
 
+
                 'payment_method_types' => [
+
                     'card'
+
                 ],
+
 
                 'line_items' => $lineItems,
 
+
                 'success_url' =>
+
                     site_url(
                         'payment/success'
                     )
-                    . '?session_id={CHECKOUT_SESSION_ID}',
+                    .
+                    '?session_id={CHECKOUT_SESSION_ID}',
+
+
 
                 'cancel_url' =>
+
                     site_url(
                         'payment/cancel'
                     ),
 
+
+
                 'metadata' => [
+
 
                     'order_id' =>
                         $order['id'],
 
+
                     'payment_id' =>
                         $payment['id'],
+
 
                     'order_no' =>
                         $order['order_no'],
 
+
                     'payment_no' =>
                         $payment['payment_no']
+
                 ]
-            ]);
 
-            return [
-                'success' => true,
-                'session_id' => $session->id,
-                'url' => $session->url
-            ];
+            ],
 
-        } catch (ApiErrorException $e) {
 
-            log_message(
-                'error',
-                'Stripe Checkout Error: '
-                . $e->getMessage()
-            );
+            /*
+             Stripe idempotency key
+            */
+            [
 
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
-        }
+                'idempotency_key' =>
+                    $idempotencyKey
+
+            ]
+
+        );
+
+
+
+        return [
+
+            'success'=>true,
+
+
+            'session_id'=>
+                $session->id,
+
+
+            'url'=>
+                $session->url
+
+        ];
+
+
+
     }
+    catch(ApiErrorException $e)
+    {
+
+        log_message(
+            'error',
+            'Stripe Checkout Error: '
+            .$e->getMessage()
+        );
+
+
+        return [
+
+            'success'=>false,
+
+
+            'message'=>
+                $e->getMessage()
+
+        ];
+
+    }
+}
 
     /**
      * Retrieve Stripe Session

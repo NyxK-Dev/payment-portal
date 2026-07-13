@@ -8,6 +8,8 @@
 
     <title><?= isset($title) ? $title . ' | Payment Portal' : 'Payment Portal'; ?></title>
 
+    <link rel="icon" type="image/x-icon" href="<?= base_url('assets/images/favicon.png'); ?>">
+
     <!-- Bootstrap 5 -->
     <link rel="stylesheet" href="<?= base_url('assets/bootstrap/css/bootstrap.min.css'); ?>">
 

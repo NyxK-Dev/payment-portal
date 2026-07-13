@@ -7,7 +7,8 @@ class Cart extends MY_Controller
     {
         parent::__construct();
 
-        $this->load->model('Product_model');
+        // $this->load->model('Product_model');
+        $this->load->repository('ProductRepository');
         $this->load->library('session');
     }
 
@@ -33,7 +34,7 @@ class Cart extends MY_Controller
             $qty = 1;
         }
 
-        $product = $this->Product_model->find($productId);
+        $product = $this->productrepository->find($productId);
 
         if (!$product) {
             show_404();

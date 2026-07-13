@@ -3,7 +3,6 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Permission_model extends CI_Model
 {
-
     protected $table = 'permissions';
 
 
@@ -18,16 +17,30 @@ class Permission_model extends CI_Model
     }
 
 
-
-
-
     public function find($id)
     {
-
         return $this->db
             ->where('id', $id)
             ->get($this->table)
             ->row();
+    }
+
+    /**
+     * Base query
+     */
+    public function query()
+    {
+
+        return $this->db
+            ->select([
+                'permissions.id',
+                'permissions.name',
+                'permissions.code',
+                'permissions.description',
+                'permissions.created_at',
+                'permissions.updated_at'
+            ])
+            ->from($this->table);
     }
 
 
@@ -52,8 +65,7 @@ class Permission_model extends CI_Model
     {
 
         return $this->db
-            ->where(
-                'code',
+            ->where('code',
                 $code
             )
             ->get(
@@ -182,5 +194,12 @@ class Permission_model extends CI_Model
             ->count_all_results(
                 $this->table
             ) > 0;
+    }
+    /**
+     * Get table name
+     */
+    public function getTable()
+    {
+        return $this->table;
     }
 }

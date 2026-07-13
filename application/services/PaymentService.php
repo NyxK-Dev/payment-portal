@@ -88,11 +88,11 @@ class PaymentService
      */
     public function saveStripeSession($attemptId, $sessionId)
     {
-        return $this->CI->paymentattemptrepository->update($attemptId, [
-            'stripe_session_id' => $sessionId,
-            'updated_at'        => date('Y-m-d H:i:s')
-        ]);
-    }
+    //     return $this->CI->paymentattemptrepository->update($attemptId, [
+    //         'stripe_session_id' => $sessionId,
+    //         'updated_at'        => date('Y-m-d H:i:s')
+    //     ]);
+    // }
 
     /**
      * Successful payment webhook (Stripe Event Processing Loop)

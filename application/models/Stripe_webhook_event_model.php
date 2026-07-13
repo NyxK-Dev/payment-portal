@@ -1,73 +1,18 @@
 <?php
-
 defined('BASEPATH') OR exit('No direct script access allowed');
-
 
 class Stripe_webhook_event_model extends CI_Model
 {
+    /**
+     * Stripe Webhook Events Table
+     */
+    protected $table = 'stripe_webhook_events';
 
-
-    protected $table =
-        'stripe_webhook_events';
-
-
-
-    public function insert($data)
+    /**
+     * Get Table Name
+     */
+    public function getTable()
     {
-
-        $this->db->insert(
-            $this->table,
-            $data
-        );
-
-
-        return $this->db->insert_id();
-
+        return $this->table;
     }
-
-
-
-public function where(
-    $column,
-    $value
-)
-{
-    $this->db->where(
-        $column,
-        $value
-    );
-
-    return $this;
-}
-
-
-
-public function count_all_results()
-{
-    return $this->db
-        ->from($this->table)
-        ->count_all_results();
-}
-
-
-
-    public function update(
-        $id,
-        $data
-    )
-    {
-
-        return $this->db
-        ->where(
-            'id',
-            $id
-        )
-        ->update(
-            $this->table,
-            $data
-        );
-
-    }
-
-
 }
