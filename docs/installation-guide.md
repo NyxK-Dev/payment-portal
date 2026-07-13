@@ -1,20 +1,20 @@
 # Installation Guide — Payment Portal
 
-**Related:** [Technology Guide](technology-guide.md) · [Flow Guide](technology-flow-guide.md) · [Database Design](database-design.md)
+**Related:** [Technology Guide](technology-guide.md) · [Technology Flow Guide](technology-flow-guide.md) · [Database Design](database-design.md)
 
 ---
 
 ### 1. Prerequisites
 
-Docker 20+ / Compose v2 · Git · Composer 2.x · Stripe account (test mode) · ngrok · Postman
+Docker 20+ / Compose v2 · Git · Composer 2.x · Stripe account (test mode) · ngrok
 
 ---
 
-### 2. Clone & Enter
+### 2. Clone
 
 ```
-git clone <repo-url> ecommerce-portal
-cd ecommerce-portal/project
+git clone <repo-url> payment-portal
+cd payment-portal
 ```
 
 ---
@@ -32,7 +32,11 @@ Key values to set:
 | `STRIPE_PUBLIC_KEY` | Stripe Dashboard → API keys (pk_test_...) |
 | `STRIPE_SECRET_KEY` | Stripe Dashboard → API keys (sk_test_...) |
 | `STRIPE_WEBHOOK_SECRET` | set in Step 7 |
-| `API_BEARER_TOKEN` | `openssl rand -base64 32` (macOS) or PowerShell equivalent |
+| `RECAPTCHA_SITE_KEY` | Google reCAPTCHA admin console |
+| `RECAPTCHA_SECRET` | Google reCAPTCHA admin console |
+| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | Your SMTP provider |
+| `SUPPORT_EMAIL` | From address for verification emails |
+| `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | Redis for verification code storage |
 
 ---
 
@@ -41,28 +45,36 @@ Key values to set:
 ```
 docker compose build
 docker compose up -d
-docker compose exec php-fpm composer install
+docker compose exec php composer install
 ```
 
-Three containers start: **nginx** (port 8080), **php-fpm** (PHP 7.3), **mysql** (port 3306).
+Three containers start: **nginx** (port 8080), **php** (PHP 7.3 FPM), **mysql** (port 3310 external / 3306 internal).
 
 ---
 
 ### 5. Database
 
+Run the CI3 migrations (creates all 23 tables):
+
 ```
-docker compose exec mysql mysql -u root -p payment_portal < database/schema.sql
-docker compose exec mysql mysql -u root -p payment_portal < database/seed.sql
+docker compose exec php php index.php cli migrate
 ```
 
-Password: `DB_ROOT_PASSWORD` from .env (default `root`).
+Then seed roles, permissions, and lookup data:
+
+```
+docker compose exec php php index.php cli seed
+```
+
+> Alternatively, import the raw SQL files: `docker compose exec mysql mysql -u root -p payment_portal < sql/schema.sql` and `docker compose exec mysql mysql -u root -p payment_portal < sql/seed.sql`. Password is `DB_ROOT_PASSWORD` from .env (default `root`).
 
 ---
 
 ### 6. Verify
 
 - Storefront: `http://localhost:8080`
-- Admin: `http://localhost:8080/admin/login`
+- Login: `http://localhost:8080/login`
+- Admin dashboard: `http://localhost:8080/dashboard`
 
 ---
 
@@ -74,36 +86,35 @@ ngrok http 8080
 
 Copy the `https://*.ngrok-free.app` URL. In Stripe Dashboard → Webhooks → Add endpoint:
 
-- URL: `https://your-subdomain.ngrok-free.app/webhook/stripe`
-- Events: `checkout.session.completed`
+- URL: `https://your-subdomain.ngrok-free.app/webhooks/stripe`
+- Events: `checkout.session.completed` · `payment_intent.payment_failed`
 
 Copy the signing secret (`whsec_...`) into `.env` as `STRIPE_WEBHOOK_SECRET`, then:
 
 ```
-docker compose restart php-fpm
+docker compose restart php
 ```
 
 ---
 
-### 8. Test Purchase
+### 8. Test Full Purchase
 
-1. Register/sign in at the storefront
-2. Add product to cart → Checkout
-3. Pay with `4242 4242 4242 4242`, any future expiry, any CVC
-4. Redirected to `/checkout/success` — order marked paid, invoice + receipt generated
-5. Check **My Orders** for downloads
-6. Admin panel → verify in All Invoices/Receipts and Stripe Transaction Log
+1. Register at `/register` — a 6-digit verification code is sent via email
+2. Enter the code on the verification page to activate your account
+3. Sign in at `/login`
+4. Browse products at `/products`, add to cart, go to `/checkout`
+5. Complete payment on Stripe — card `4242 4242 4242 4242`, any future expiry, any CVC
+6. Redirected to `/payment/success` — invoice and receipt generated
+7. Check **My Orders** for downloads
+8. Admin panel → verify invoices, receipts, and Stripe transactions
 
-Test failure with card `4000 0000 0000 0002` — redirects to `/checkout/cancel`, order stays unpaid.
+Test failure with card `4000 0000 0000 0002` — redirects to `/payment/cancel`, order stays unpaid.
 
 ---
 
 ### 9. API Testing
 
-Import `postman/ecommerce-portal.postman_collection.json`. Set `base_url` to `http://localhost:8080` and `bearer_token` to your `API_BEARER_TOKEN`.
-
-- `GET /api/invoices` — your records (all records if admin token)
-- `GET /api/receipts` — your records (all records if admin token)
+API controllers (`Api/V1/Auth`, `Api/V1/Invoices`, `Api/V1/Receipts`) are currently stubs — API authentication and endpoints are not yet implemented.
 
 ---
 
@@ -115,6 +126,7 @@ Import `postman/ecommerce-portal.postman_collection.json`. Set `base_url` to `ht
 | Webhooks silent | ngrok URL changed — update in Stripe Dashboard |
 | Webhook 400 | Check `STRIPE_WEBHOOK_SECRET` matches Stripe |
 | Composer fails | Add `pdo_mysql`, `mbstring`, `curl`, `gd` to Dockerfile |
+| DB connection refused | Check `DB_HOST=mysql` (container hostname), not `localhost` |
 
 ---
 
@@ -122,7 +134,7 @@ Import `postman/ecommerce-portal.postman_collection.json`. Set `base_url` to `ht
 
 ```
 docker compose down      # stop, keep data
-docker compose down -v   # stop, delete data
+docker compose down -v   # stop, delete all data
 ```
 
 ---
