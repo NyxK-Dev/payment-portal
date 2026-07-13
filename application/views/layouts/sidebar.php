@@ -47,7 +47,7 @@ $adminGroups = [
         'items' => [
             ['manage_products', 'admin/products',    'fa-boxes',         'Products'],
             ['manage_orders',   'admin/orders',       'fa-shopping-cart', 'Orders'],
-            ['manage_orders',   'admin/order_items',  'fa-list',          'Order Items'],
+            // ['manage_orders',   'admin/order_items',  'fa-list',          'Order Items'],
         ],
     ],
     [

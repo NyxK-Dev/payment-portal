@@ -1,7 +1,8 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
+require_once APPPATH . 'interfaces/RolePermissionRepositoryInterface.php';
 
-class RolePermissionRepository
+class RolePermissionRepository implements RolePermissionRepositoryInterface
 {
     protected $CI;
 
@@ -12,33 +13,100 @@ class RolePermissionRepository
         $this->CI->load->model('Role_permission_model');
     }
 
-    public function getAll()
-    {
-        return $this->CI->Role_permission_model->getAll();
-    }
-
-    public function insert($data)
-    {
-        return $this->CI->Role_permission_model->insert($data);
-    }
-
-    public function deleteByRole($role_id)
-    {
-        return $this->CI->Role_permission_model->deleteByRole($role_id);
-    }
-
-    public function getPermissionIdsByRole($role_id)
-    {
-        return $this->CI->Role_permission_model->getPermissionIdsByRole($role_id);
-    }
-
-    public function hasPermission($role_id, $permission)
+    private function query()
     {
         return $this->CI
             ->Role_permission_model
-            ->hasPermission(
-                $role_id,
-                $permission
+            ->rolePermissionQuery();
+    }
+
+    private function table()
+    {
+        return $this->CI
+            ->Role_permission_model
+            ->getTable();
+    }
+
+    public function getAll()
+    {
+        return $this->query()
+            ->select([
+                'roles.id AS role_id',
+                'roles.name AS role_name',
+                'GROUP_CONCAT(permissions.name) AS permissions'
+            ])
+            ->join(
+                'roles',
+                'roles.id = role_permissions.role_id'
+            )
+            ->join(
+                'permissions',
+                'permissions.id = role_permissions.permission_id'
+            )
+            ->group_by('roles.id')
+            ->get()
+            ->result();
+    }
+
+    public function insert(array $data): bool
+    {
+        return $this->CI->db->insert(
+            $this->table(),
+            $data
+        );
+    }
+
+    public function deleteByRole(int $roleId): bool
+    {
+        if ($roleId <= 0) {
+            return false;
+        }
+
+        return $this->CI->db
+            ->where('role_id', $roleId)
+            ->delete(
+                $this->table()
             );
+    }
+
+    public function getPermissionIdsByRole(int $roleId): array
+    {
+        if ($roleId <= 0) {
+            return [];
+        }
+
+        $rows = $this->query()
+            ->select('permission_id')
+            ->where('role_id', $roleId)
+            ->get()
+            ->result_array();
+
+        return array_column(
+            $rows,
+            'permission_id'
+        );
+    }
+
+    public function hasPermission(
+        int $roleId,
+        string $permission
+    ): bool {
+
+        return $this->query()
+            ->select('permissions.id')
+            ->join(
+                'permissions',
+                'permissions.id = role_permissions.permission_id'
+            )
+            ->where(
+                'role_permissions.role_id',
+                $roleId
+            )
+            ->where(
+                'permissions.code',
+                trim($permission)
+            )
+            ->limit(1)
+            ->count_all_results() > 0;
     }
 }

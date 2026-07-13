@@ -1,65 +1,5 @@
 <div class="container-fluid py-4">
-
-
-    <!-- Header -->
-    <div class="card shadow-sm border-0 mb-4">
-
-        <div class="card-body">
-
-            <div class="d-flex justify-content-between align-items-center">
-
-
-                <div>
-
-                    <div class="d-flex align-items-center gap-3">
-
-                        <h4 class="fw-bold mb-0">
-                            Order Details
-                        </h4>
-
-
-                        <span class="badge bg-light text-dark border fs-6">
-                            #<?= $order->order_no ?>
-                        </span>
-
-
-                    </div>
-
-
-                    <small class="text-muted">
-                        Created on
-                        <?= date(
-                            'd M Y, h:i A',
-                            strtotime($order->created_at)
-                        ) ?>
-                    </small>
-
-
-                </div>
-
-
-
-                <a href="<?= site_url('admin/orders') ?>"
-                    class="btn btn-outline-secondary">
-
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Back
-
-                </a>
-
-
-            </div>
-
-
-        </div>
-
-    </div>
-
-
-
-
-
-
+s
     <div class="row g-4">
 
 
@@ -559,5 +499,12 @@
 
     </div>
 
+<a href="<?= site_url('admin/orders') ?>"
+                    class="btn btn-outline-secondary">
+
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back
+
+                </a>
 
 </div>

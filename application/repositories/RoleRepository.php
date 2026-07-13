@@ -1,150 +1,84 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
+require_once APPPATH . 'interfaces/RoleRepositoryInterface.php';
 
-class RoleRepository
+class RoleRepository implements RoleRepositoryInterface
 {
-
     protected $CI;
 
-
+    protected $table = 'roles';
 
     public function __construct()
     {
+        $this->CI = &get_instance();
+    }
 
-        $this->CI =& get_instance();
+    public function getAll(): array
+    {
+        return $this->CI->db
+            ->order_by('name', 'ASC')
+            ->get($this->table)
+            ->result();
+    }
 
+    public function find(int $id)
+    {
+        return $this->CI->db
+            ->where('id', $id)
+            ->limit(1)
+            ->get($this->table)
+            ->row();
+    }
 
-        $this->CI->load->model(
-            'Role_model'
+    public function existsName(string $name, ?int $ignoreId = null): bool
+    {
+        $this->CI->db
+            ->where('name', trim($name));
+
+        if ($ignoreId !== null) {
+            $this->CI->db
+                ->where('id !=', $ignoreId);
+        }
+
+        return $this->CI->db
+            ->count_all_results($this->table) > 0;
+    }
+
+    public function create(array $data): int
+    {
+        $this->CI->db->insert(
+            $this->table,
+            $data
         );
 
+        return (int) $this->CI->db->insert_id();
     }
 
-
-
-
-
-    public function getAll()
+    public function update(int $id, array $data): bool
     {
-
-        return $this->CI
-            ->Role_model
-            ->getAll();
-
-    }
-
-
-
-
-
-    public function find($id)
-    {
-
-        return $this->CI
-            ->Role_model
-            ->find($id);
-
-    }
-
-
-
-
-
-    public function existsName(
-        $name,
-        $ignoreId=null
-    )
-    {
-
-        return $this->CI
-            ->Role_model
-            ->existsName(
-                $name,
-                $ignoreId
-            );
-
-    }
-
-
-
-
-
-    public function create($data)
-    {
-
-        return $this->CI
-            ->Role_model
-            ->create($data);
-
-    }
-
-
-
-
-
-    public function update(
-        $id,
-        $data
-    )
-    {
-
-        return $this->CI
-            ->Role_model
+        return $this->CI->db
+            ->where('id', $id)
             ->update(
-                $id,
+                $this->table,
                 $data
             );
-
     }
 
-
-
-
-
-    public function delete($id)
+    public function delete(int $id): bool
     {
-
-
-        $this->CI->db
-            ->trans_start();
-
-
-
-        // remove permissions first
+        $this->CI->db->trans_start();
 
         $this->CI->db
-            ->where(
-                'role_id',
-                $id
-            )
-            ->delete(
-                'role_permissions'
-            );
-
-
-
-        // remove role
-
-        $this->CI
-            ->Role_model
-            ->delete(
-                $id
-            );
-
-
+            ->where('role_id', $id)
+            ->delete('role_permissions');
 
         $this->CI->db
-            ->trans_complete();
+            ->where('id', $id)
+            ->delete($this->table);
 
+        $this->CI->db->trans_complete();
 
-
-        return $this->CI
-            ->db
-            ->trans_status();
-
-
+        return $this->CI->db->trans_status();
     }
-
-
 }

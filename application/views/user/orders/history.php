@@ -56,16 +56,13 @@
 
                     </div>
 
-
-
                     <div class="col-md-1">
-
-                        <a href="<?= site_url('user/orders/history') ?>"
+                        <button
+                            type="button"
+                            id="resetSearch"
                             class="btn btn-secondary w-100">
-
-                            <i class="fas fa-sync"></i>
-
-                        </a>
+                            <i class="fa fa-sync"></i>
+                        </button>
 
                     </div>
 
@@ -472,3 +469,78 @@
 
 
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+
+        var searchInput = document.getElementById('searchOrder');
+
+        var resetButton = document.getElementById('resetSearch');
+
+        var rows = document.querySelectorAll('#ordersTable tbody tr');
+
+
+
+
+        function filterOrders() {
+
+
+            var keyword = searchInput.value.toLowerCase().trim();
+
+
+
+            rows.forEach(function(row) {
+
+
+                var text = row.innerText.toLowerCase();
+
+
+
+                if (text.indexOf(keyword) !== -1) {
+
+                    row.style.display = '';
+
+                } else {
+
+                    row.style.display = 'none';
+
+                }
+
+
+            });
+
+
+
+        }
+
+
+
+
+        searchInput.addEventListener('keyup', function() {
+
+
+            filterOrders();
+
+
+        });
+
+
+
+
+
+        resetButton.addEventListener('click', function() {
+
+
+            searchInput.value = '';
+
+            filterOrders();
+
+            searchInput.focus();
+
+
+        });
+
+
+
+    });
+</script>
