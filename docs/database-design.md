@@ -1,337 +1,583 @@
 # Database Design — Payment Portal
 
-## Overview
+**CodeIgniter 3 · PHP 7.3 · MySQL 8 · Stripe**
 
-This schema supports a CodeIgniter 3 payment portal with admin product/user management, customer purchases via Stripe, invoice/receipt generation, API token access, and audit logging.
-
-Design goals:
-
-- **3NF** with intentional denormalization for financial snapshots
-- **Referential integrity** via foreign keys with deliberate `ON DELETE` rules
-- **Payment safety** via Stripe event idempotency and immutable financial documents
-- **Clarity** — straightforward constraints suitable for a take-home assessment
+**Related:** [Technology Guide](technology-guide.md) · [Technology Flow Guide](technology-flow-guide.md) · [Installation Guide](installation-guide.md)
 
 ---
 
-## ER Diagram
+### Overview
+
+23 tables supporting RBAC, payment processing via Stripe, invoice/receipt generation, API token access, audit logging, and generic lookups.
+
+**Design goals:** 3NF with intentional denormalization for financial snapshots · referential integrity via FKs · payment safety via Stripe event idempotency · immutable financial documents · generic lookup pattern replacing hard-coded enums.
+
+---
+
+### ER Diagram
 
 ```mermaid
 erDiagram
-    roles ||--o{ users : assigns
-    users ||--o{ orders : places
-    users ||--o{ invoices : receives
-    users ||--o{ receipts : receives
-    users ||--o{ api_tokens : owns
-    users ||--o{ audit_logs : performs
+    roles ||--o{ users : ""
+    roles ||--o{ role_permissions : ""
+    permissions ||--o{ role_permissions : ""
 
-    products ||--o{ order_items : referenced_in
+    users ||--o{ orders : ""
+    users ||--o{ products : "created_by"
+    users ||--o{ api_tokens : ""
+    users ||--o{ audit_logs : ""
+    users ||--o{ activity_logs : ""
+    users ||--o{ email_logs : ""
+    users ||--o{ refunds : "created_by / approved_by"
+    users ||--o{ idempotency_keys : ""
+    users ||--o{ invoices : "issued_by"
+    users ||--o{ receipts : "issued_by"
 
-    orders ||--|{ order_items : contains
-    orders ||--o{ payments : has
-    orders ||--o{ invoices : documents
-    orders ||--o{ receipts : confirms
+    lookup_groups ||--o{ lookups : ""
 
-    payments ||--o{ stripe_transactions : logs
-    payments ||--o| invoices : generates
-    payments ||--o| receipts : generates
-    payments ||--o{ refunds : may_have
+    lookups ||--o{ users : "status"
+    lookups ||--o{ products : "category/status"
+    lookups ||--o{ orders : "status"
+    lookups ||--o{ payments : "status"
+    lookups ||--o{ payment_attempts : "status"
+    lookups ||--o{ invoices : "status"
+    lookups ||--o{ receipts : "status"
+    lookups ||--o{ refunds : "status"
+    lookups ||--o{ email_logs : "status"
 
-    invoices ||--|{ invoice_line_items : contains
+    orders ||--o{ order_items : ""
+    orders ||--o{ payments : ""
+    orders ||--o{ invoices : ""
 
-    roles {
-        int id PK
-        varchar name UK
-        text description
-        datetime created_at
-        datetime updated_at
-    }
+    products ||--o{ order_items : ""
 
-    users {
-        int id PK
-        int role_id FK
-        varchar name
-        varchar email UK
-        varchar password
-        enum status
-        datetime deleted_at
-    }
+    payments ||--o{ payment_attempts : ""
+    payments ||--o{ stripe_transactions : ""
+    payments ||--o{ payment_events : ""
+    payments ||--o{ refunds : ""
 
-    products {
-        int id PK
-        varchar sku UK
-        varchar name
-        decimal price
-        enum status
-        datetime deleted_at
-    }
+    payment_attempts ||--o{ stripe_transactions : ""
 
-    orders {
-        bigint id PK
-        int user_id FK
-        varchar order_number UK
-        enum status
-        decimal subtotal
-        decimal tax_amount
-        decimal total_amount
-        char currency
-    }
+    stripe_webhook_events ||--o{ stripe_transactions : ""
 
-    order_items {
-        bigint id PK
-        bigint order_id FK
-        int product_id FK
-        varchar product_name "snapshot"
-        decimal unit_price
-        int quantity
-        decimal subtotal
-    }
-
-    payments {
-        bigint id PK
-        bigint order_id FK
-        varchar payment_reference UK
-        varchar provider
-        varchar provider_reference
-        decimal amount
-        enum status
-        datetime paid_at
-    }
-
-    stripe_transactions {
-        bigint id PK
-        bigint payment_id FK
-        varchar stripe_event_id UK
-        varchar stripe_payment_intent
-        varchar stripe_session_id
-        varchar event_type
-        longtext payload
-    }
-
-    invoices {
-        bigint id PK
-        bigint payment_id UK,FK
-        bigint order_id FK
-        int user_id FK
-        varchar invoice_number UK
-        decimal subtotal
-        decimal tax_amount
-        decimal total_amount
-        char currency
-    }
-
-    invoice_line_items {
-        bigint id PK
-        bigint invoice_id FK
-        varchar product_name
-        decimal unit_price
-        int quantity
-        decimal subtotal
-    }
-
-    receipts {
-        bigint id PK
-        bigint payment_id UK,FK
-        bigint order_id FK
-        int user_id FK
-        varchar receipt_number UK
-        decimal amount
-        char currency
-    }
-
-    refunds {
-        bigint id PK
-        bigint payment_id FK
-        varchar stripe_refund_id UK
-        decimal amount
-        enum status
-    }
-
-    api_tokens {
-        bigint id PK
-        int user_id FK
-        char token_hash UK
-        varchar name
-        datetime expires_at
-        datetime revoked_at
-    }
-
-    audit_logs {
-        bigint id PK
-        int user_id FK
-        varchar action
-        varchar entity_type
-        bigint entity_id
-        datetime created_at
-    }
+    invoices ||--o{ receipts : ""
 ```
 
+### Table Reference
+
+| # | Table | Purpose |
+|---|-------|---------|
+| 1 | `roles` | Named roles (Admin, User) |
+| 2 | `permissions` | Permission codes (`product.create`, `invoice.view.all`) |
+| 3 | `role_permissions` | Junction: permissions → roles |
+| 4 | `users` | Application accounts, soft-deletable |
+| 5 | `products` | Catalog items, soft-deletable, versioned |
+| 6 | `orders` | Purchase record, versioned |
+| 7 | `order_items` | Line items with price snapshots |
+| 8 | `payments` | Internal payment records |
+| 9 | `payment_attempts` | Retry attempts per payment |
+| 10 | `stripe_transactions` | Stripe-level transaction records |
+| 11 | `stripe_webhook_events` | Inbound webhook event log + idempotency |
+| 12 | `payment_events` | Event history per payment |
+| 13 | `idempotency_keys` | API idempotency tracking |
+| 14 | `refunds` | Refund tracking (partial/full) |
+| 15 | `invoices` | Billing documents |
+| 16 | `receipts` | Payment-proof documents |
+| 17 | `api_tokens` | Hashed bearer tokens |
+| 18 | `audit_logs` | Before/after change tracking |
+| 19 | `activity_logs` | User activity trail |
+| 20 | `lookup_groups` | Categories of lookup values |
+| 21 | `lookups` | Individual lookup values |
+| 22 | `settings` | Key/value application config |
+| 23 | `email_logs` | Outbound email records |
+
 ---
 
-## Table Summary
+### Column Detail
 
-| Table | Purpose |
-|---|---|
-| `roles` | Permission groups (`admin`, `customer`) |
-| `users` | Authenticated portal users with soft delete |
-| `products` | Purchasable catalog items |
-| `orders` | Purchase header with totals and status |
-| `order_items` | Line items with price snapshots |
-| `payments` | Internal payment records with provider identifiers |
-| `stripe_transactions` | Immutable Stripe webhook/event log |
-| `invoices` | Formal billing document per successful payment |
-| `invoice_line_items` | Snapshotted line items on the invoice |
-| `receipts` | Payment confirmation document per successful payment |
-| `refunds` | Refund attempts linked to Stripe |
-| `api_tokens` | Hashed bearer tokens for API access |
-| `audit_logs` | Who did what, to which entity, and when |
+#### roles
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| name | varchar(50) | NOT NULL, UNIQUE |
+| description | varchar(255) | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+#### permissions
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| code | varchar(100) | NOT NULL, UNIQUE |
+| name | varchar(255) | NOT NULL |
+| description | text | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+#### role_permissions
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| role_id | bigint | NOT NULL → roles.id |
+| permission_id | bigint | NOT NULL → permissions.id |
+| created_at | datetime | |
+
+**Index:** `(role_id, permission_id)` UNIQUE
+
+#### users
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| role_id | bigint | NOT NULL → roles.id |
+| name | varchar(150) | NOT NULL |
+| email | varchar(150) | NOT NULL, UNIQUE |
+| password | varchar(255) | NOT NULL |
+| status_lookup_id | bigint | → lookups.id |
+| last_login_at | datetime | |
+| created_at | datetime | |
+| updated_at | datetime | |
+| deleted_at | datetime | |
+
+**Indexes:** `role_id`, `status_lookup_id`, `email`
+
+#### products
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| category_lookup_id | bigint | → lookups.id |
+| status_lookup_id | bigint | → lookups.id |
+| name | varchar(255) | NOT NULL |
+| description | text | |
+| sku | varchar(100) | UNIQUE |
+| price | decimal(12,2) | NOT NULL |
+| stock_qty | int | DEFAULT 0 |
+| version | int | DEFAULT 1 |
+| created_by | bigint | → users.id |
+| created_at | datetime | |
+| updated_at | datetime | |
+| deleted_at | datetime | |
+
+**Indexes:** `sku`, `category_lookup_id`, `status_lookup_id`, `created_by`
+
+#### orders
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| user_id | bigint | NOT NULL → users.id |
+| order_no | varchar(100) | NOT NULL, UNIQUE |
+| status_lookup_id | bigint | → lookups.id |
+| total_amount | decimal(12,2) | NOT NULL |
+| version | int | DEFAULT 1 |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+**Indexes:** `order_no`, `user_id`, `status_lookup_id`
+
+#### order_items
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| order_id | bigint | NOT NULL → orders.id |
+| product_id | bigint | NOT NULL → products.id |
+| quantity | int | NOT NULL |
+| unit_price | decimal(12,2) | NOT NULL |
+| subtotal | decimal(12,2) | NOT NULL |
+| created_at | datetime | |
+
+**Indexes:** `order_id`, `product_id`
+
+#### payments
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| order_id | bigint | NOT NULL → orders.id |
+| payment_no | varchar(100) | NOT NULL, UNIQUE |
+| amount | decimal(12,2) | NOT NULL |
+| currency | varchar(10) | NOT NULL, DEFAULT 'USD' |
+| payment_method | varchar(50) | |
+| status_lookup_id | bigint | → lookups.id |
+| version | int | NOT NULL, DEFAULT 1 |
+| failure_reason | text | |
+| paid_at | datetime | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+**Indexes:** `order_id`, `payment_no`, `status_lookup_id`
+
+#### payment_attempts
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| payment_id | bigint | NOT NULL → payments.id |
+| attempt_no | int | NOT NULL |
+| provider | varchar(50) | |
+| stripe_session_id | varchar(255) | |
+| payment_intent_id | varchar(255) | |
+| amount | decimal(12,2) | |
+| status_lookup_id | bigint | → lookups.id |
+| failure_reason | text | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+**Index:** `(payment_id, attempt_no)` UNIQUE
+
+#### stripe_transactions
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| payment_id | bigint | NOT NULL → payments.id |
+| payment_attempt_id | bigint | → payment_attempts.id |
+| webhook_event_id | bigint | → stripe_webhook_events.id |
+| provider | varchar(50) | DEFAULT 'stripe' |
+| stripe_session_id | varchar(255) | |
+| payment_intent_id | varchar(255) | |
+| charge_id | varchar(255) | |
+| currency | varchar(10) | |
+| amount | decimal(12,2) | |
+| provider_status | varchar(50) | |
+| raw_payload | text | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+**Indexes:** `payment_id`, `payment_attempt_id`, `webhook_event_id`, `payment_intent_id`, `stripe_session_id`, `charge_id`
+
+#### stripe_webhook_events
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| event_id | varchar(255) | NOT NULL, UNIQUE |
+| event_type | varchar(255) | |
+| processed | boolean | DEFAULT false |
+| retry_count | int | DEFAULT 0 |
+| processing_started_at | datetime | |
+| processing_completed_at | datetime | |
+| error_message | text | |
+| payload | text | |
+| created_at | datetime | |
+| processed_at | datetime | |
+
+**Indexes:** `event_id` UNIQUE, `processed`, `event_type`
+
+#### payment_events
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| payment_id | bigint | NOT NULL → payments.id |
+| event_type | varchar(100) | |
+| event_source | varchar(50) | |
+| payload | text | |
+| created_at | datetime | |
+
+**Indexes:** `payment_id`, `event_type`
+
+#### idempotency_keys
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| user_id | bigint | → users.id |
+| idempotency_key | varchar(255) | NOT NULL, UNIQUE |
+| request_hash | varchar(255) | |
+| response_data | text | |
+| expires_at | datetime | |
+| created_at | datetime | |
+
+**Indexes:** `idempotency_key` UNIQUE, `user_id`
+
+#### refunds
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| payment_id | bigint | NOT NULL → payments.id |
+| refund_no | varchar(100) | NOT NULL, UNIQUE |
+| stripe_refund_id | varchar(255) | UNIQUE |
+| amount | decimal(12,2) | NOT NULL |
+| reason | varchar(255) | |
+| status_lookup_id | bigint | → lookups.id |
+| refunded_at | datetime | |
+| created_by | bigint | → users.id |
+| approved_by | bigint | → users.id |
+| approved_at | datetime | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+**Indexes:** `refund_no` UNIQUE, `payment_id`, `stripe_refund_id`, `status_lookup_id`, `created_by`, `approved_by`
+
+#### invoices
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| order_id | bigint | NOT NULL → orders.id |
+| invoice_no | varchar(100) | NOT NULL, UNIQUE |
+| amount | decimal(12,2) | NOT NULL |
+| status_lookup_id | bigint | → lookups.id |
+| issued_at | datetime | |
+| issued_by | bigint | → users.id |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+**Indexes:** `invoice_no` UNIQUE, `order_id` UNIQUE, `status_lookup_id`, `issued_by`
+
+#### receipts
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| invoice_id | bigint | NOT NULL → invoices.id |
+| receipt_no | varchar(100) | NOT NULL, UNIQUE |
+| amount | decimal(12,2) | NOT NULL |
+| status_lookup_id | bigint | → lookups.id |
+| issued_at | datetime | |
+| issued_by | bigint | → users.id |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+**Indexes:** `receipt_no` UNIQUE, `invoice_id` UNIQUE, `status_lookup_id`, `issued_by`
+
+#### api_tokens
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| user_id | bigint | NOT NULL → users.id |
+| token_hash | varchar(255) | |
+| expires_at | datetime | |
+| last_used_at | datetime | |
+| created_at | datetime | |
+
+**Indexes:** `token_hash` UNIQUE, `user_id`
+
+#### audit_logs
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| user_id | bigint | → users.id |
+| action | varchar(100) | |
+| entity_type | varchar(100) | |
+| entity_id | bigint | |
+| old_data | json | |
+| new_data | json | |
+| ip_address | varchar(100) | |
+| user_agent | text | |
+| created_at | datetime | |
+
+**Indexes:** `user_id`, `entity_type`, `entity_id`, `action`
+
+#### activity_logs
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| user_id | bigint | → users.id |
+| activity_type | varchar(100) | |
+| description | text | |
+| ip_address | varchar(100) | |
+| created_at | datetime | |
+
+**Indexes:** `user_id`, `activity_type`
+
+#### lookup_groups
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| code | varchar(100) | NOT NULL, UNIQUE |
+| name | varchar(255) | |
+| description | text | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+#### lookups
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| group_id | bigint | NOT NULL → lookup_groups.id |
+| code | varchar(100) | |
+| value | varchar(255) | |
+| description | text | |
+| sort_order | int | DEFAULT 0 |
+| is_active | boolean | DEFAULT true |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+**Indexes:** `group_id`, `(group_id, code)` UNIQUE
+
+#### settings
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| setting_key | varchar(255) | NOT NULL, UNIQUE |
+| setting_value | text | |
+| description | text | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+#### email_logs
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | bigint | PK, auto-increment |
+| user_id | bigint | → users.id |
+| email_to | varchar(255) | |
+| subject | varchar(255) | |
+| status_lookup_id | bigint | → lookups.id |
+| response | text | |
+| sent_at | datetime | |
+
+**Indexes:** `user_id`, `status_lookup_id`
 
 ---
 
-## Key Design Decisions
+### Relationships Summary
 
-### 1. User email uniqueness
+| Parent | Child | FK Column(s) |
+|--------|-------|-------------|
+| `roles` | `users`, `role_permissions` | role_id |
+| `permissions` | `role_permissions` | permission_id |
+| `users` | `orders`, `products`(created_by), `api_tokens`, `audit_logs`, `activity_logs`, `email_logs`, `idempotency_keys`, `refunds`(created_by/approved_by), `invoices`(issued_by), `receipts`(issued_by) | user_id / created_by / approved_by / issued_by |
+| `lookup_groups` | `lookups` | group_id |
+| `lookups` | `users`(status), `products`(category/status), `orders`(status), `payments`(status), `payment_attempts`(status), `invoices`(status), `receipts`(status), `refunds`(status), `email_logs`(status) | status_lookup_id / category_lookup_id |
+| `orders` | `order_items`, `payments`, `invoices` | order_id |
+| `products` | `order_items` | product_id |
+| `payments` | `payment_attempts`, `stripe_transactions`, `payment_events`, `refunds` | payment_id |
+| `payment_attempts` | `stripe_transactions` | payment_attempt_id |
+| `stripe_webhook_events` | `stripe_transactions` | webhook_event_id |
+| `invoices` | `receipts` | invoice_id |
 
-`users.email` has a straightforward `UNIQUE` constraint. Soft-deleted users retain their email in the row, so the same address cannot be re-registered without handling that in application logic (e.g. clearing or mutating the email on delete).
+---
 
-### 2. Payment identifier separation
+### Design Decisions
 
-The `payments` table distinguishes internal and external identifiers:
+| Decision | Rationale |
+|----------|-----------|
+| **Version columns** | `products.version` and `orders.version` enable optimistic locking for concurrent updates |
+| **Payment attempts** | `payment_attempts` tracks each retry separately — preserves history of failed attempts before success |
+| **Payment events** | `payment_events` captures a chronological event stream per payment (created, attempted, succeeded, failed, refunded) |
+| **Idempotency keys** | `idempotency_keys` table provides API-level idempotency — clients can retry safely |
+| **Webhook idempotency** | `stripe_webhook_events.event_id` UNIQUE — rejects duplicate Stripe deliveries at DB level |
+| **Lookup pattern** | `lookup_groups` + `lookups` replaces hard-coded enums — new statuses are data, not migrations |
+| **Separate logs** | `audit_logs` (compliance, old/new data) vs `activity_logs` (high-volume routine actions) |
+| **Soft deletes** | `deleted_at` on users/products preserves historical orders |
+| **Price snapshots** | `order_items.unit_price` copied at purchase time — historical invoices stay accurate |
+| **Receipts → invoices** | Receipt references invoice (not order directly) — matches billing → proof-of-payment sequence |
+| **Relational RBAC** | `roles` + `permissions` + `role_permissions` — data-driven auth, not hard-coded role checks |
 
-| Column | Example | Purpose |
-|---|---|---|
-| `payment_reference` | `PAY-20260708-000001` | Application-owned immutable reference shown to users |
-| `provider` | `stripe` | Payment provider name |
-| `provider_reference` | `pi_3abc123` | Provider-owned identifier (e.g. Stripe Payment Intent) |
+---
 
-`UNIQUE(payment_reference)` and `UNIQUE(provider, provider_reference)` allow future providers without schema changes. `provider_reference` is nullable until the provider assigns an ID.
-
-### 3. Financial snapshots
-
-`order_items.product_name`, `unit_price`, and `subtotal` are copied at purchase time so historical orders remain accurate even if products change or are soft-deleted.
-
-`invoice_line_items` mirrors this pattern for issued invoices — invoices are **immutable documents** once created.
-
-### 4. Payment domain separation
-
-| Layer | Table | Responsibility |
-|---|---|---|
-| Business | `payments` | Internal payment state and identifiers |
-| Provider | `stripe_transactions` | Raw Stripe events, one row per webhook |
-| Documents | `invoices`, `receipts` | Customer-facing records |
-| Reversals | `refunds` | Partial or full refund tracking |
-
-`stripe_transactions.stripe_event_id` is **UNIQUE** to guarantee webhook idempotency — duplicate Stripe deliveries are rejected at the database level.
-
-### 5. One invoice and one receipt per payment
-
-`UNIQUE(payment_id)` on both `invoices` and `receipts` prevents duplicate document generation from race conditions or double webhook processing.
-
-`user_id` and `order_id` are denormalized onto invoices/receipts to simplify user-scoped queries without multi-table joins.
-
-### 6. Audit log scope
-
-`audit_logs` records **who** (`user_id`), **what** (`action`), **which entity** (`entity_type`, `entity_id`), and **when** (`created_at`), plus optional `ip_address` and `user_agent`. It does not store before/after value diffs.
-
-### 7. Foreign key delete rules
-
-| Relationship | ON DELETE | Rationale |
-|---|---|---|
-| `order_items` → `orders` | CASCADE | Line items have no meaning without the order |
-| `order_items` → `products` | RESTRICT | Preserve order history |
-| `payments` → `orders` | RESTRICT | Never orphan payments |
-| `stripe_transactions` → `payments` | RESTRICT | Preserve financial audit trail |
-| `invoices/receipts` → `payments` | RESTRICT | Documents must not outlive payments |
-| `api_tokens` → `users` | CASCADE | Tokens are user-scoped credentials |
-| `audit_logs` → `users` | SET NULL | Retain logs after user deletion |
-
-### 8. API token storage
-
-Only `token_hash` (SHA-256, 64 hex chars) is stored. The raw bearer token is shown once at creation and never persisted.
-
-### 9. BIGINT on high-volume tables
-
-`orders`, `order_items`, `payments`, `stripe_transactions`, `invoices`, `receipts`, `refunds`, `api_tokens`, and `audit_logs` use `BIGINT UNSIGNED` primary keys.
-
-### 10. CHECK constraints
-
-MySQL 8 `CHECK` constraints enforce:
-
-- `price`, `amount`, `subtotal` ≥ 0
-- `quantity` > 0
-- `refund.amount` > 0
-
-### 11. Indexes
-
-Beyond primary and foreign key indexes:
+### Suggested Indexes
 
 | Index | Use case |
-|---|---|
-| `orders.created_at` | Admin order listing, date filters |
-| `payments.paid_at` | Revenue reporting |
-| `payments.provider_reference` | Provider reconciliation |
-| `stripe_transactions.stripe_payment_intent` | Checkout reconciliation |
-| `stripe_transactions.stripe_session_id` | Success/cancel redirect lookup |
-| `invoices.user_id`, `receipts.user_id` | User document listing |
-| `audit_logs.(entity_type, entity_id)` | Entity history |
-| `audit_logs.created_at` | Time-range queries |
-| `api_tokens.expires_at` | Token cleanup jobs |
-| `users.(status, deleted_at)` | Active user queries |
+|-------|----------|
+| `role_permissions(role_id, permission_id)` UNIQUE | Junction uniqueness |
+| `users.email` | Login lookup |
+| `users.role_id`, `users.status_lookup_id` | User filtering |
+| `products.sku` | Product lookup |
+| `products.category_lookup_id`, `status_lookup_id` | Catalog filtering |
+| `orders.order_no` | Order lookup |
+| `orders.user_id`, `orders.status_lookup_id` | User order listing + filtering |
+| `order_items.order_id`, `product_id` | Order line items |
+| `payments.payment_no` | Payment lookup |
+| `payments.order_id`, `status_lookup_id` | Payment listing |
+| `payment_attempts(payment_id, attempt_no)` UNIQUE | Attempt dedup |
+| `stripe_transactions.payment_intent_id`, `stripe_session_id`, `charge_id` | Stripe reconciliation |
+| `stripe_webhook_events.event_id` UNIQUE | Webhook idempotency |
+| `payment_events.payment_id` | Payment event history |
+| `idempotency_keys.idempotency_key` UNIQUE | API idempotency |
+| `refunds.payment_id`, `stripe_refund_id` | Refund tracking |
+| `invoices.invoice_no` UNIQUE, `order_id` UNIQUE | Invoice lookup |
+| `receipts.receipt_no` UNIQUE, `invoice_id` UNIQUE | Receipt lookup |
+| `api_tokens.token_hash` UNIQUE | Bearer token auth |
+| `audit_logs(entity_type, entity_id)` | Entity history queries |
+| `activity_logs.user_id` | User activity trail |
+| `lookups(group_id, code)` UNIQUE | Lookup resolution |
+| `email_logs.user_id`, `status_lookup_id` | Email history |
 
 ---
 
-## Data Flow
+### Data Flow
 
 ```
-User places order
-    → orders (pending)
-    → order_items (snapshotted prices)
+Order placed
+  → orders (pending)
+  → order_items (price snapshots)
 
 Checkout initiated
-    → payments (pending, payment_reference, provider = stripe)
-    → payments.provider_reference set when Stripe returns Payment Intent ID
+  → payments (pending, payment_no)
+  → payment_attempts (attempt_no = 1, stripe_session_id)
 
 Stripe webhook received
-    → stripe_transactions (stripe_event_id UNIQUE — idempotent)
-    → payments (paid, paid_at)
-    → orders (paid)
+  → stripe_webhook_events (event_id, deduplicated)
+  → stripe_transactions (provider_status)
+  → payment_events (event_type = 'payment.completed')
+  → payments (paid, paid_at)
+  → orders (paid)
 
 On successful payment
-    → invoices + invoice_line_items (snapshotted)
-    → receipts
+  → invoices (immutable billing document)
+  → receipts (proof-of-payment against invoice)
 
 Refund (optional)
-    → refunds (stripe_refund_id UNIQUE)
-    → payments (refunded / partially_refunded)
-    → orders (refunded)
+  → refunds (refund_no, stripe_refund_id)
+  → payment_events (event_type = 'refund.completed')
+  → payments (status = refunded / partially_refunded)
 ```
 
 ---
 
-## Migration Files
+### Migration Files
 
-| # | File | Action |
-|---|---|---|
-| 001 | `create_roles` | Roles table |
-| 002 | `create_users` | Users with unique email |
-| 003 | `create_products` | Products with SKU |
-| 004 | `create_orders` | Orders with tax/currency |
-| 005 | `create_order_items` | Line items with snapshots |
-| 006 | `create_payments` | Payment records with provider identifiers |
-| 007 | `create_stripe_transactions` | Stripe event log |
-| 008 | `create_invoices` | Invoice headers |
-| 009 | `create_receipts` | Receipt records |
-| 010 | `create_api_tokens` | Hashed API tokens |
-| 011 | `create_audit_logs` | Audit trail |
-| 012 | `create_invoice_line_items` | Invoice line snapshots |
-| 013 | `create_refunds` | Refund tracking |
-| 014 | `seed_roles` | Insert `admin` and `customer` roles |
+| # | Migration | Tables created |
+|---|-----------|---------------|
+| 001 | `create_roles` | roles |
+| 002 | `create_permissions` | permissions |
+| 003 | `create_role_permissions` | role_permissions |
+| 004 | `create_users` | users |
+| 005 | `create_products` | products |
+| 006 | `create_lookup_groups` | lookup_groups |
+| 007 | `create_lookups` | lookups |
+| 008 | `create_orders` | orders |
+| 009 | `create_order_items` | order_items |
+| 010 | `create_payments` | payments |
+| 011 | `create_payment_attempts` | payment_attempts |
+| 012 | `create_stripe_webhook_events` | stripe_webhook_events |
+| 013 | `create_stripe_transactions` | stripe_transactions |
+| 014 | `create_payment_events` | payment_events |
+| 015 | `create_idempotency_keys` | idempotency_keys |
+| 016 | `create_refunds` | refunds |
+| 017 | `create_invoices` | invoices |
+| 018 | `create_receipts` | receipts |
+| 019 | `create_api_tokens` | api_tokens |
+| 020 | `create_audit_logs` | audit_logs |
+| 021 | `create_activity_logs` | activity_logs |
+| 022 | `create_settings` | settings |
+| 023 | `create_email_logs` | email_logs |
+| 024 | `seed_roles` | Insert admin + user roles |
+| 025 | `seed_permissions` | Insert default permissions |
+| 026 | `seed_lookups` | Insert status/category lookups |
 
 ---
 
-## SQL Companion Files
+### SQL Companion Files
 
 | File | Purpose |
-|---|---|
-| `sql/schema.sql` | Full DDL — use for manual setup or reference |
-| `sql/seed.sql` | Default role seed data |
+|------|---------|
+| `sql/schema.sql` | Full DDL |
+| `sql/seed.sql` | Initial seed data (roles, permissions, lookups, admin user, demo products) |
 | `sql/rollback.sql` | Drop all tables in dependency-safe order |
