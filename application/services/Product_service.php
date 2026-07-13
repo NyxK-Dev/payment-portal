@@ -27,7 +27,7 @@ class Product_Service extends BaseService
             "created_at"         => date('Y-m-d H:i:s')
         ];
 
-        $insertId = $this->repository->create($product);
+        $insertId = $this->repository->insert($product);
 
         if ($insertId) {
             $this->logAction('CREATE', $insertId, null, $product);

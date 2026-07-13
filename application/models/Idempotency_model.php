@@ -1,12 +1,12 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Product_Model extends CI_Model
+class Idempotency_model extends CI_Model
 {
     /**
-     * Product Table
+     * Idempotency Keys Table
      */
-    protected $table = 'products';
+    protected $table = 'idempotency_keys';
 
     /**
      * Get Table Name
