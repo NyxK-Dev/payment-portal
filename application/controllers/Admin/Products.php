@@ -24,7 +24,7 @@ class Products extends MY_Controller
     {
         $keyword = $this->input->get('keyword');
 
-        $data['products'] = $this->productrepository->all([
+        $data['products'] = $this->productrepository->findAll([
             'keyword' => $keyword
         ]);
 

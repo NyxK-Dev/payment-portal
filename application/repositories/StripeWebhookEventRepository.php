@@ -1,65 +1,62 @@
 <?php
-
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+require_once APPPATH . 'interfaces/StripeWebhookEventInterface.php';
 
-class StripeWebhookEventRepository
+class StripeWebhookEventRepository implements StripeWebhookEventInterface
 {
-
     protected $CI;
-
+    protected $table;
 
     public function __construct()
     {
-
         $this->CI =& get_instance();
 
+        $this->CI->load->model('Stripe_webhook_event_model');
 
-        $this->CI->load->model(
-            'Stripe_webhook_event_model',
-            'stripeWebhookEventModel'
-        );
-
+        $this->table = $this->CI->Stripe_webhook_event_model->getTable();
     }
 
-
-
+    /**
+     * Check if Event Already Exists
+     */
     public function existsByEventId($eventId)
     {
-
-        return $this->CI
-            ->stripeWebhookEventModel
+        return $this->CI->db
             ->where(
                 'event_id',
                 $eventId
             )
+            ->from($this->table)
             ->count_all_results() > 0;
-
     }
 
-
-
-    public function create($data)
+    /**
+     * Create Webhook Event
+     */
+    public function create(array $data)
     {
+        $this->CI->db->insert(
+            $this->table,
+            $data
+        );
 
-        return $this->CI
-            ->stripeWebhookEventModel
-            ->insert($data);
-
+        return $this->CI->db->insert_id();
     }
 
-
-
-    public function update($id,$data)
+    /**
+     * Update Webhook Event
+     */
+    public function update($id, array $data)
     {
-
-        return $this->CI
-            ->stripeWebhookEventModel
+        return $this->CI->db
+            ->where(
+                'id',
+                $id
+            )
             ->update(
-                $id,
+                $this->table,
                 $data
             );
-
     }
-
 }

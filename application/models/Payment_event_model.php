@@ -1,26 +1,18 @@
 <?php
-
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Payment_event_model extends CI_Model
 {
+    /**
+     * Payment Events Table
+     */
     protected $table = 'payment_events';
 
-    public function insert(array $data)
+    /**
+     * Get Table Name
+     */
+    public function getTable()
     {
-        $this->db->insert(
-            $this->table,
-            $data
-        );
-
-        return $this->db->insert_id();
-    }
-
-    public function findByPaymentId($paymentId)
-    {
-        return $this->db
-            ->where('payment_id', $paymentId)
-            ->get($this->table)
-            ->result_array();
+        return $this->table;
     }
 }
