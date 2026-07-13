@@ -470,77 +470,19 @@
 
 </div>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
+    const resetButton = document.getElementById('resetSearch');
 
-        var searchInput = document.getElementById('searchOrder');
+    if (resetButton) {
 
-        var resetButton = document.getElementById('resetSearch');
+        resetButton.addEventListener('click', function () {
 
-        var rows = document.querySelectorAll('#ordersTable tbody tr');
-
-
-
-
-        function filterOrders() {
-
-
-            var keyword = searchInput.value.toLowerCase().trim();
-
-
-
-            rows.forEach(function(row) {
-
-
-                var text = row.innerText.toLowerCase();
-
-
-
-                if (text.indexOf(keyword) !== -1) {
-
-                    row.style.display = '';
-
-                } else {
-
-                    row.style.display = 'none';
-
-                }
-
-
-            });
-
-
-
-        }
-
-
-
-
-        searchInput.addEventListener('keyup', function() {
-
-
-            filterOrders();
-
+            window.location.href = window.location.pathname;
 
         });
 
+    }
 
-
-
-
-        resetButton.addEventListener('click', function() {
-
-
-            searchInput.value = '';
-
-            filterOrders();
-
-            searchInput.focus();
-
-
-        });
-
-
-
-    });
-</script>
+});
+</script>s
