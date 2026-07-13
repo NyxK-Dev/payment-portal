@@ -3,6 +3,9 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Receipts extends CI_Controller
 {
+    private $receiptRoute = 'admin/receipts';
+    private $isAdmin = true;
+
     public function __construct()
     {
         parent::__construct();
@@ -13,9 +16,11 @@ class Receipts extends CI_Controller
     public function index()
     {
         $data = [
-            'title'    => 'Manage Receipts',
-            'content'  => 'admin/receipts/index',
-            'receipts' => $this->receiptservice->getAllWithRelations()
+            'title'        => 'Manage Receipts',
+            'content'      => 'shared/receipts/index',
+            'receiptRoute' => $this->receiptRoute,
+            'isAdmin'      => $this->isAdmin,
+            'receipts'     => $this->receiptservice->getAllWithRelations()
         ];
         $this->load->view('layouts/app_layout', $data);
     }
@@ -28,9 +33,11 @@ class Receipts extends CI_Controller
         }
 
         $data = [
-            'title'   => 'Receipt Details - ' . $receipt->receipt_no,
-            'content' => 'admin/receipts/show',
-            'receipt' => $receipt
+            'title'        => 'Receipt Details - ' . $receipt->receipt_no,
+            'content'      => 'shared/receipts/show',
+            'receiptRoute' => $this->receiptRoute,
+            'isAdmin'      => $this->isAdmin,
+            'receipt'      => $receipt
         ];
         $this->load->view('layouts/app_layout', $data);
     }
@@ -42,6 +49,8 @@ class Receipts extends CI_Controller
             show_404();
         }
 
+        // Keep this pointing to your dedicated print asset layout 
+        // as PDF layouts usually require distinct print CSS styles
         $this->pdfdocument->streamFromView(
             'admin/receipts/print_pdf',
             ['receipt' => $receipt],

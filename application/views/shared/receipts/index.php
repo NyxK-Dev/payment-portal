@@ -1,5 +1,18 @@
+<?php
+defined('BASEPATH') or exit('No direct script access allowed');
+?>
+
 <section class="content pt-4">
     <div class="container-fluid">
+
+        <!-- Notification Layer -->
+        <?php if ($this->session->flashdata('success')): ?>
+            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+                <i class="fas fa-check-circle me-2"></i><?= html_escape($this->session->flashdata('success')); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="text-muted small">
                 Monitor payment allocations, check status changes, and track generated transaction receipts.
@@ -18,7 +31,9 @@
                                 <th class="py-3">Invoice Reference</th>
                                 <th class="text-end py-3">Amount</th>
                                 <th class="text-center py-3">Status</th>
-                                <th class="py-3">Issued By</th>
+                                <?php if (!empty($isAdmin) && $isAdmin): ?>
+                                    <th class="py-3">Issued By</th>
+                                <?php endif; ?>
                                 <th width="160" class="pe-4 text-end py-3">Actions</th>
                             </tr>
                         </thead>
@@ -27,8 +42,8 @@
                                 <?php foreach ($receipts as $item): ?>
                                     <tr>
                                         <td class="ps-4 fw-bold text-secondary">#<?= $item->id; ?></td>
-                                        <td><code class="text-dark bg-light px-2 py-1 rounded fw-medium"><?= htmlspecialchars($item->receipt_no); ?></code></td>
-                                        <td class="fw-bold text-dark"><?= htmlspecialchars($item->invoice_no ?? 'N/A'); ?></td>
+                                        <td><code class="text-dark bg-light px-2 py-1 rounded fw-medium"><?= html_escape($item->receipt_no); ?></code></td>
+                                        <td class="fw-bold text-dark"><?= html_escape($item->invoice_no ?? 'N/A'); ?></td>
                                         <td class="text-end text-success fw-bold font-monospace">$<?= number_format($item->amount, 2); ?></td>
                                         <td class="text-center">
                                             <?php
@@ -41,21 +56,27 @@
                                             }
                                             ?>
                                             <span class="badge rounded-pill px-3 py-2 <?= $badgeClass; ?>">
-                                                <?= htmlspecialchars($item->status_name ?? 'Pending'); ?>
+                                                <?= html_escape($item->status_name ?? 'Pending'); ?>
                                             </span>
                                         </td>
-
-                                        <td class="text-muted small"><?= htmlspecialchars($item->issuer_name ?? 'System'); ?></td>
-                                        <td class="pe-4 text-end">
-                                            <a href="<?= site_url('admin/receipts/show/' . $item->id); ?>" class="btn btn-outline-dark btn-sm rounded-pill font-medium" style="font-size: 0.75rem; padding: 0.25rem 0.75rem; white-space: nowrap;">
-                                                <i class="fas fa-eye me-1" style="font-size: 0.7rem;"></i> View Details
-                                            </a>
+                                        <?php if (!empty($isAdmin) && $isAdmin): ?>
+                                            <td class="text-muted small"><?= html_escape($item->issuer_name ?? 'System'); ?></td>
+                                        <?php endif; ?>
+                                        <td class="pe-4 text-end text-nowrap">
+                                            <div class="d-inline-flex gap-1">
+                                                <a href="<?= site_url($receiptRoute . '/show/' . $item->id); ?>" class="btn btn-outline-dark btn-sm rounded-pill font-medium" style="font-size: 0.75rem; padding: 0.25rem 0.75rem;">
+                                                    <i class="fas fa-eye me-1" style="font-size: 0.7rem;"></i> View Details
+                                                </a>
+                                                <a href="<?= site_url($receiptRoute . '/download/' . $item->id); ?>" class="btn btn-outline-danger btn-sm rounded-pill font-medium" style="font-size: 0.75rem; padding: 0.25rem 0.75rem;">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="7" class="text-center py-5 text-muted">
+                                    <td colspan="<?= (!empty($isAdmin) && $isAdmin) ? '7' : '6'; ?>" class="text-center py-5 text-muted">
                                         <i class="fas fa-receipt fa-3x mb-3 text-light"></i>
                                         <p class="fw-bold mt-2 mb-1">No receipts found</p>
                                         <p class="small mb-0">Receipts are automatically generated when an invoice is paid.</p>
