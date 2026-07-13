@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class RoleSeeder
 {
@@ -7,7 +7,7 @@ class RoleSeeder
 
     public function __construct()
     {
-        $this->CI =& get_instance();
+        $this->CI = &get_instance();
         $this->CI->load->database();
     }
 
@@ -58,16 +58,33 @@ class RoleSeeder
                 'updated_at' => date('Y-m-d H:i:s'),
             ],
             [
+                'code' => 'manage_invoices',
+                'name' => 'Manage invoices',
+                'description' => 'View and download all invoices',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ],
+            [
+                'code' => 'view_own_invoices',
+                'name' => 'View own invoices',
+                'description' => 'View and download customer own invoices',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ],
+            [
                 'code' => 'view_reports',
                 'name' => 'View reports',
                 'description' => 'Access sales and activity reports',
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
             ],
+
         ]);
 
         $adminRole = $this->CI->db->get_where('roles', ['name' => 'admin'])->row();
-        $permissionIds = $this->CI->db->select('id')->from('permissions')->where_in('code', ['manage_users', 'manage_products', 'manage_orders', 'manage_payments', 'view_reports'])->get()->result_array();
+        $customerRole = $this->CI->db->get_where('roles', ['name' => 'customer'])->row();
+        $now = date('Y-m-d H:i:s');
+        $permissionIds = $this->CI->db->select('id')->from('permissions')->where_in('code', ['manage_users', 'manage_products', 'manage_orders', 'manage_payments', 'manage_invoices', 'view_reports'])->get()->result_array();
 
         $rows = [];
         foreach ($permissionIds as $permission) {
@@ -75,6 +92,38 @@ class RoleSeeder
                 'role_id' => $adminRole->id,
                 'permission_id' => $permission['id'],
                 'created_at' => date('Y-m-d H:i:s'),
+            ];
+        }
+
+        /*
+|--------------------------------------------------------------------------
+| Customer Permissions
+|--------------------------------------------------------------------------
+*/
+
+        $customerPermissions = $this->CI->db
+            ->select('id')
+            ->from('permissions')
+            ->where_in(
+                'code',
+                [
+                    'view_own_invoices'
+                ]
+            )
+            ->get()
+            ->result_array();
+
+
+        foreach ($customerPermissions as $permission) {
+
+            $rows[] = [
+
+                'role_id' => $customerRole->id,
+
+                'permission_id' => $permission['id'],
+
+                'created_at' => $now,
+
             ];
         }
 

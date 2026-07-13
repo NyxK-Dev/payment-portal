@@ -1,24 +1,29 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-
 class Permission_model extends CI_Model
 {
 
     protected $table = 'permissions';
 
 
+
     public function getAll()
     {
+
         return $this->db
+            ->order_by('code')
             ->get($this->table)
             ->result();
     }
 
 
 
+
+
     public function find($id)
     {
+
         return $this->db
             ->where('id', $id)
             ->get($this->table)
@@ -27,27 +32,87 @@ class Permission_model extends CI_Model
 
 
 
-    public function existsCode($code, $ignoreId = null)
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHANGE START
+    |
+    | Get permission by code
+    |
+    | Example:
+    |
+    | manage_invoices
+    | view_own_invoices
+    |
+    |--------------------------------------------------------------------------
+    */
+
+    public function getByCode($code)
     {
 
+        return $this->db
+            ->where(
+                'code',
+                $code
+            )
+            ->get(
+                $this->table
+            )
+            ->row();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHANGE END
+    |--------------------------------------------------------------------------
+    */
+
+
+
+
+
+    public function existsCode(
+        $code,
+        $ignoreId = null
+    ) {
+
+
         $this->db
-            ->where('code', $code);
+            ->where(
+                'code',
+                $code
+            );
 
 
         if ($ignoreId) {
+
+
             $this->db
-                ->where('id !=', $ignoreId);
+                ->where(
+                    'id !=',
+                    $ignoreId
+                );
         }
 
 
+
         return $this->db
-            ->count_all_results($this->table) > 0;
+            ->count_all_results(
+                $this->table
+            ) > 0;
     }
+
+
+
+
 
 
 
     public function create($data)
     {
+
         return $this->db
             ->insert(
                 $this->table,
@@ -57,31 +122,65 @@ class Permission_model extends CI_Model
 
 
 
-    public function update($id, $data)
-    {
+
+
+
+    public function update(
+        $id,
+        $data
+    ) {
 
         return $this->db
-            ->where('id', $id)
+            ->where(
+                'id',
+                $id
+            )
             ->update(
                 $this->table,
                 $data
             );
     }
 
+
+
+
+
+
     public function delete($id)
     {
 
         return $this->db
-            ->where('id', $id)
+            ->where(
+                'id',
+                $id
+            )
             ->delete(
                 $this->table
             );
     }
 
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Check permission exists
+    |--------------------------------------------------------------------------
+    */
+
     public function exists($code)
     {
+
         return $this->db
-            ->where('code', $code)
-            ->count_all_results('permissions') > 0;
+            ->where(
+                'code',
+                $code
+            )
+            ->count_all_results(
+                $this->table
+            ) > 0;
     }
 }
