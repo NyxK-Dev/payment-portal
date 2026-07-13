@@ -1,122 +1,25 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class Role_model extends CI_Model
 {
-
     protected $table = 'roles';
 
-
-
-    public function getAll()
+    public function roleQuery()
     {
         return $this->db
- 
-            ->get($this->table)
-            ->result();
+            ->select([
+                'roles.id',
+                'roles.name',
+                'roles.description',
+                'roles.created_at',
+                'roles.updated_at'
+            ])
+            ->from($this->table);
     }
 
-
-
-
-    public function find($id)
+    public function getTable()
     {
-        return $this->db
-            ->where('id',$id)
-            ->get($this->table)
-            ->row();
+        return $this->table;
     }
-
-
-
-
-
-    public function existsName(
-        $name,
-        $ignoreId = null
-    )
-    {
-
-        $this->db
-            ->where('name',$name);
-
-
-
-        if($ignoreId !== null)
-        {
-
-            $this->db
-                ->where(
-                    'id !=',
-                    $ignoreId
-                );
-
-        }
-
-
-
-        return $this->db
-            ->count_all_results(
-                $this->table
-            ) > 0;
-
-    }
-
-
-
-
-
-    public function create($data)
-    {
-
-        return $this->db
-            ->insert(
-                $this->table,
-                $data
-            );
-
-    }
-
-
-
-
-
-    public function update(
-        $id,
-        $data
-    )
-    {
-
-        return $this->db
-            ->where(
-                'id',
-                $id
-            )
-            ->update(
-                $this->table,
-                $data
-            );
-
-    }
-
-
-
-
-
-    public function delete($id)
-    {
-
-        return $this->db
-            ->where(
-                'id',
-                $id
-            )
-            ->delete(
-                $this->table
-            );
-
-    }
-
-
 }

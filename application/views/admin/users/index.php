@@ -6,7 +6,29 @@
         <div class="card-body">
 
 
-            <table class="table table-bordered">
+            <div class="row mb-3">
+
+                <div class="col-md-4 ms-auto">
+                    <div class="input-group">
+
+                        <input
+                            type="text"
+                            id="searchUser"
+                            class="form-control"
+                            placeholder="Search by ID, Name, Email, Role or Status">
+
+                        <button
+                            type="button"
+                            id="resetSearch"
+                            class="btn btn-secondary">
+                            <i class="fa fa-sync"></i>
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+            <table class="table table-bordered" id="userTable">
 
 
                 <thead>
@@ -390,4 +412,45 @@
 
 
         });
+
+    const searchInput = document.getElementById('searchUser');
+    const resetButton = document.getElementById('resetSearch');
+
+    function filterUsers() {
+
+        let value = searchInput.value.toLowerCase();
+
+        let rows = document.querySelectorAll('#userTable tbody tr');
+
+        rows.forEach(function(row) {
+
+            let text = row.textContent.toLowerCase();
+
+            if (text.indexOf(value) > -1) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+
+        });
+
+    }
+
+
+    // Search
+    searchInput.addEventListener('keyup', function() {
+
+        filterUsers();
+
+    });
+
+
+    // Reset
+    resetButton.addEventListener('click', function() {
+
+        searchInput.value = '';
+
+        filterUsers();
+
+    });
 </script>
