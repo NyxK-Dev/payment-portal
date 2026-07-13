@@ -19,9 +19,9 @@ class CheckoutService
 
 
         $this->CI->load->service('OrderService');
-$this->CI->load->service('PaymentService');
-$this->CI->load->service('StripeService');
-$this->CI->load->service('IdempotencyService');
+        $this->CI->load->service('PaymentService');
+        $this->CI->load->service('StripeService');
+        $this->CI->load->service('IdempotencyService');
 
 
 
@@ -38,8 +38,7 @@ $this->CI->load->service('IdempotencyService');
     public function checkout(
         $userId,
         array $cart
-    )
-    {
+    ) {
 
 
         /*
@@ -49,14 +48,13 @@ $this->CI->load->service('IdempotencyService');
         */
 
         $key =
-    $this->CI
-         ->input
-         ->post('idempotency_key');
+            $this->CI
+                ->input
+                ->post('idempotency_key');
 
 
 
-        if(empty($key))
-        {
+        if (empty($key)) {
 
             throw new Exception(
                 'Missing Idempotency-Key'
@@ -76,17 +74,17 @@ $this->CI->load->service('IdempotencyService');
 
         $idem =
 
-        $this->CI
-        ->idempotencyservice
-        ->start(
+            $this->CI
+                ->idempotencyservice
+                ->start(
 
-            $key,
+                    $key,
 
-            $userId,
+                    $userId,
 
-            $cart
+                    $cart
 
-        );
+                );
 
 
 
@@ -99,10 +97,9 @@ $this->CI->load->service('IdempotencyService');
         */
 
 
-        if(
+        if (
             $idem['duplicate']
-        )
-        {
+        ) {
 
             return $idem['response'];
 
@@ -123,8 +120,7 @@ $this->CI->load->service('IdempotencyService');
 
 
 
-        try
-        {
+        try {
 
 
             /*
@@ -133,15 +129,15 @@ $this->CI->load->service('IdempotencyService');
 
             $order =
 
-            $this->CI
-            ->orderservice
-            ->createOrder(
+                $this->CI
+                    ->orderservice
+                    ->createOrder(
 
-                $userId,
+                        $userId,
 
-                $cart
+                        $cart
 
-            );
+                    );
 
 
 
@@ -155,19 +151,13 @@ $this->CI->load->service('IdempotencyService');
 
             $payment =
 
-            $this->CI
-            ->paymentservice
-            ->createPayment(
+                $this->CI
+                    ->paymentservice
+                    ->createPayment(
 
-                $order
+                        $order
 
-            );
-
-
-
-
-
-
+                    );
 
             /*
             Create Stripe Checkout Session
@@ -178,28 +168,20 @@ $this->CI->load->service('IdempotencyService');
 
             $stripe =
 
-            $this->CI
-            ->stripeservice
-            ->createCheckoutSession(
+                $this->CI
+                    ->stripeservice
+                    ->createCheckoutSession(
 
-                $order,
+                        $order,
 
-                $payment,
+                        $payment,
 
-                $cart,
+                        $cart,
 
-                $key
+                        $key
 
-            );
-
-
-
-
-
-
-
-            if(!$stripe['success'])
-            {
+                    );
+            if (!$stripe['success']) {
 
                 throw new Exception(
                     $stripe['message']
@@ -218,14 +200,14 @@ $this->CI->load->service('IdempotencyService');
             */
 
             $this->CI
-            ->paymentservice
-            ->saveStripeSession(
+                ->paymentservice
+                ->saveStripeSession(
 
-                $payment['attempt_id'],
+                    $payment['attempt_id'],
 
-                $stripe['session_id']
+                    $stripe['session_id']
 
-            );
+                );
 
 
 
@@ -236,11 +218,11 @@ $this->CI->load->service('IdempotencyService');
 
             $response = [
 
-                'success'=>true,
+                'success' => true,
 
-                'url'=>$stripe['url'],
+                'url' => $stripe['url'],
 
-                'order_id'=>$order['id']
+                'order_id' => $order['id']
 
             ];
 
@@ -256,16 +238,16 @@ $this->CI->load->service('IdempotencyService');
             */
 
             $this->CI
-            ->idempotencyrepository
-            ->complete(
+                ->idempotencyrepository
+                ->complete(
 
-                $key,
+                    $key,
 
-                $response,
+                    $response,
 
-                200
+                    200
 
-            );
+                );
 
 
 
@@ -282,28 +264,17 @@ $this->CI->load->service('IdempotencyService');
 
 
 
-        }
-        catch(Exception $e)
-        {
-
-
+        } catch (Exception $e) {
             $this->CI->db->trans_rollback();
-
-
-
-
             $this->CI
-            ->idempotencyrepository
-            ->fail(
+                ->idempotencyrepository
+                ->fail(
 
-                $key,
+                    $key,
 
-                $e->getMessage()
+                    $e->getMessage()
 
-            );
-
-
-
+                );
             throw $e;
 
 
