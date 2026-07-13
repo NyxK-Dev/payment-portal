@@ -95,6 +95,7 @@ class Lookup_model extends CI_Model
             ->where('code', $code)
             ->get($this->table)
             ->row();
+    }
     public function getByGroupCode($groupCode)
     {
         return $this->db

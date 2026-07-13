@@ -200,11 +200,11 @@ $this->CI->load->repository(
         $sessionId
     )
     {
-        return $this->CI->paymentattemptrepository->update($attemptId, [
-            'stripe_session_id' => $sessionId,
-            'updated_at'        => date('Y-m-d H:i:s')
-        ]);
-    }
+    //     return $this->CI->paymentattemptrepository->update($attemptId, [
+    //         'stripe_session_id' => $sessionId,
+    //         'updated_at'        => date('Y-m-d H:i:s')
+    //     ]);
+    // }
 
         return $this->CI
         ->paymentattemptrepository
@@ -616,42 +616,22 @@ log_message(
      */
     public function markWebhookProcessed($id)
     {
-
-
         return $this->CI
-        ->stripewebhookeventrepository
-        ->update(
+            ->stripewebhookeventrepository
+            ->update(
+                $id,
+                [
+                    'processed' => 1,
 
-            $id,
+                    'processed_at' => date(
+                        'Y-m-d H:i:s'
+                    ),
 
-            [
-
-                'processed'=>1,
-
-
-                'processed_at'=>date(
-                    'Y-m-d H:i:s'
-                ),
-
-
-                'processing_completed_at'=>date(
-                    'Y-m-d H:i:s'
-                )
-
-            ]
-
-            // 4. AUTOMATION: Generate the Receipt record
-            $receiptNo = 'RCT-' . date('YmdHis') . '-' . rand(100, 999);
-            $this->CI->receiptrepository->create([
-                'invoice_id'       => $invoiceId,
-                'receipt_no'       => $receiptNo,
-                'amount'           => $amount,
-                'status_lookup_id' => $invoiceReceiptPaidStatus, // Dynamic ID 22
-                'issued_at'        => date('Y-m-d H:i:s'),
-                'created_at'       => date('Y-m-d H:i:s')
-            ]);
-
-
+                    'processing_completed_at' => date(
+                        'Y-m-d H:i:s'
+                    )
+                ]
+            );
     }
           
     public function fulfillPaymentBySession($sessionId)
