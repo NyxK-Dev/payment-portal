@@ -6,32 +6,30 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class CheckoutService
 {
 
-
+    protected $orderService;
+    protected $paymentService;
+    protected $stripeService;
+    protected $idempotencyService;
+    protected $idempotencyRepository;
     protected $CI;
 
 
+    public function __construct(
+        OrderService $orderService,
+        PaymentService $paymentService,
+        StripeService $stripeService,
+        IdempotencyService $idempotencyService,
+        IdempotencyInterface $idempotencyRepository
+    ) {
 
-    public function __construct()
-    {
+        $this->orderService = $orderService;
+        $this->paymentService = $paymentService;
+        $this->stripeService = $stripeService;
+        $this->idempotencyService = $idempotencyService;
+        $this->idempotencyRepository = $idempotencyRepository;
 
         $this->CI =& get_instance();
-
-
-
-        $this->CI->load->service('OrderService');
-        $this->CI->load->service('PaymentService');
-        $this->CI->load->service('StripeService');
-        $this->CI->load->service('IdempotencyService');
-
-
-
-        $this->CI->load->repository(
-            'IdempotencyRepository'
-        );
-
     }
-
-
 
 
 
@@ -41,17 +39,10 @@ class CheckoutService
     ) {
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Get Idempotency Key
-        |--------------------------------------------------------------------------
-        */
-
         $key =
             $this->CI
                 ->input
                 ->post('idempotency_key');
-
 
 
         if (empty($key)) {
@@ -59,47 +50,21 @@ class CheckoutService
             throw new Exception(
                 'Missing Idempotency-Key'
             );
-
         }
 
 
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Acquire Idempotency Lock
-        |--------------------------------------------------------------------------
-        */
-
-
         $idem =
-
-            $this->CI
-                ->idempotencyservice
+            $this->idempotencyService
                 ->start(
-
                     $key,
-
                     $userId,
-
                     $cart
-
                 );
 
 
 
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Return Cached Response
-        |--------------------------------------------------------------------------
-        */
-
-
-        if (
-            $idem['duplicate']
-        ) {
+        if ($idem['duplicate']) {
 
             return $idem['response'];
 
@@ -107,80 +72,40 @@ class CheckoutService
 
 
 
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Business Transaction
-        |--------------------------------------------------------------------------
-        */
-
-
         $this->CI->db->trans_begin();
-
 
 
         try {
 
 
-            /*
-            Create Order
-            */
-
             $order =
-
-                $this->CI
-                    ->orderservice
+                $this->orderService
                     ->createOrder(
-
                         $userId,
-
                         $cart
-
                     );
 
 
-
-
-
-
-
-            /*
-            Create Payment
-            */
 
             $payment =
-
-                $this->CI
-                    ->paymentservice
+                $this->paymentService
                     ->createPayment(
-
                         $order
-
                     );
 
-            /*
-            Create Stripe Checkout Session
 
-            IMPORTANT:
-            Pass SAME idempotency key
-            */
 
             $stripe =
-
-                $this->CI
-                    ->stripeservice
+                $this->stripeService
                     ->createCheckoutSession(
-
                         $order,
-
                         $payment,
-
                         $cart,
-
                         $key
-
                     );
+
+
+
             if (!$stripe['success']) {
 
                 throw new Exception(
@@ -191,99 +116,57 @@ class CheckoutService
 
 
 
-
-
-
-
-            /*
-            Save Stripe Session
-            */
-
-            $this->CI
-                ->paymentservice
+            $this->paymentService
                 ->saveStripeSession(
-
                     $payment['attempt_id'],
-
                     $stripe['session_id']
-
                 );
-
-
-
-
-
 
 
 
             $response = [
 
                 'success' => true,
-
                 'url' => $stripe['url'],
-
                 'order_id' => $order['id']
 
             ];
 
 
 
-
-
-
-
-
-            /*
-            Cache Response
-            */
-
-            $this->CI
-                ->idempotencyrepository
+            $this->idempotencyRepository
                 ->complete(
-
                     $key,
-
                     $response,
-
                     200
-
                 );
-
-
-
-
-
 
 
 
             $this->CI->db->trans_commit();
 
 
-
             return $response;
 
 
 
-        } catch (Exception $e) {
+        } catch(Exception $e) {
+
+
             $this->CI->db->trans_rollback();
-            $this->CI
-                ->idempotencyrepository
+
+
+            $this->idempotencyRepository
                 ->fail(
-
                     $key,
-
                     $e->getMessage()
-
                 );
-            throw $e;
 
+
+            throw $e;
 
         }
 
-
-
     }
-
-
 
 }

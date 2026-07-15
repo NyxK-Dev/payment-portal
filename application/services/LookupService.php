@@ -7,9 +7,16 @@ require_once APPPATH . 'services/BaseService.php';
 
 class LookupService extends BaseService
 {
-    public function __construct()
+        public function __construct(
+        LookupRepositoryInterface $repository,
+        AuditLogService $auditService
+    )
     {
-        parent::__construct(new LookupRepository(), 'LOOKUP');
+        parent::__construct(
+            $repository,
+            'LOOKUP',
+            $auditService
+        );
     }
 
     public function create(array $data)

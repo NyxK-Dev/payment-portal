@@ -1,47 +1,55 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+require_once APPPATH . 'interfaces/UserRepositoryInterface.php';
+
+
 class UserService
 {
-    protected $CI;
+    protected $userRepository;
 
 
-    public function __construct()
+
+    public function __construct(
+        UserRepositoryInterface $userRepository
+    )
     {
-        $this->CI = &get_instance();
-
-
-        $this->CI->load->repository(
-            'UserRepository'
-        );
+        $this->userRepository = $userRepository;
     }
 
 
 
     public function getUsers()
     {
-        return $this->CI->userrepository
+        return $this->userRepository
             ->getAll();
     }
+
 
 
     public function getRoleByName($name)
     {
         return $this->userRepository
-            ->getRoleByName($name);
+            ->getRoleByName(
+                $name
+            );
     }
+
+
 
     public function getUser($id)
     {
-        return $this->CI->userrepository
-            ->find($id);
+        return $this->userRepository
+            ->find(
+                $id
+            );
     }
 
 
 
     public function changeRole($id, $roleId)
     {
-        return $this->CI->userrepository
+        return $this->userRepository
             ->updateRole(
                 $id,
                 $roleId

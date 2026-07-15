@@ -5,11 +5,7 @@ class Role_permission_model extends CI_Model
 {
     protected $table = 'role_permissions';
 
-    public function rolePermissionQuery()
-    {
-        return $this->db
-            ->from($this->table);
-    }
+ 
 
     public function getTable()
     {
