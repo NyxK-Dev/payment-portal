@@ -60,4 +60,18 @@ class LookupRepository implements LookupRepositoryInterface
     {
         return $this->CI->Lookup_model->getByGroupCode($groupCode);
     }
+
+    public function findByGroupAndCode(
+        int $groupId,
+        string $code
+    ) {
+
+        return $this->CI->db
+            ->where([
+                'group_id' => $groupId,
+                'code' => $code
+            ])
+            ->get('lookups')
+            ->row();
+    }
 }
