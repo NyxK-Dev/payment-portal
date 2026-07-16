@@ -1,7 +1,6 @@
 <?php
 
-defined('BASEPATH') OR exit('No direct script access allowed');
-
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class CheckoutService
 {
@@ -67,7 +66,6 @@ class CheckoutService
         if ($idem['duplicate']) {
 
             return $idem['response'];
-
         }
 
 
@@ -112,6 +110,8 @@ class CheckoutService
                     $stripe['message']
                 );
 
+            if (empty($gatewayResponse['success'])) {
+                throw new Exception($gatewayResponse['message'] ?? 'Unable to initialize payment.');
             }
 
 
@@ -129,7 +129,6 @@ class CheckoutService
                 'success' => true,
                 'url' => $stripe['url'],
                 'order_id' => $order['id']
-
             ];
 
 

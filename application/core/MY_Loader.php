@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 class MY_Loader extends CI_Loader
@@ -22,15 +22,21 @@ class MY_Loader extends CI_Loader
 
         require_once $path;
 
+        $CI = &get_instance();
 
-        $CI =& get_instance();
+        /*
+    |--------------------------------------------------------------------------
+    | Support subfolders
+    |--------------------------------------------------------------------------
+    */
 
+        $segments = explode('/', $service);
 
-        $property = strtolower($service);
+        $class = end($segments);
 
+        $property = strtolower($class);
 
-        $CI->$property = $this->resolve($service);
-
+        $CI->$property = new $class();
     }
 
 
@@ -52,8 +58,7 @@ class MY_Loader extends CI_Loader
 
         require_once $path;
 
-
-        $CI =& get_instance();
+        $CI = &get_instance();
 
 
         $property = strtolower($repository);
@@ -237,8 +242,7 @@ class MY_Loader extends CI_Loader
 
         require_once $path;
 
-
-        $CI =& get_instance();
+        $CI = &get_instance();
 
 
         $property = strtolower($request);
@@ -247,5 +251,4 @@ class MY_Loader extends CI_Loader
         $CI->$property = new $request();
 
     }
-
 }

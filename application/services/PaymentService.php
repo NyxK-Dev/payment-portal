@@ -225,6 +225,7 @@ class PaymentService
 
             );
 
+            );
     }
 
     /**
@@ -236,6 +237,20 @@ class PaymentService
     )
     {
 
+    /**
+     * Save Gateway Transaction (new method to fix the error)
+     * Stores the gateway response for reference and updates attempt if needed.
+     */
+    public function saveGatewayTransaction($payment, $paymentMethod, $gatewayResponse)
+    {
+        // 1. Save the full gateway response in payment_events for audit/logging
+        $this->CI->paymenteventrepository->create([
+            'payment_id'   => $payment['id'],
+            'event_type'   => 'gateway_transaction_created',
+            'event_source' => $paymentMethod,
+            'payload'      => json_encode($gatewayResponse),
+            'created_at'   => date('Y-m-d H:i:s')
+        ]);
 
         $session =
             $event->data->object;
@@ -253,6 +268,10 @@ class PaymentService
 
         }
 
+        log_message(
+            'error',
+            'SESSION DATA: ' . json_encode($session)
+        );
 
 
         $paymentId =

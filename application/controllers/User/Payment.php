@@ -14,34 +14,142 @@ class Payment extends MY_Controller
      * Stripe success URL
      */
     public function success()
-    {
-        $sessionId = $this->input->get('session_id');
+{
+    /*
+    |--------------------------------------------------------------------------
+    | Stripe Payment
+    |--------------------------------------------------------------------------
+    */
 
-        if (empty($sessionId)) {
-            redirect('user/cart/index');
-        }
+    $sessionId = $this->input->get('session_id');
+
+
+    if (!empty($sessionId)) {
 
         try {
-            // Process post-payment records (Invoice, Receipt, Status Updates)
-            $this->paymentservice->fulfillPaymentBySession($sessionId);
 
-            // Clear the cart session since they bought the items successfully
+            $this->paymentservice
+                 ->fulfillPaymentBySession($sessionId);
+
+
             $this->session->unset_userdata('cart');
+
 
             $this->render(
                 'user/checkout/success',
                 [
-                    'title'      => 'Payment Successful',
-                    'session_id' => $sessionId
+                    'title' => 'Payment Successful',
+                    'session_id' => $sessionId,
+                    'payment_method' => 'stripe'
                 ]
             );
-        } catch (Exception $e) {
-            log_message('error', 'Fulfillment failed for Stripe Session ' . $sessionId . ': ' . $e->getMessage());
 
-            $this->session->set_flashdata('error', 'Payment confirmed, but system fulfillment failed. Please contact support.');
-            redirect('user/cart/index');
+
+            return;
+
+
+        } catch (Exception $e) {
+
+
+            log_message(
+                'error',
+                'Stripe fulfillment failed: '
+                .$e->getMessage()
+            );
+
+
+            $this->session->set_flashdata(
+                'error',
+                'Stripe payment confirmed but fulfillment failed.'
+            );
+
+
+            redirect(
+                'user/cart/index'
+            );
+
         }
+
     }
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PayPal Payment
+    |--------------------------------------------------------------------------
+    */
+
+
+    $paypalToken = $this->input->get('token');
+
+
+    if (!empty($paypalToken)) {
+
+
+        try {
+
+
+            /*
+            PayPal payment was already captured
+            inside Paypal.php success()
+            */
+
+
+            $this->session->unset_userdata('cart');
+
+
+            $this->render(
+                'user/checkout/success',
+                [
+                    'title' => 'Payment Successful',
+                    'payment_method' => 'paypal',
+                    'transaction_id' => $paypalToken
+                ]
+            );
+
+
+            return;
+
+
+
+        } catch (Exception $e) {
+
+
+            log_message(
+                'error',
+                'PayPal fulfillment failed: '
+                .$e->getMessage()
+            );
+
+
+            $this->session->set_flashdata(
+                'error',
+                'PayPal payment confirmed but fulfillment failed.'
+            );
+
+
+            redirect(
+                'user/cart/index'
+            );
+
+        }
+
+    }
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | No Payment Information
+    |--------------------------------------------------------------------------
+    */
+
+    redirect(
+        'user/cart/index'
+    );
+}
 
     /**
      * Stripe cancel URL
