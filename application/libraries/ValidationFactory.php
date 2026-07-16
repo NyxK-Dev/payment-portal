@@ -1,25 +1,27 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 class ValidationFactory
 {
 
 
-    public function getRules($module,$action)
+    public function getRules($module, $action)
     {
 
+        // Load RuleBuilder first
+        require_once APPPATH . 'libraries/RuleBuilder.php';
+
         $file = APPPATH .
-                'validations/' .
-                $module .
-                'Rules.php';
+            'validations/' .
+            $module .
+            'Rules.php';
 
 
 
-        if(!file_exists($file))
-        {
+        if (!file_exists($file)) {
             throw new Exception(
-                "Validation file missing: ".$file
+                "Validation file missing: " . $file
             );
         }
 
@@ -29,24 +31,22 @@ class ValidationFactory
 
 
 
-        $class = $module.'Rules';
+        $class = $module . 'Rules';
 
 
 
-        if(!class_exists($class))
-        {
+        if (!class_exists($class)) {
             throw new Exception(
-                "Validation class missing: ".$class
+                "Validation class missing: " . $class
             );
         }
 
 
 
-        if(!method_exists($class,$action))
-        {
+        if (!method_exists($class, $action)) {
             throw new Exception(
-                "Validation method missing: ".
-                $class.'::'.$action
+                "Validation method missing: " .
+                    $class . '::' . $action
             );
         }
 
@@ -58,7 +58,5 @@ class ValidationFactory
                 $action
             ]
         );
-
     }
-
 }

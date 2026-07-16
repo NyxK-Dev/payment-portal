@@ -1,7 +1,5 @@
 <?php
-
 defined('BASEPATH') or exit('No direct script access allowed');
-
 
 class OrderService
 {
@@ -23,9 +21,9 @@ class OrderService
 
     }
 
-
-
-
+    /**
+     * Admin: Get all orders
+     */
     public function getAllOrders()
     {
         return $this->orderRepository
@@ -42,8 +40,6 @@ class OrderService
     ) {
 
         $total = 0;
-
-
         foreach ($cart as $item) {
 
             $total +=
@@ -53,7 +49,18 @@ class OrderService
 
         }
 
+        // 3. Generate Order Number
+//         $orderNo = 'ORD-' . date('YmdHis');
 
+//         // 4. Create Order
+//         $orderId = $this->CI->orderrepository->create([
+//             'user_id'          => $userId,
+//             'order_no'         => $orderNo,
+//             'status_lookup_id' => 5, // Pending Status
+//             'total_amount'     => $total,
+//             'version'          => 1,
+//             'created_at'       => date('Y-m-d H:i:s')
+//         ]);
 
 
         $orderNo =
@@ -130,20 +137,41 @@ class OrderService
 
 
         return [
-
-            'id'=>$orderId,
-
-            'order_no'=>$orderNo,
-
-            'total'=>$total
-
+            'id'       => $orderId,
+            'order_no' => $orderNo,
+            'total'    => $total
         ];
 
     }
 
+    /**
+     * Validate Order Items structure and payload data.
+     */
+    protected function validateItems(array $cart)
+    {
+        if (empty($cart)) {
+            return false;
+        }
 
+        foreach ($cart as $item) {
+            // Check keys exist
+            if (!isset($item['product_id']) || !isset($item['price']) || !isset($item['quantity'])) {
+                return false;
+            }
 
+            // Check types are numeric
+            if (!is_numeric($item['product_id']) || !is_numeric($item['price']) || !is_numeric($item['quantity'])) {
+                return false;
+            }
 
+            // Check quantity boundaries
+            if ($item['quantity'] <= 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
 
 
@@ -160,64 +188,7 @@ class OrderService
                     $filters
                 );
 
-
-
-        foreach ($orders as $order) {
-
-
-            $order->items =
-                $this->orderItemRepository
-                    ->getByOrderId(
-                        $order->id
-                    );
-
-        }
-
-
-
-        return $orders;
-
     }
-
-
-
-
-
-
-
-
-    public function getOrderDetail($id)
-    {
-
-        $order =
-            $this->orderRepository
-                ->findWithItems($id);
-
-
-
-        if ($order) {
-
-
-            $order->items =
-                $this->orderItemRepository
-                    ->getByOrderId(
-                        $id
-                    );
-
-        }
-
-
-
-        return $order;
-
-    }
-
-
-
-
-
-
-
     public function updateStatus(
         $id,
         $statusId

@@ -230,6 +230,7 @@ CREATE TABLE IF NOT EXISTS `api_tokens` (
     `id`           BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
     `user_id`      INT UNSIGNED     NOT NULL,
     `token_hash`   CHAR(64)         NOT NULL,
+    `token_family` VARCHAR(100)     NULL,
     `name`         VARCHAR(100)     NULL,
     `expires_at`   DATETIME         NOT NULL,
     `revoked_at`   DATETIME         NULL,
