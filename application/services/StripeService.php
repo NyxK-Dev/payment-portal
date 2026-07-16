@@ -22,177 +22,141 @@ class StripeService
     /**
      * Create Stripe Checkout Session
      */
-    /**
- * Create Stripe Checkout Session
- */
-public function createCheckoutSession(
-    array $order,
-    array $payment,
-    array $items,
-    string $idempotencyKey
-)
-{
-    try {
+    public function createCheckoutSession(
+        array $order,
+        array $payment,
+        array $items,
+        string $idempotencyKey
+    ) {
+        try {
 
-        $lineItems = [];
+            $lineItems = [];
 
+            foreach ($items as $item) {
 
-        foreach ($items as $item)
-        {
+                $lineItems[] = [
 
-            $lineItems[] = [
+                    'price_data' => [
 
-                'price_data' => [
+                        'currency' =>
+                            getenv('STRIPE_CURRENCY') ?: 'usd',
 
-                    'currency' =>
-                        getenv('STRIPE_CURRENCY') ?: 'usd',
+                        'product_data' => [
 
+                            'name' =>
+                                $item['name']
 
-                    'product_data' => [
+                        ],
 
-                        'name' =>
-                            $item['name']
+                        'unit_amount' =>
+
+                            (int) round(
+                                $item['price'] * 100
+                            )
 
                     ],
 
+                    'quantity' =>
+                        (int) $item['quantity']
 
-                    'unit_amount' =>
+                ];
+            }
 
-                        (int) round(
-                            $item['price'] * 100
+            $session = Session::create(
+
+                [
+
+                    'mode' => 'payment',
+
+                    'payment_method_types' => [
+
+                        'card'
+
+                    ],
+
+                    'line_items' => $lineItems,
+
+                    'success_url' =>
+
+                        site_url(
+                            'payment/success'
                         )
+                        .
+                        '?session_id={CHECKOUT_SESSION_ID}',
+
+                    'cancel_url' =>
+
+                        site_url(
+                            'payment/cancel'
+                        ),
+
+                    'metadata' => [
+
+                        'order_id' =>
+                            $order['id'],
+
+                        'payment_id' =>
+                            $payment['id'],
+
+                        'order_no' =>
+                            $order['order_no'],
+
+                        'payment_no' =>
+                            $payment['payment_no']
+
+                    ]
 
                 ],
 
+                /*
+                 Stripe idempotency key
+                */
+                [
 
-                'quantity' =>
-                    (int)$item['quantity']
-
-            ];
-
-        }
-
-
-
-        $session = Session::create(
-
-            [
-
-                'mode' => 'payment',
-
-
-                'payment_method_types' => [
-
-                    'card'
-
-                ],
-
-
-                'line_items' => $lineItems,
-
-
-                'success_url' =>
-
-                    site_url(
-                        'payment/success'
-                    )
-                    .
-                    '?session_id={CHECKOUT_SESSION_ID}',
-
-
-
-                'cancel_url' =>
-
-                    site_url(
-                        'payment/cancel'
-                    ),
-
-
-
-                'metadata' => [
-
-
-                    'order_id' =>
-                        $order['id'],
-
-
-                    'payment_id' =>
-                        $payment['id'],
-
-
-                    'order_no' =>
-                        $order['order_no'],
-
-
-                    'payment_no' =>
-                        $payment['payment_no']
+                    'idempotency_key' =>
+                        $idempotencyKey
 
                 ]
 
-            ],
+            );
 
+            return [
 
-            /*
-             Stripe idempotency key
-            */
-            [
+                'success' => true,
 
-                'idempotency_key' =>
-                    $idempotencyKey
+                'session_id' =>
+                    $session->id,
 
-            ]
+                'url' =>
+                    $session->url
 
-        );
+            ];
 
+        } catch (ApiErrorException $e) {
 
+            log_message(
+                'error',
+                'Stripe Checkout Error: '
+                . $e->getMessage()
+            );
 
-        return [
+            return [
 
-            'success'=>true,
+                'success' => false,
 
+                'message' =>
+                    $e->getMessage()
 
-            'session_id'=>
-                $session->id,
-
-
-            'url'=>
-                $session->url
-
-        ];
-
-
-
+            ];
+        }
     }
-    catch(ApiErrorException $e)
-    {
-
-        log_message(
-            'error',
-            'Stripe Checkout Error: '
-            .$e->getMessage()
-        );
-
-
-        return [
-
-            'success'=>false,
-
-
-            'message'=>
-                $e->getMessage()
-
-        ];
-
-    }
-}
 
     /**
      * Retrieve Stripe Session
      */
     public function retrieveSession(
         string $sessionId
-    )
-    {
+    ) {
         try {
 
             return Session::retrieve(
@@ -216,8 +180,7 @@ public function createCheckoutSession(
      */
     public function retrievePaymentIntent(
         string $paymentIntentId
-    )
-    {
+    ) {
         try {
 
             return \Stripe\PaymentIntent::retrieve(
@@ -241,8 +204,7 @@ public function createCheckoutSession(
      */
     public function retrieveCharge(
         string $chargeId
-    )
-    {
+    ) {
         try {
 
             return \Stripe\Charge::retrieve(
@@ -267,8 +229,7 @@ public function createCheckoutSession(
     public function createRefund(
         string $paymentIntentId,
         float $amount = null
-    )
-    {
+    ) {
         try {
 
             $payload = [
@@ -276,8 +237,8 @@ public function createCheckoutSession(
                     $paymentIntentId
             ];
 
-            if ($amount !== null)
-            {
+            if ($amount !== null) {
+
                 $payload['amount'] =
                     (int) round(
                         $amount * 100
@@ -306,8 +267,7 @@ public function createCheckoutSession(
     public function constructWebhookEvent(
         string $payload,
         string $signature
-    )
-    {
+    ) {
         try {
 
             return \Stripe\Webhook::constructEvent(
@@ -337,19 +297,18 @@ public function createCheckoutSession(
      */
     public function getSessionStatus(
         string $sessionId
-    )
-    {
+    ) {
         $session =
             $this->retrieveSession(
                 $sessionId
             );
 
-        if (!$session)
-        {
+        if (!$session) {
             return null;
         }
 
         return [
+
             'id' =>
                 $session->id,
 
@@ -361,6 +320,7 @@ public function createCheckoutSession(
 
             'payment_intent' =>
                 $session->payment_intent
+
         ];
     }
 
@@ -369,8 +329,7 @@ public function createCheckoutSession(
      */
     public function convertStripeAmount(
         int $amount
-    )
-    {
+    ) {
         return number_format(
             $amount / 100,
             2,

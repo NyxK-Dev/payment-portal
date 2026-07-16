@@ -1,6 +1,6 @@
 <?php
 
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 class Checkout extends MY_Controller
@@ -30,11 +30,10 @@ class Checkout extends MY_Controller
 
         $cart =
             $this->session
-                 ->userdata('cart');
+            ->userdata('cart');
 
 
-        if(empty($cart))
-        {
+        if (empty($cart)) {
             redirect(
                 'user/cart/index'
             );
@@ -44,11 +43,10 @@ class Checkout extends MY_Controller
         $this->render(
             'user/checkout/index',
             [
-                'title'=>'Checkout',
-                'cart'=>$cart
+                'title' => 'Checkout',
+                'cart' => $cart
             ]
         );
-
     }
 
 
@@ -60,84 +58,75 @@ class Checkout extends MY_Controller
      * /index.php/user/checkout/placeOrder
      */
     public function placeOrder()
-{
-
-    $userId =
-        $this->session
-             ->userdata('user_id');
-
-
-    $cart =
-        $this->session
-             ->userdata('cart');
-
-
-    if(empty($cart))
-    {
-        $this->session->set_flashdata(
-            'error',
-            'Your cart is empty'
-        );
-
-
-        redirect(
-            'user/cart/index'
-        );
-    }
-
-
-
-    try
     {
 
-
-        $result =
-            $this->checkoutservice
-                 ->checkout(
-                    $userId,
-                    $cart
-                 );
+        $userId =
+            $this->session
+            ->userdata('user_id');
 
 
+        $cart =
+            $this->session
+            ->userdata('cart');
 
-        if(!$result['success'])
-        {
 
-            throw new Exception(
-                $result['message']
+        if (empty($cart)) {
+            $this->session->set_flashdata(
+                'error',
+                'Your cart is empty'
             );
 
+
+            redirect(
+                'user/cart/index'
+            );
         }
 
-        redirect(
-            $result['url']
-        );
 
 
-    }
-    catch(Exception $e)
-    {
+        try {
+            $paymentMethod =
+                $this->input->post('payment_method');
+
+            $result =
+                $this->checkoutservice
+                ->checkout(
+                    $userId,
+                    $cart,
+                    $paymentMethod
+                );
 
 
-        log_message(
-            'error',
-            $e->getMessage()
-        );
+
+            if (!$result['success']) {
+
+                throw new Exception(
+                    $result['message']
+                );
+            }
+
+            redirect(
+                $result['url']
+            );
+        } catch (Exception $e) {
 
 
-        $this->session
-             ->set_flashdata(
+            log_message(
                 'error',
-                'Payment initialization failed'
-             );
+                $e->getMessage()
+            );
 
 
-        redirect(
-            'user/checkout/index'
-        );
+            $this->session
+                ->set_flashdata(
+                    'error',
+                    'Payment initialization failed'
+                );
 
+
+            redirect(
+                'user/checkout/index'
+            );
+        }
     }
-
-}
-
 }
