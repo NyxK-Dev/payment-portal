@@ -49,6 +49,13 @@ class Auth
     {
         return $this->CI->session->userdata('user_id');
     }
+    /*  CHANGE START | | Return current user data | 
+    */
+    public function user()
+    {
+        return (object)['id' => $this->id(), 'role_id' => $this->roleId(), 'role' => $this->role()];
+    } /*  CHANGE END 
+    */
 
     public function role()
     {
@@ -72,15 +79,15 @@ class Auth
         return $this->role() === 'customer';
     }
 
-   public function can($permission)
-{
-    return $this->CI
-        ->rolepermissionservice
-        ->hasPermission(
-            $this->roleId(),
-            $permission
-        );
-}
+    public function can($permission)
+    {
+        return $this->CI
+            ->rolepermissionservice
+            ->hasPermission(
+                $this->roleId(),
+                $permission
+            );
+    }
     public function deny($permission)
     {
 
@@ -90,5 +97,20 @@ class Auth
                 403
             );
         }
+    }
+    // For permission library for api
+    public function canRole($roleId, $permission)
+    {
+
+        if (empty($roleId)) {
+            return false;
+        }
+
+        return $this->CI
+            ->rolepermissionservice
+            ->hasPermission(
+                $roleId,
+                $permission
+            );
     }
 }

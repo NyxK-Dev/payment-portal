@@ -4,135 +4,168 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class CheckoutService
 {
+
+    protected $orderService;
+    protected $paymentService;
+    protected $stripeService;
+    protected $idempotencyService;
+    protected $idempotencyRepository;
     protected $CI;
 
-    public function __construct()
-    {
+
+    public function __construct(
+        OrderService $orderService,
+        PaymentService $paymentService,
+        StripeService $stripeService,
+        IdempotencyService $idempotencyService,
+        IdempotencyInterface $idempotencyRepository
+    ) {
+
+        $this->orderService = $orderService;
+        $this->paymentService = $paymentService;
+        $this->stripeService = $stripeService;
+        $this->idempotencyService = $idempotencyService;
+        $this->idempotencyRepository = $idempotencyRepository;
+
         $this->CI =& get_instance();
-        $this->CI->load->service('OrderService');
-        $this->CI->load->service('PaymentService');
-        $this->CI->load->service('payments/PaymentGatewayResolver');
-        $this->CI->load->service('IdempotencyService');
-        $this->CI->load->repository('IdempotencyRepository');
     }
 
-    /**
-     * Checkout
-     */
-    public function checkout($userId, array $cart, string $paymentMethod)
-    {
-        /*
-        |--------------------------------------------------------------------------
-        | Idempotency Key
-        |--------------------------------------------------------------------------
-        */
-        $key = $this->CI->input->post('idempotency_key');
+
+
+    public function checkout(
+        $userId,
+        array $cart
+    ) {
+
+
+        $key =
+            $this->CI
+                ->input
+                ->post('idempotency_key');
+
 
         if (empty($key)) {
-            throw new Exception('Missing Idempotency-Key');
+
+            throw new Exception(
+                'Missing Idempotency-Key'
+            );
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Idempotency Lock
-        |--------------------------------------------------------------------------
-        */
-        $idem = $this->CI->idempotencyservice->start($key, $userId, $cart);
+
+
+        $idem =
+            $this->idempotencyService
+                ->start(
+                    $key,
+                    $userId,
+                    $cart
+                );
+
+
 
         if ($idem['duplicate']) {
+
             return $idem['response'];
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Database Transaction
-        |--------------------------------------------------------------------------
-        */
+
+
         $this->CI->db->trans_begin();
 
+
         try {
-            /*
-            |--------------------------------------------------------------------------
-            | Create Order
-            |--------------------------------------------------------------------------
-            */
-            $order = $this->CI->orderservice->createOrder($userId, $cart);
 
-            /*
-            |--------------------------------------------------------------------------
-            | Create Payment
-            |--------------------------------------------------------------------------
-            */
-            $payment = $this->CI->paymentservice->createPayment($order);
 
-            /*
-            |--------------------------------------------------------------------------
-            | Resolve Payment Gateway
-            |--------------------------------------------------------------------------
-            */
-            $gateway = $this->CI->paymentgatewayresolver->resolve($paymentMethod);
+            $order =
+                $this->orderService
+                    ->createOrder(
+                        $userId,
+                        $cart
+                    );
 
-            /*
-            |--------------------------------------------------------------------------
-            | Create Payment
-            |--------------------------------------------------------------------------
-            */
-            $gatewayResponse = $gateway->createPayment($order, $payment, $cart, $key);
+
+
+            $payment =
+                $this->paymentService
+                    ->createPayment(
+                        $order
+                    );
+
+
+
+            $stripe =
+                $this->stripeService
+                    ->createCheckoutSession(
+                        $order,
+                        $payment,
+                        $cart,
+                        $key
+                    );
+
+
+
+            if (!$stripe['success']) {
+
+                throw new Exception(
+                    $stripe['message']
+                );
 
             if (empty($gatewayResponse['success'])) {
                 throw new Exception($gatewayResponse['message'] ?? 'Unable to initialize payment.');
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Save Gateway Transaction
-            |--------------------------------------------------------------------------
-            */
-            $this->CI->paymentservice->saveGatewayTransaction($payment, $paymentMethod, $gatewayResponse);
 
-            /*
-            |--------------------------------------------------------------------------
-            | Extract Redirect URL (handle different gateway response keys)
-            |--------------------------------------------------------------------------
-            */
-            $redirectUrl = null;
-            if (isset($gatewayResponse['redirect_url'])) {
-                $redirectUrl = $gatewayResponse['redirect_url'];
-            } elseif (isset($gatewayResponse['url'])) {
-                $redirectUrl = $gatewayResponse['url'];
-            } elseif (isset($gatewayResponse['approval_url'])) {
-                $redirectUrl = $gatewayResponse['approval_url'];
-            }
 
-            if (empty($redirectUrl)) {
-                throw new Exception('No redirect URL returned from the payment gateway.');
-            }
+            $this->paymentService
+                ->saveStripeSession(
+                    $payment['attempt_id'],
+                    $stripe['session_id']
+                );
 
-            /*
-            |--------------------------------------------------------------------------
-            | Response
-            |--------------------------------------------------------------------------
-            */
+
+
             $response = [
-                'success'  => true,
-                'url'      => $redirectUrl,
+
+                'success' => true,
+                'url' => $stripe['url'],
                 'order_id' => $order['id']
             ];
 
-            /*
-            |--------------------------------------------------------------------------
-            | Complete Idempotency
-            |--------------------------------------------------------------------------
-            */
-            $this->CI->idempotencyrepository->complete($key, $response, 200);
+
+
+            $this->idempotencyRepository
+                ->complete(
+                    $key,
+                    $response,
+                    200
+                );
+
+
 
             $this->CI->db->trans_commit();
+
+
             return $response;
 
-        } catch (Exception $e) {
+
+
+        } catch(Exception $e) {
+
+
             $this->CI->db->trans_rollback();
-            $this->CI->idempotencyrepository->fail($key, $e->getMessage());
+
+
+            $this->idempotencyRepository
+                ->fail(
+                    $key,
+                    $e->getMessage()
+                );
+
+
             throw $e;
+
         }
+
     }
+
 }

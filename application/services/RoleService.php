@@ -1,154 +1,49 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class RoleService
 {
+    protected $roleRepository;
 
-    protected $CI;
-
-
-
-    public function __construct()
+    public function __construct(RoleRepositoryInterface $roleRepository)
     {
-
-        $this->CI =& get_instance();
-
-
-        $this->CI->load->repository(
-            'RoleRepository'
-        );
-
+        $this->roleRepository = $roleRepository;
     }
-
-
-
-
 
     public function getRoles()
     {
-
-        return $this->CI
-            ->rolerepository
-            ->getAll();
-
+        return $this->roleRepository->getAll();
     }
-
-
-
-
 
     public function getRole($id)
     {
-
-        return $this->CI
-            ->rolerepository
-            ->find($id);
-
+        return $this->roleRepository->find($id);
     }
-
-
-
-
 
     public function create($data)
     {
-
-
-        if(
-            $this->CI
-            ->rolerepository
-            ->existsName(
-                $data['name']
-            )
-        )
-        {
-
-            throw new Exception(
-                'Role already exists'
-            );
-
+        if ($this->roleRepository->existsName($data['name'])) {
+            throw new Exception('Role already exists');
         }
 
+        $data['created_at'] = date('Y-m-d H:i:s');
 
-
-
-        $data['created_at'] =
-            date(
-                'Y-m-d H:i:s'
-            );
-
-
-
-        return $this->CI
-            ->rolerepository
-            ->create(
-                $data
-            );
-
+        return $this->roleRepository->create($data);
     }
 
-
-
-
-
-    public function update(
-        $id,
-        $data
-    )
+    public function update($id, $data)
     {
-
-
-        if(
-            $this->CI
-            ->rolerepository
-            ->existsName(
-                $data['name'],
-                $id
-            )
-        )
-        {
-
-            throw new Exception(
-                'Role already exists'
-            );
-
+        if ($this->roleRepository->existsName($data['name'], $id)) {
+            throw new Exception('Role already exists');
         }
 
+        $data['updated_at'] = date('Y-m-d H:i:s');
 
-
-
-        $data['updated_at'] =
-            date(
-                'Y-m-d H:i:s'
-            );
-
-
-
-
-        return $this->CI
-            ->rolerepository
-            ->update(
-                $id,
-                $data
-            );
-
+        return $this->roleRepository->update($id, $data);
     }
-
-
-
-
 
     public function delete($id)
     {
-
-        return $this->CI
-            ->rolerepository
-            ->delete(
-                $id
-            );
-
+        return $this->roleRepository->delete($id);
     }
-
-
 }

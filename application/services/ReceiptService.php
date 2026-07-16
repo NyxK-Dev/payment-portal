@@ -7,11 +7,15 @@ require_once APPPATH . 'services/BaseService.php';
 
 class ReceiptService extends BaseService
 {
-    public function __construct()
+      public function __construct(
+        ReceiptRepositoryInterface $repository,
+        AuditLogService $auditService
+    )
     {
         parent::__construct(
-            new ReceiptRepository(),
-            'RECEIPT'
+            $repository,
+            'RECEIPT',
+            $auditService
         );
     }
 

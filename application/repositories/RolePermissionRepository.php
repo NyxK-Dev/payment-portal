@@ -1,10 +1,15 @@
 <?php
+
 defined('BASEPATH') or exit('No direct script access allowed');
+
 require_once APPPATH . 'interfaces/RolePermissionRepositoryInterface.php';
+
 
 class RolePermissionRepository implements RolePermissionRepositoryInterface
 {
     protected $CI;
+
+
 
     public function __construct()
     {
@@ -13,13 +18,24 @@ class RolePermissionRepository implements RolePermissionRepositoryInterface
         $this->CI->load->model('Role_permission_model');
     }
 
+
+
+    /**
+     * Base query
+     */
     private function query()
     {
-        return $this->CI
-            ->Role_permission_model
-            ->rolePermissionQuery();
+        return $this->CI->db
+            ->from(
+                $this->table()
+            );
     }
 
+
+
+    /**
+     * Table name
+     */
     private function table()
     {
         return $this->CI
@@ -27,6 +43,11 @@ class RolePermissionRepository implements RolePermissionRepositoryInterface
             ->getTable();
     }
 
+
+
+    /**
+     * Get roles with permissions
+     */
     public function getAll()
     {
         return $this->query()
@@ -43,11 +64,18 @@ class RolePermissionRepository implements RolePermissionRepositoryInterface
                 'permissions',
                 'permissions.id = role_permissions.permission_id'
             )
-            ->group_by('roles.id')
+            ->group_by(
+                'roles.id'
+            )
             ->get()
             ->result();
     }
 
+
+
+    /**
+     * Insert role permission
+     */
     public function insert(array $data): bool
     {
         return $this->CI->db->insert(
@@ -56,30 +84,51 @@ class RolePermissionRepository implements RolePermissionRepositoryInterface
         );
     }
 
+
+
+    /**
+     * Delete permissions by role
+     */
     public function deleteByRole(int $roleId): bool
     {
         if ($roleId <= 0) {
             return false;
         }
 
+
         return $this->CI->db
-            ->where('role_id', $roleId)
+            ->where(
+                'role_id',
+                $roleId
+            )
             ->delete(
                 $this->table()
             );
     }
 
+
+
+    /**
+     * Get permission ids
+     */
     public function getPermissionIdsByRole(int $roleId): array
     {
         if ($roleId <= 0) {
             return [];
         }
 
+
         $rows = $this->query()
-            ->select('permission_id')
-            ->where('role_id', $roleId)
+            ->select(
+                'permission_id'
+            )
+            ->where(
+                'role_id',
+                $roleId
+            )
             ->get()
             ->result_array();
+
 
         return array_column(
             $rows,
@@ -87,13 +136,20 @@ class RolePermissionRepository implements RolePermissionRepositoryInterface
         );
     }
 
+
+
+    /**
+     * Check permission
+     */
     public function hasPermission(
         int $roleId,
         string $permission
     ): bool {
 
         return $this->query()
-            ->select('permissions.id')
+            ->select(
+                'permissions.id'
+            )
             ->join(
                 'permissions',
                 'permissions.id = role_permissions.permission_id'

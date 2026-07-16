@@ -1,20 +1,25 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-require_once APPPATH . 'interfaces/InvoiceRepositoryInterface.php';
-require_once APPPATH . 'repositories/InvoiceRepository.php';
 require_once APPPATH . 'services/BaseService.php';
 
 class InvoiceService extends BaseService
 {
-    public function __construct()
+    public function __construct(
+        InvoiceRepositoryInterface $repository,
+        AuditLogService $auditService
+    )
     {
+        $CI = &get_instance();
+
+        $CI->load->repository('InvoiceRepository');
+
         parent::__construct(
-            new InvoiceRepository(),
-            'INVOICE'
+            $repository,
+            'INVOICE',
+            $auditService
         );
     }
-
     /*
     |--------------------------------------------------------------------------
     | Admin
