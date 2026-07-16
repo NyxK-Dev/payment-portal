@@ -36,7 +36,7 @@ class MY_Loader extends CI_Loader
 
         $property = strtolower($class);
 
-        $CI->$property = new $class();
+        $CI->$property = $this->resolve($class);
     }
 
 
@@ -76,14 +76,12 @@ class MY_Loader extends CI_Loader
     /**
      * Resolve class dependencies
      */
- protected function resolve($class)
+protected function resolve($class)
 {
-
     // Load interface files first
     foreach (glob(APPPATH . 'interfaces/*.php') as $file) {
         require_once $file;
     }
-
 
     // If interface is requested
     if (interface_exists($class)) {
@@ -94,7 +92,26 @@ class MY_Loader extends CI_Loader
 
     }
 
+    // Try loading a service
+    $serviceFile = APPPATH . 'services/' . $class . '.php';
 
+    if (file_exists($serviceFile)) {
+        require_once $serviceFile;
+    }
+
+    // Try loading a repository
+    $repositoryFile = APPPATH . 'repositories/' . $class . '.php';
+
+    if (file_exists($repositoryFile)) {
+        require_once $repositoryFile;
+    }
+
+    // Try loading a model
+    $modelFile = APPPATH . 'models/' . $class . '.php';
+
+    if (file_exists($modelFile)) {
+        require_once $modelFile;
+    }
 
     if (!class_exists($class)) {
 
@@ -104,61 +121,34 @@ class MY_Loader extends CI_Loader
 
     }
 
-
-
     $reflection = new ReflectionClass($class);
-
 
     $constructor = $reflection->getConstructor();
 
-
-
     if (!$constructor) {
-
         return new $class();
-
     }
-
-
 
     $dependencies = [];
 
-
-
     foreach ($constructor->getParameters() as $parameter) {
-
 
         $type = $parameter->getType();
 
-
-
         if (!$type) {
-
             throw new Exception(
                 "Cannot resolve dependency: " .
                 $parameter->getName()
             );
-
         }
-
-
 
         $dependency = $type->getName();
 
-
-
-        $dependencies[] = $this->resolve(
-            $dependency
-        );
-
+        $dependencies[] = $this->resolve($dependency);
     }
 
-
-
     return new $class(...$dependencies);
-
 }
-
 
 
 

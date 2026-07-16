@@ -125,6 +125,7 @@ class PaypalService
         return [
             'success'      => true,
             'approval_url' => $approvalUrl,
+            'url'          => $approvalUrl,
             'order_id'     => $data['id']
         ];
     }

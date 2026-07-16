@@ -5,6 +5,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class CheckoutService
 {
 
+    protected $paymentGatewayResolver;
     protected $orderService;
     protected $paymentService;
     protected $stripeService;
@@ -14,6 +15,7 @@ class CheckoutService
 
 
     public function __construct(
+        PaymentGatewayResolver $paymentGatewayResolver,
         OrderService $orderService,
         PaymentService $paymentService,
         StripeService $stripeService,
@@ -21,151 +23,86 @@ class CheckoutService
         IdempotencyInterface $idempotencyRepository
     ) {
 
+        $this->paymentGatewayResolver = $paymentGatewayResolver;
         $this->orderService = $orderService;
         $this->paymentService = $paymentService;
         $this->stripeService = $stripeService;
         $this->idempotencyService = $idempotencyService;
         $this->idempotencyRepository = $idempotencyRepository;
 
-        $this->CI =& get_instance();
+        $this->CI = &get_instance();
     }
 
 
 
     public function checkout(
-        $userId,
-        array $cart
-    ) {
+    $userId,
+    array $cart,
+    $paymentMethod
+)
+{
 
 
-        $key =
-            $this->CI
-                ->input
-                ->post('idempotency_key');
+    $key =
+        $this->CI
+        ->input
+        ->post(
+            'idempotency_key'
+        );
 
 
-        if (empty($key)) {
-
-            throw new Exception(
-                'Missing Idempotency-Key'
-            );
-        }
-
-
-
-        $idem =
-            $this->idempotencyService
-                ->start(
-                    $key,
-                    $userId,
-                    $cart
-                );
+    $order =
+        $this->orderService
+        ->createOrder(
+            $userId,
+            $cart
+        );
 
 
 
-        if ($idem['duplicate']) {
-
-            return $idem['response'];
-        }
-
-
-
-        $this->CI->db->trans_begin();
-
-
-        try {
-
-
-            $order =
-                $this->orderService
-                    ->createOrder(
-                        $userId,
-                        $cart
-                    );
+    $payment =
+        $this->paymentService
+        ->createPayment(
+            $order,
+            $paymentMethod
+        );
 
 
 
-            $payment =
-                $this->paymentService
-                    ->createPayment(
-                        $order
-                    );
+    $gateway =
+        $this->paymentGatewayResolver
+        ->resolve(
+            $paymentMethod
+        );
 
 
 
-            $stripe =
-                $this->stripeService
-                    ->createCheckoutSession(
-                        $order,
-                        $payment,
-                        $cart,
-                        $key
-                    );
+    $gatewayResponse =
+        $gateway
+        ->createPayment(
+            $order,
+            $payment,
+            $cart,
+            $key
+        );
 
 
-
-            if (!$stripe['success']) {
-
-                throw new Exception(
-                    $stripe['message']
-                );
-
-            if (empty($gatewayResponse['success'])) {
-                throw new Exception($gatewayResponse['message'] ?? 'Unable to initialize payment.');
-            }
-
-
-
-            $this->paymentService
-                ->saveStripeSession(
-                    $payment['attempt_id'],
-                    $stripe['session_id']
-                );
-
-
-
-            $response = [
-
-                'success' => true,
-                'url' => $stripe['url'],
-                'order_id' => $order['id']
-            ];
-
-
-
-            $this->idempotencyRepository
-                ->complete(
-                    $key,
-                    $response,
-                    200
-                );
-
-
-
-            $this->CI->db->trans_commit();
-
-
-            return $response;
-
-
-
-        } catch(Exception $e) {
-
-
-            $this->CI->db->trans_rollback();
-
-
-            $this->idempotencyRepository
-                ->fail(
-                    $key,
-                    $e->getMessage()
-                );
-
-
-            throw $e;
-
-        }
-
+    if (!$gatewayResponse['success']) {
+        return $gatewayResponse;
     }
 
+
+    if ($paymentMethod === 'stripe' && !empty($gatewayResponse['session_id'])) {
+        $this->paymentService
+            ->saveStripeSession(
+                $payment['attempt_id'], 
+                $gatewayResponse['session_id']
+            );
+    }
+
+
+    return $gatewayResponse;
+
+
+}
 }

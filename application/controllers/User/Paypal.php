@@ -12,6 +12,7 @@ class Paypal extends MY_Controller
 
         $this->load->service('PaypalService');
         $this->load->service('PaymentService');
+        $this->load->service('AccountingService');
 
         $this->load->repository('OrderRepository');
         $this->load->repository('PaymentRepository');
@@ -379,6 +380,18 @@ class Paypal extends MY_Controller
         );
 
 
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Settle invoice and generate receipt
+        |--------------------------------------------------------------------------
+        */
+
+        $this->accountingservice->fulfillInvoiceAndReceipt(
+            $orderId,
+            (float) $amount
+        );
 
 
         /*
