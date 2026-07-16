@@ -1,6 +1,6 @@
 <?php
 
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 class ProductRules
@@ -13,50 +13,81 @@ class ProductRules
     {
         return [
 
-            [
-                'field' => 'category_lookup_id',
-                'label' => 'Category',
-                'rules' => 'required|integer'
-            ],
+            RuleBuilder::make(
+                'category_lookup_id',
+                'Category',
+                RuleBuilder::combine(
+                    RuleBuilder::required(),
+                    RuleBuilder::integer()
+                )
+            ),
 
-            [
-                'field' => 'status_lookup_id',
-                'label' => 'Status',
-                'rules' => 'required|integer'
-            ],
 
-            [
-                'field' => 'name',
-                'label' => 'Product Name',
-                'rules' => 'required|trim|min_length[3]|max_length[255]'
-            ],
+            RuleBuilder::make(
+                'status_lookup_id',
+                'Status',
+                RuleBuilder::combine(
+                    RuleBuilder::required(),
+                    RuleBuilder::integer()
+                )
+            ),
 
-            [
-                'field' => 'description',
-                'label' => 'Description',
-                'rules' => 'trim|max_length[500]'
-            ],
 
-            [
-                'field' => 'sku',
-                'label' => 'SKU',
-                'rules' => 'trim|max_length[100]'
-            ],
+            RuleBuilder::make(
+                'name',
+                'Product Name',
+                RuleBuilder::combine(
+                    RuleBuilder::required(),
+                    'trim',
+                    RuleBuilder::min(3),
+                    RuleBuilder::max(255)
+                )
+            ),
 
-            [
-                'field' => 'price',
-                'label' => 'Price',
-                'rules' => 'required|numeric'
-            ],
 
-            [
-                'field' => 'stock_qty',
-                'label' => 'Stock Quantity',
-                'rules' => 'required|integer|greater_than_equal_to[0]'
-            ],
+            RuleBuilder::make(
+                'description',
+                'Description',
+                RuleBuilder::combine(
+                    'trim',
+                    RuleBuilder::max(500)
+                )
+            ),
+
+
+            RuleBuilder::make(
+                'sku',
+                'SKU',
+                RuleBuilder::combine(
+                    'trim',
+                    RuleBuilder::max(100)
+                )
+            ),
+
+
+            RuleBuilder::make(
+                'price',
+                'Price',
+                RuleBuilder::combine(
+                    RuleBuilder::required(),
+                    RuleBuilder::numeric()
+                )
+            ),
+
+
+            RuleBuilder::make(
+                'stock_qty',
+                'Stock Quantity',
+                RuleBuilder::combine(
+                    RuleBuilder::required(),
+                    RuleBuilder::integer(),
+                    'greater_than_equal_to[0]'
+                )
+            )
 
         ];
     }
+
 
 
 
@@ -65,69 +96,28 @@ class ProductRules
      */
     public static function update()
     {
-        return [
-
-            [
-                'field' => 'category_lookup_id',
-                'label' => 'Category',
-                'rules' => 'required|integer'
-            ],
-
-            [
-                'field' => 'status_lookup_id',
-                'label' => 'Status',
-                'rules' => 'required|integer'
-            ],
-
-            [
-                'field' => 'name',
-                'label' => 'Product Name',
-                'rules' => 'required|trim|min_length[3]|max_length[255]'
-            ],
-
-            [
-                'field' => 'description',
-                'label' => 'Description',
-                'rules' => 'trim|max_length[500]'
-            ],
-
-            [
-                'field' => 'sku',
-                'label' => 'SKU',
-                'rules' => 'trim|max_length[100]'
-            ],
-
-            [
-                'field' => 'price',
-                'label' => 'Price',
-                'rules' => 'required|numeric'
-            ],
-
-            [
-                'field' => 'stock_qty',
-                'label' => 'Stock Quantity',
-                'rules' => 'required|integer|greater_than_equal_to[0]'
-            ],
-
-        ];
+        return self::create();
     }
 
 
 
+
     /**
-     * Delete Validation
+     * Delete Product Validation
      */
     public static function delete()
     {
         return [
 
-            [
-                'field' => 'id',
-                'label' => 'Product ID',
-                'rules' => 'required|integer'
-            ]
+            RuleBuilder::make(
+                'id',
+                'Product ID',
+                RuleBuilder::combine(
+                    RuleBuilder::required(),
+                    RuleBuilder::integer()
+                )
+            )
 
         ];
     }
-
 }

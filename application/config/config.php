@@ -468,7 +468,9 @@ $config['csrf_expire'] = 7200;
 $config['csrf_regenerate'] = TRUE;
 $config['csrf_exclude_uris'] = array(
     'admin/lookupgroups/store',
-    'webhooks/stripe'
+    'webhooks/stripe',
+    // API routes
+    'api/v1/.*'
 );
 
 /*
@@ -537,3 +539,12 @@ $config['rewrite_short_tags'] = FALSE;
 | Array:		array('10.0.1.200', '192.168.5.0/24')
 */
 $config['proxy_ips'] = '';
+
+/*
+|--------------------------------------------------------------------------
+| JWT Configuration
+|--------------------------------------------------------------------------
+*/
+
+$config['jwt_secret'] =
+    'change_this_payment_portal_secret_key';
