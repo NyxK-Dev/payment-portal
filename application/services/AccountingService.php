@@ -1,85 +1,158 @@
 <?php
+
 defined('BASEPATH') or exit('No direct script access allowed');
+
 
 class AccountingService
 {
-    protected $CI;
+    protected $invoiceRepository;
+    protected $receiptRepository;
+    protected $lookupRepository;
 
-    public function __construct()
-    {
-        $this->CI = &get_instance();
 
-        // Load the specific data access layers required for accounting documents
-        $this->CI->load->repository('InvoiceRepository');
-        $this->CI->load->repository('ReceiptRepository');
+    public function __construct(
+        InvoiceRepositoryInterface $invoiceRepository,
+        ReceiptRepositoryInterface $receiptRepository,
+        LookupRepositoryInterface $lookupRepository
+    ) {
+        $this->invoiceRepository = $invoiceRepository;
+        $this->receiptRepository = $receiptRepository;
+        $this->lookupRepository = $lookupRepository;
     }
+
+
 
     /**
      * Create an initial pending invoice for an order
      */
     public function createPendingInvoice(array $order): int
     {
-        // Group 6 (Invoice/Receipt) -> 'pending' state
-        $invoicePendingStatus = $this->CI->db->get_where('lookups', [
-            'group_id' => 6,
-            'code'     => 'pending'
-        ])->row()->id;
 
-        $invoiceNo = 'INV-' . date('YmdHis') . '-' . rand(100, 999);
+        $invoicePendingStatus =
+            $this->lookupRepository
+                ->findByGroupAndCode(
+                    6,
+                    'pending'
+                )
+                ->id;
 
-        return $this->CI->invoicerepository->create([
-            'order_id'         => $order['id'],
-            'invoice_no'       => $invoiceNo,
-            'amount'           => $order['total'],
-            'status_lookup_id' => $invoicePendingStatus,
-            'issued_at'        => date('Y-m-d H:i:s'),
-            'created_at'       => date('Y-m-d H:i:s'),
-            'updated_at'       => date('Y-m-d H:i:s')
-        ]);
+
+
+        $invoiceNo =
+            $this->generateInvoiceNumber();
+
+
+
+        return $this->invoiceRepository
+            ->create([
+                'order_id'         => $order['id'],
+                'invoice_no'       => $invoiceNo,
+                'amount'           => $order['total'],
+                'status_lookup_id' => $invoicePendingStatus,
+                'issued_at'        => date('Y-m-d H:i:s'),
+                'created_at'       => date('Y-m-d H:i:s'),
+                'updated_at'       => date('Y-m-d H:i:s')
+            ]);
     }
 
-    /**
-     * Settle an invoice and issue a matching payment receipt
-     */
-    public function fulfillInvoiceAndReceipt($orderId, $amount): void
-    {
-        $invoiceReceiptPaidStatus = $this->CI->db->get_where('lookups', [
-            'group_id' => 6,
-            'code'     => 'paid'
-        ])->row()->id;
 
-        // Locate the existing Invoice linked to this order
-        $invoice = $this->CI->db->get_where('invoices', ['order_id' => $orderId])->row();
+
+
+
+    /**
+     * Settle invoice and create receipt
+     */
+    public function fulfillInvoiceAndReceipt(
+        int $orderId,
+        float $amount
+    ): void {
+
+
+        $paidStatus =
+            $this->lookupRepository
+                ->findByGroupAndCode(
+                    6,
+                    'paid'
+                )
+                ->id;
+
+
+
+        $invoice =
+            $this->invoiceRepository
+                ->findByOrderId($orderId);
+
+
 
         if (!$invoice) {
-            // Defensive fallback: If an invoice wasn't created during initialization, generate it directly as paid
-            $invoiceNo = 'INV-' . date('YmdHis') . '-' . rand(100, 999);
-            $invoiceId = $this->CI->invoicerepository->create([
-                'order_id'         => $orderId,
-                'invoice_no'       => $invoiceNo,
+
+
+            $invoiceId =
+                $this->invoiceRepository
+                    ->create([
+                        'order_id'         => $orderId,
+                        'invoice_no'       => $this->generateInvoiceNumber(),
+                        'amount'           => $amount,
+                        'status_lookup_id' => $paidStatus,
+                        'issued_at'        => date('Y-m-d H:i:s'),
+                        'created_at'       => date('Y-m-d H:i:s')
+                    ]);
+
+
+        } else {
+
+
+            $invoiceId = $invoice->id;
+
+
+            $this->invoiceRepository
+                ->update(
+                    $invoiceId,
+                    [
+                        'status_lookup_id' => $paidStatus,
+                        'updated_at'       => date('Y-m-d H:i:s')
+                    ]
+                );
+        }
+
+
+
+
+        $this->receiptRepository
+            ->create([
+                'invoice_id'       => $invoiceId,
+                'receipt_no'       => $this->generateReceiptNumber(),
                 'amount'           => $amount,
-                'status_lookup_id' => $invoiceReceiptPaidStatus,
+                'status_lookup_id' => $paidStatus,
                 'issued_at'        => date('Y-m-d H:i:s'),
                 'created_at'       => date('Y-m-d H:i:s')
             ]);
-        } else {
-            $invoiceId = $invoice->id;
-            // Transition state from 'Pending' to 'Paid'
-            $this->CI->invoicerepository->update($invoiceId, [
-                'status_lookup_id' => $invoiceReceiptPaidStatus,
-                'updated_at'       => date('Y-m-d H:i:s')
-            ]);
-        }
 
-        // Issue receipt point-in-time linked directly to the cleared invoice
-        $receiptNo = 'RCT-' . date('YmdHis') . '-' . rand(100, 999);
-        $this->CI->receiptrepository->create([
-            'invoice_id'       => $invoiceId,
-            'receipt_no'       => $receiptNo,
-            'amount'           => $amount,
-            'status_lookup_id' => $invoiceReceiptPaidStatus,
-            'issued_at'        => date('Y-m-d H:i:s'),
-            'created_at'       => date('Y-m-d H:i:s')
-        ]);
     }
+
+
+
+
+
+    private function generateInvoiceNumber(): string
+    {
+        return
+            'INV-' .
+            date('YmdHis') .
+            '-' .
+            random_int(100,999);
+    }
+
+
+
+
+    private function generateReceiptNumber(): string
+    {
+        return
+            'RCT-' .
+            date('YmdHis') .
+            '-' .
+            random_int(100,999);
+    }
+
 }

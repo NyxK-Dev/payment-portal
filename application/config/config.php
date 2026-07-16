@@ -548,3 +548,4 @@ $config['proxy_ips'] = '';
 
 $config['jwt_secret'] =
     'change_this_payment_portal_secret_key';
+$config['enable_hooks'] = TRUE;

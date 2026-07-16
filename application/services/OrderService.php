@@ -3,15 +3,22 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class OrderService
 {
-    protected $CI;
 
-    public function __construct()
-    {
-        $this->CI = &get_instance();
+    protected $orderRepository;
 
-        // Load required repositories
-        $this->CI->load->repository('OrderRepository');
-        $this->CI->load->repository('OrderItemRepository');
+    protected $orderItemRepository;
+
+
+
+    public function __construct(
+        OrderInterface $orderRepository,
+        OrderItemInterface $orderItemRepository
+    ) {
+
+        $this->orderRepository = $orderRepository;
+
+        $this->orderItemRepository = $orderItemRepository;
+
     }
 
     /**
@@ -19,59 +26,122 @@ class OrderService
      */
     public function getAllOrders()
     {
-        return $this->CI->orderrepository->getAll();
+        return $this->orderRepository
+            ->getAll();
     }
 
-    /**
-     * Create a new customer order and its nested items.
-     * Shared by Web Checkout and API Order Create.
-     */
-    public function createOrder($userId, array $cart)
-    {
-        // 1. Business Validation
-        if (!$this->validateItems($cart)) {
-            throw new Exception('Invalid order items');
-        }
 
-        // 2. Calculate Total
+
+
+
+    public function createOrder(
+        $userId,
+        array $cart
+    ) {
+
         $total = 0;
         foreach ($cart as $item) {
-            $total += $item['price'] * $item['quantity'];
+
+            $total +=
+                $item['price']
+                *
+                $item['quantity'];
+
         }
 
         // 3. Generate Order Number
-        $orderNo = 'ORD-' . date('YmdHis');
+//         $orderNo = 'ORD-' . date('YmdHis');
 
-        // 4. Create Order
-        $orderId = $this->CI->orderrepository->create([
-            'user_id'          => $userId,
-            'order_no'         => $orderNo,
-            'status_lookup_id' => 5, // Pending Status
-            'total_amount'     => $total,
-            'version'          => 1,
-            'created_at'       => date('Y-m-d H:i:s')
-        ]);
+//         // 4. Create Order
+//         $orderId = $this->CI->orderrepository->create([
+//             'user_id'          => $userId,
+//             'order_no'         => $orderNo,
+//             'status_lookup_id' => 5, // Pending Status
+//             'total_amount'     => $total,
+//             'version'          => 1,
+//             'created_at'       => date('Y-m-d H:i:s')
+//         ]);
 
-        // 5. Build and Create Order Items
+
+        $orderNo =
+            'ORD-'
+            . date('YmdHis');
+
+
+
+
+        $orderId =
+            $this->orderRepository
+                ->create([
+
+                    'user_id'=>$userId,
+
+                    'order_no'=>$orderNo,
+
+                    'status_lookup_id'=>5,
+
+                    'total_amount'=>$total,
+
+                    'version'=>1,
+
+                    'created_at'=>date(
+                        'Y-m-d H:i:s'
+                    )
+
+                ]);
+
+
+
+
+
+
         $items = [];
+
+
+
         foreach ($cart as $item) {
-            $items[] = [
-                'order_id'   => $orderId,
-                'product_id' => $item['product_id'],
-                'quantity'   => $item['quantity'],
-                'unit_price' => $item['price'],
-                'subtotal'   => $item['price'] * $item['quantity'],
-                'created_at' => date('Y-m-d H:i:s')
+
+            $items[]=[
+
+                'order_id'=>$orderId,
+
+                'product_id'=>$item['product_id'],
+
+                'quantity'=>$item['quantity'],
+
+                'unit_price'=>$item['price'],
+
+                'subtotal'=>
+                    $item['price']
+                    *
+                    $item['quantity'],
+
+                'created_at'=>date(
+                    'Y-m-d H:i:s'
+                )
+
             ];
+
         }
 
-        $this->CI->orderitemrepository->createBatch($items);
+
+
+
+        $this->orderItemRepository
+            ->createBatch(
+                $items
+            );
+
+
+
+
 
         return [
             'id'       => $orderId,
             'order_no' => $orderNo,
             'total'    => $total
         ];
+
     }
 
     /**
@@ -103,41 +173,36 @@ class OrderService
         return true;
     }
 
-    /**
-     * Retrieve Order History for a specific user, with optional filters.
-     */
-    public function getOrderHistory($userId, $filters = [])
-    {
-        $orders = $this->CI->orderrepository->getByUser($userId, $filters);
 
-        foreach ($orders as $order) {
-            $order->items = $this->CI->orderitemrepository->getByOrderId($order->id);
-        }
 
-        return $orders;
+    public function getOrderHistory(
+        $userId,
+        $filters=[]
+    ) {
+
+
+        $orders =
+            $this->orderRepository
+                ->getByUser(
+                    $userId,
+                    $filters
+                );
+
+    }
+    public function updateStatus(
+        $id,
+        $statusId
+    ) {
+
+        return $this->orderRepository
+            ->update(
+                $id,
+                [
+                    'status_lookup_id'=>$statusId
+                ]
+            );
+
     }
 
-    /**
-     * Retrieve a detailed single order view with its items.
-     */
-    public function getOrderDetail($id)
-    {
-        $order = $this->CI->orderrepository->findWithItems($id);
 
-        if ($order) {
-            $order->items = $this->CI->orderitemrepository->getByOrderId($id);
-        }
-
-        return $order;
-    }
-
-    /**
-     * Update an existing order's status.
-     */
-    public function updateStatus($id, $statusId)
-    {
-        return $this->CI->orderrepository->update($id, [
-            'status_lookup_id' => $statusId
-        ]);
-    }
 }

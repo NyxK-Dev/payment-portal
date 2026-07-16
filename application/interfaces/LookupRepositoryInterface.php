@@ -11,4 +11,6 @@ interface LookupRepositoryInterface
     public function delete($id);
     public function countByGroup($groupId);
     public function getByGroupCode($groupCode);
+
+    public function findByGroupAndCode(int $groupId,string $code);
 }

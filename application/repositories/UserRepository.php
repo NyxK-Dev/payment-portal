@@ -1,11 +1,14 @@
 <?php
+
 defined('BASEPATH') or exit('No direct script access allowed');
 
 require_once APPPATH . 'interfaces/UserRepositoryInterface.php';
 
+
 class UserRepository implements UserRepositoryInterface
 {
     protected $CI;
+
 
     public function __construct()
     {
@@ -14,12 +17,35 @@ class UserRepository implements UserRepositoryInterface
         $this->CI->load->model('User_model');
     }
 
-    private function query()
+
+    private function userQuery()
     {
-        return $this->CI
-            ->User_model
-            ->userQuery();
+        return $this->CI->db
+            ->select([
+                'users.id',
+                'users.name',
+                'users.email',
+                'users.password',
+                'users.role_id',
+                'users.status_lookup_id',
+                'users.created_at',
+                'users.updated_at',
+                'users.deleted_at',
+                'users.last_login_at',
+                'roles.name AS role_name'
+            ])
+            ->from($this->table())
+            ->join(
+                'roles',
+                'roles.id = users.role_id',
+                'left'
+            )
+            ->where(
+                'users.deleted_at',
+                null
+            );
     }
+
 
     private function table()
     {
@@ -28,23 +54,29 @@ class UserRepository implements UserRepositoryInterface
             ->getTable();
     }
 
+
     private function now()
     {
         return date('Y-m-d H:i:s');
     }
 
+
     public function findById(int $id)
     {
-        return $this->query()
-            ->where('users.id', $id)
+        return $this->userQuery()
+            ->where(
+                'users.id',
+                $id
+            )
             ->limit(1)
             ->get()
             ->row();
     }
 
+
     public function findByEmail(string $email)
     {
-        return $this->query()
+        return $this->userQuery()
             ->where(
                 'users.email',
                 strtolower(trim($email))
@@ -54,19 +86,28 @@ class UserRepository implements UserRepositoryInterface
             ->row();
     }
 
+
     public function getAll(int $limit = 20, int $offset = 0)
     {
-        return $this->query()
-            ->order_by('users.id', 'ASC')
-            ->limit($limit, $offset)
+        return $this->userQuery()
+            ->order_by(
+                'users.id',
+                'ASC'
+            )
+            ->limit(
+                $limit,
+                $offset
+            )
             ->get()
             ->result();
     }
+
 
     public function find(int $id)
     {
         return $this->findById($id);
     }
+
 
     public function create(array $data): int
     {
@@ -80,27 +121,39 @@ class UserRepository implements UserRepositoryInterface
         return (int) $this->CI->db->insert_id();
     }
 
+
     public function update(int $id, array $data): bool
     {
         $data['updated_at'] = $this->now();
 
         return $this->CI->db
-            ->where('id', $id)
-            ->where('deleted_at', null)
+            ->where(
+                'id',
+                $id
+            )
+            ->where(
+                'deleted_at',
+                null
+            )
             ->update(
                 $this->table(),
                 $data
             );
     }
 
+
     public function getRoleByName(string $name)
     {
         return $this->CI->db
-            ->where('name', trim($name))
+            ->where(
+                'name',
+                trim($name)
+            )
             ->limit(1)
             ->get('roles')
             ->row();
     }
+
 
     public function updateRole(int $id, int $roleId): bool
     {
@@ -111,6 +164,7 @@ class UserRepository implements UserRepositoryInterface
             ]
         );
     }
+
 
     public function updateLastLogin(int $id): bool
     {

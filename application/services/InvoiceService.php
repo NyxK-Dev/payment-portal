@@ -5,15 +5,19 @@ require_once APPPATH . 'services/BaseService.php';
 
 class InvoiceService extends BaseService
 {
-    public function __construct()
+    public function __construct(
+        InvoiceRepositoryInterface $repository,
+        AuditLogService $auditService
+    )
     {
         $CI = &get_instance();
 
         $CI->load->repository('InvoiceRepository');
 
         parent::__construct(
-            $CI->invoicerepository,
-            'INVOICE'
+            $repository,
+            'INVOICE',
+            $auditService
         );
     }
     /*

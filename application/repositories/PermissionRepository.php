@@ -1,14 +1,16 @@
 <?php
+
 defined('BASEPATH') or exit('No direct script access allowed');
+
 
 require_once APPPATH . 'interfaces/PermissionRepositoryInterface.php';
 
+
 class PermissionRepository implements PermissionRepositoryInterface
 {
-    /**
-     * @var CI_Controller
-     */
     protected $CI;
+
+
 
     public function __construct()
     {
@@ -17,15 +19,28 @@ class PermissionRepository implements PermissionRepositoryInterface
         $this->CI->load->model('Permission_model');
     }
 
+
+
     /**
-     * Base query
+     * Base Query
      */
     private function query()
     {
-        return $this->CI
-            ->Permission_model
-            ->query();
+        return $this->CI->db
+            ->select([
+                'permissions.id',
+                'permissions.name',
+                'permissions.code',
+                'permissions.description',
+                'permissions.created_at',
+                'permissions.updated_at'
+            ])
+            ->from(
+                $this->table()
+            );
     }
+
+
 
     /**
      * Table name
@@ -37,19 +52,26 @@ class PermissionRepository implements PermissionRepositoryInterface
             ->getTable();
     }
 
+
+
     /**
      * Get all permissions
      */
-    public function getAll()
+    public function getAll(): array
     {
         return $this->query()
-            ->order_by('permissions.id', 'ASC')
+            ->order_by(
+                'permissions.id',
+                'ASC'
+            )
             ->get()
             ->result();
     }
 
+
+
     /**
-     * Find permission by id
+     * Find permission
      */
     public function find(int $id)
     {
@@ -57,77 +79,111 @@ class PermissionRepository implements PermissionRepositoryInterface
             return null;
         }
 
+
         return $this->query()
-            ->where('permissions.id', $id)
+            ->where(
+                'permissions.id',
+                $id
+            )
             ->limit(1)
             ->get()
             ->row();
     }
 
+
+
+    /**
+     * Find by code
+     */
+    public function getByCode(string $code)
+    {
+        return $this->query()
+            ->where(
+                'permissions.code',
+                trim($code)
+            )
+            ->limit(1)
+            ->get()
+            ->row();
+    }
+
+
+
     /**
      * Check duplicate code
      */
-    public function existsCode(string $code, int $ignoreId = null): bool
-    {
+    public function existsCode(
+        string $code,
+        ?int $ignoreId = null
+    ): bool {
+
         $query = $this->query()
-            ->where('permissions.code', trim($code));
+            ->where(
+                'permissions.code',
+                trim($code)
+            );
+
 
         if ($ignoreId !== null) {
-            $query->where('permissions.id !=', $ignoreId);
+
+            $query->where(
+                'permissions.id !=',
+                $ignoreId
+            );
         }
+
 
         return $query
             ->count_all_results() > 0;
     }
 
+
+
     /**
-     * Create permission
+     * Create
      */
     public function create(array $data): int
     {
-        $this->CI->db->trans_start();
-
         $this->CI->db->insert(
             $this->table(),
             $data
         );
 
-        $id = (int) $this->CI->db->insert_id();
 
-        $this->CI->db->trans_complete();
-
-        if (!$this->CI->db->trans_status()) {
-            return 0;
-        }
-
-        return $id;
+        return (int)
+            $this->CI->db->insert_id();
     }
 
+
+
     /**
-     * Update permission
+     * Update
      */
-    public function update(int $id, array $data): bool
-    {
+    public function update(
+        int $id,
+        array $data
+    ): bool {
+
         if ($id <= 0) {
             return false;
         }
 
-        $this->CI->db->trans_start();
 
-        $this->CI->db
-            ->where('id', $id)
+        return $this->CI->db
+            ->where(
+                'id',
+                $id
+            )
             ->update(
                 $this->table(),
                 $data
             );
-
-        $this->CI->db->trans_complete();
-
-        return $this->CI->db->trans_status();
     }
 
+
+
     /**
-     * Delete permission
+     * Delete
      */
     public function delete(int $id): bool
     {
@@ -135,16 +191,31 @@ class PermissionRepository implements PermissionRepositoryInterface
             return false;
         }
 
-        $this->CI->db->trans_start();
 
-        $this->CI->db
-            ->where('id', $id)
+        return $this->CI->db
+            ->where(
+                'id',
+                $id
+            )
             ->delete(
                 $this->table()
             );
+    }
 
-        $this->CI->db->trans_complete();
 
-        return $this->CI->db->trans_status();
+
+    /**
+     * Exists
+     */
+    public function exists(string $code): bool
+    {
+        return $this->CI->db
+            ->where(
+                'code',
+                trim($code)
+            )
+            ->count_all_results(
+                $this->table()
+            ) > 0;
     }
 }
