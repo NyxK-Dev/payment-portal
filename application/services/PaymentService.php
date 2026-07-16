@@ -118,7 +118,7 @@ class PaymentService
     /**
      * Create Payment + Invoice + Attempt
      */
-    public function createPayment(array $order)
+    public function createPayment(array $order, $paymentMethod)
     {
 
         $paymentNo =
@@ -224,9 +224,8 @@ class PaymentService
                 ]
 
             );
-
-            );
     }
+
 
     /**
      * Successful Payment Webhook
@@ -234,8 +233,267 @@ class PaymentService
     public function handleSuccessfulPayment(
         $event,
         $webhookId
-    )
-    {
+    ) {
+        log_message(
+            'error',
+            'HANDLE SUCCESS PAYMENT START'
+        );
+
+        $session = $event->data->object;
+
+        log_message(
+            'error',
+            'SESSION DATA: ' . json_encode($session)
+        );
+
+
+        $metadata = $session->metadata;
+
+
+        log_message(
+            'error',
+            'METADATA: ' . json_encode($metadata)
+        );
+
+        if (!isset($metadata->payment_id)) {
+            log_message(
+                'error',
+                'PAYMENT ID NOT FOUND'
+            );
+
+            return;
+        }
+
+        $paymentId = $metadata->payment_id;
+
+        /*
+        |--------------------------------------------------
+        | Update Payment Status
+        |--------------------------------------------------
+        */
+        $this->CI
+            ->paymentrepository
+            ->update(
+                $paymentId,
+                [
+                    'status_lookup_id' => 2,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]
+            );
+
+        /*
+        |--------------------------------------------------
+        | Get Payment Attempt
+        |--------------------------------------------------
+        */
+        $attempt =
+            $this->CI
+            ->paymentattemptrepository
+            ->findByPaymentId(
+                $paymentId
+            );
+
+        if (!$attempt) {
+            log_message(
+                'error',
+                'PAYMENT ATTEMPT NOT FOUND'
+            );
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------
+        | Prevent Duplicate Transaction
+        |--------------------------------------------------
+        */
+        $existingTransaction =
+            $this->CI
+            ->stripetransactionrepository
+            ->findByPaymentIntent(
+                $session->payment_intent
+            );
+
+        if ($existingTransaction) {
+            log_message(
+                'error',
+                'TRANSACTION ALREADY EXISTS'
+            );
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------
+        | Retrieve Payment Intent
+        |--------------------------------------------------
+        */
+        $paymentIntent =
+            \Stripe\PaymentIntent::retrieve(
+                $session->payment_intent
+            );
+
+        $chargeId = null;
+
+        if (
+            isset(
+                $paymentIntent->charges->data[0]
+            )
+        ) {
+            $chargeId =
+                $paymentIntent
+                ->charges
+                ->data[0]
+                ->id;
+        }
+
+        /*
+        |--------------------------------------------------
+        | Create Stripe Transaction
+        |--------------------------------------------------
+        */
+        $transactionId =
+            $this->CI
+            ->stripetransactionrepository
+            ->create([
+
+                'payment_id' => $paymentId,
+
+                'payment_attempt_id' =>
+                $attempt->id,
+
+                'webhook_event_id' =>
+                $webhookId,
+
+                'stripe_session_id' =>
+                $session->id,
+
+                'payment_intent_id' =>
+                $session->payment_intent,
+
+                'charge_id' =>
+                $chargeId,
+
+                'provider' =>
+                'stripe',
+
+                'currency' =>
+                strtoupper(
+                    $session->currency
+                ),
+
+                'amount' =>
+                $session->amount_total / 100,
+
+                'provider_status' =>
+                'paid',
+
+                'raw_payload' =>
+                json_encode($event),
+
+                'created_at' =>
+                date('Y-m-d H:i:s'),
+
+                'updated_at' =>
+                date('Y-m-d H:i:s')
+            ]);
+
+        log_message(
+            'error',
+            'TRANSACTION CREATED ID: ' .
+                $transactionId
+        );
+
+        /*
+        |--------------------------------------------------
+        | Create Payment Event
+        |--------------------------------------------------
+        */
+        $this->CI
+            ->paymenteventrepository
+            ->create([
+
+                'payment_id' =>
+                $paymentId,
+
+                'event_type' =>
+                'checkout.session.completed',
+
+                'event_source' =>
+                'stripe',
+
+                'payload' =>
+                json_encode($event),
+
+                'created_at' =>
+                date('Y-m-d H:i:s')
+            ]);
+
+        /*
+        |--------------------------------------------------
+        | Update Product Stock
+        |--------------------------------------------------
+        */
+        $orderId =
+            $session->metadata->order_id
+            ?? null;
+
+        log_message(
+            'error',
+            'ORDER ID: ' . $orderId
+        );
+
+        if ($orderId) {
+            $items =
+                $this->CI
+                ->orderitemrepository
+                ->getByOrderId(
+                    $orderId
+                );
+
+            log_message(
+                'error',
+                'ITEM COUNT: ' .
+                    count($items)
+            );
+
+            foreach ($items as $item) {
+                log_message(
+                    'error',
+                    'PRODUCT ID: '
+                        . $item->product_id
+                        . ' QTY: '
+                        . $item->quantity
+                );
+
+                $result =
+                    $this->CI
+                    ->productrepository
+                    ->decreaseStock(
+                        $item->product_id,
+                        $item->quantity
+                    );
+
+                log_message(
+                    'error',
+                    'STOCK UPDATE RESULT: '
+                        . ($result ? 'SUCCESS' : 'FAILED')
+                );
+            }
+
+            log_message(
+                'error',
+                'PRODUCT STOCK UPDATED'
+            );
+        }
+
+        log_message(
+            'error',
+            'HANDLE SUCCESS PAYMENT END'
+        );
+    }
+
+
 
     /**
      * Save Gateway Transaction (new method to fix the error)
