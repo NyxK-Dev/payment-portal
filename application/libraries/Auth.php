@@ -98,4 +98,19 @@ class Auth
             );
         }
     }
+    // For permission library for api
+    public function canRole($roleId, $permission)
+    {
+
+        if (empty($roleId)) {
+            return false;
+        }
+
+        return $this->CI
+            ->rolepermissionservice
+            ->hasPermission(
+                $roleId,
+                $permission
+            );
+    }
 }

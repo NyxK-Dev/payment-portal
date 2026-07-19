@@ -22,12 +22,15 @@ class MY_Loader extends CI_Loader
 
         require_once $path;
 
+        $CI = &get_instance();
 
         $CI = &get_instance();
 
+        $segments = explode('/', $service);
 
-        $property = strtolower($service);
+        $class = end($segments);
 
+        $property = strtolower($class);
 
         $CI->$property = $this->resolve($service);
     }
@@ -93,6 +96,22 @@ class MY_Loader extends CI_Loader
     |--------------------------------------------------------------------------
     */
 
+    // Try loading a service
+    $serviceFile = APPPATH . 'services/' . $class . '.php';
+
+    if (file_exists($serviceFile)) {
+        require_once $serviceFile;
+    }
+
+    // Try loading a repository
+    $repositoryFile = APPPATH . 'repositories/' . $class . '.php';
+
+    if (file_exists($repositoryFile)) {
+        require_once $repositoryFile;
+    }
+
+    // Try loading a model
+    $modelFile = APPPATH . 'models/' . $class . '.php';
 
         if (!class_exists($class)) {
 

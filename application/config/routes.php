@@ -164,3 +164,25 @@ $route['checkout/placeOrder'] =
 
 $route['payment/success'] = 'User/Payment/success';
 $route['payment/cancel']  = 'User/Payment/cancel';
+
+$route['payment/paypal/success'] = 'user/Paypal/success';
+$route['payment/paypal/cancel']  = 'user/Paypal/cancel';
+/*
+|--------------------------------------------------------------------------
+| Load API Routes
+|--------------------------------------------------------------------------
+*/
+
+require_once APPPATH . 'config/routes_api.php';
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Reserved Routes
+|--------------------------------------------------------------------------
+*/
+
+$route['404_override'] = '';
+
+$route['translate_uri_dashes'] = FALSE;

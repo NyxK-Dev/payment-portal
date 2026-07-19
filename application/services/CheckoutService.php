@@ -6,6 +6,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class CheckoutService
 {
 
+    protected $paymentGatewayResolver;
     protected $orderService;
     protected $paymentService;
     protected $stripeService;
@@ -15,6 +16,7 @@ class CheckoutService
 
 
     public function __construct(
+        PaymentGatewayResolver $paymentGatewayResolver,
         OrderService $orderService,
         PaymentService $paymentService,
         StripeService $stripeService,
@@ -22,6 +24,7 @@ class CheckoutService
         IdempotencyInterface $idempotencyRepository
     ) {
 
+        $this->paymentGatewayResolver = $paymentGatewayResolver;
         $this->orderService = $orderService;
         $this->paymentService = $paymentService;
         $this->stripeService = $stripeService;
@@ -141,35 +144,57 @@ class CheckoutService
                 'url' => $stripe['url'],
                 'order_id' => $order['id']
 
-            ];
+
+    $key =
+        $this->CI
+        ->input
+        ->post(
+            'idempotency_key'
+        );
+
+
+    $order =
+        $this->orderService
+        ->createOrder(
+            $userId,
+            $cart
+        );
 
 
 
-            $this->idempotencyRepository
-                ->complete(
-                    $key,
-                    $response,
-                    200
-                );
-
-
-
-            $this->CI->db->trans_commit();
+    $payment =
+        $this->paymentService
+        ->createPayment(
+            $order,
+            $paymentMethod
+        );
 
 
             return $response;
         } catch (Exception $e) {
 
+    $gatewayResponse =
+        $gateway
+        ->createPayment(
+            $order,
+            $payment,
+            $cart,
+            $key
+        );
 
-            $this->CI->db->trans_rollback();
+
+    if (!$gatewayResponse['success']) {
+        return $gatewayResponse;
+    }
 
 
-            $this->idempotencyRepository
-                ->fail(
-                    $key,
-                    $e->getMessage()
-                );
-
+    if ($paymentMethod === 'stripe' && !empty($gatewayResponse['session_id'])) {
+        $this->paymentService
+            ->saveStripeSession(
+                $payment['attempt_id'], 
+                $gatewayResponse['session_id']
+            );
+    }
 
             throw $e;
         }
