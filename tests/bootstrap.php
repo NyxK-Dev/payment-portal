@@ -120,3 +120,4 @@ require_once APPPATH . 'services/EmailService.php';
 require_once APPPATH . 'services/RegisterService.php';
 require_once APPPATH . 'repositories/LookupRepository.php';
 require_once APPPATH . 'validators/RegisterValidator.php';
+require_once APPPATH . 'services/PaymentGatewayResolver.php';
