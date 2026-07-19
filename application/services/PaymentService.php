@@ -78,8 +78,7 @@ class PaymentService
             $accountingService;
 
 
-        $this->CI =& get_instance();
-
+        $this->CI = &get_instance();
     }
 
 
@@ -112,100 +111,157 @@ class PaymentService
                 'created_at' => date('Y-m-d H:i:s')
 
             ]);
-
     }
 
     /**
      * Create Payment + Invoice + Attempt
      */
-    public function createPayment(array $order)
-    {
+public function createPayment(array $order)
+{
 
-        $paymentNo =
-            'PAY-'
-            . date('YmdHis')
-            . rand(100,999);
+    if (
+        empty($order['id']) ||
+        !isset($order['total']) ||
+        $order['total'] <= 0
+    ) {
 
-
-
-        $paymentId =
-            $this->paymentRepository
-                ->create([
-
-                    'order_id'         => $order['id'],
-
-                    'payment_no'       => $paymentNo,
-
-                    'amount'           => $order['total'],
-
-                    'currency'         => 'USD',
-
-                    'status_lookup_id' => 1,
-
-                    'version'          => 1,
-
-                    'created_at'       => date('Y-m-d H:i:s')
-
-                ]);
-
-
-
-
-
-        $invoiceId =
-            $this->accountingService
-                ->createPendingInvoice(
-                    $order
-                );
-
-
-
-
-
-        $attemptId =
-            $this->paymentAttemptRepository
-                ->create([
-
-                    'payment_id'       => $paymentId,
-
-                    'attempt_no'       => 1,
-
-                    'provider'         => 'stripe',
-
-                    'amount'           => $order['total'],
-
-                    'status_lookup_id' => 1,
-
-                    'created_at'       => date('Y-m-d H:i:s')
-
-                ]);
-
-
-
-
-
-        return [
-
-            'id'         => $paymentId,
-
-            'payment_no' => $paymentNo,
-
-            'attempt_id' => $attemptId,
-
-            'invoice_id' => $invoiceId
-
-        ];
+        throw new Exception(
+            'Invalid order data'
+        );
 
     }
 
+
+
+    $paymentNo =
+        'PAY-'
+        . date('YmdHis')
+        . rand(100,999);
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create Payment
+    |--------------------------------------------------------------------------
+    */
+
+    $paymentId =
+        $this->paymentRepository
+        ->create([
+
+            'order_id'         => $order['id'],
+
+            'payment_no'       => $paymentNo,
+
+            'amount'           => $order['total'],
+
+            'currency'         => 'USD',
+
+            'status_lookup_id' => 1,
+
+            'version'          => 1,
+
+            'created_at'       => date(
+                'Y-m-d H:i:s'
+            )
+
+        ]);
+
+
+
+    if (!$paymentId) {
+
+        throw new Exception(
+            'Payment creation failed'
+        );
+
+    }
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create Invoice
+    |--------------------------------------------------------------------------
+    */
+
+    $invoiceId =
+        $this->accountingService
+        ->createPendingInvoice(
+            $order
+        );
+
+
+
+    if (!$invoiceId) {
+
+        throw new Exception(
+            'Invoice creation failed'
+        );
+
+    }
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create Payment Attempt
+    |--------------------------------------------------------------------------
+    */
+
+    $attemptId =
+        $this->paymentAttemptRepository
+        ->create([
+
+            'payment_id'       => $paymentId,
+
+            'attempt_no'       => 1,
+
+            'provider'         => 'stripe',
+
+            'amount'           => $order['total'],
+
+            'status_lookup_id' => 1,
+
+            'created_at'       => date(
+                'Y-m-d H:i:s'
+            )
+
+        ]);
+
+
+
+    if (!$attemptId) {
+
+        throw new Exception(
+            'Payment attempt creation failed'
+        );
+
+    }
+
+
+
+    return [
+
+        'id' => $paymentId,
+
+        'payment_no' => $paymentNo,
+
+        'invoice_id' => $invoiceId,
+
+        'attempt_id' => $attemptId
+
+    ];
+
+}
     /**
      * Save Stripe session
      */
     public function saveStripeSession(
         $attemptId,
         $sessionId
-    )
-    {
+    ) {
 
         return $this->paymentAttemptRepository
             ->update(
@@ -215,16 +271,15 @@ class PaymentService
                 [
 
                     'stripe_session_id' =>
-                        $sessionId,
+                    $sessionId,
 
 
                     'updated_at' =>
-                        date('Y-m-d H:i:s')
+                    date('Y-m-d H:i:s')
 
                 ]
 
             );
-
     }
 
     /**
@@ -233,8 +288,7 @@ class PaymentService
     public function handleSuccessfulPayment(
         $event,
         $webhookId
-    )
-    {
+    ) {
 
 
         $session =
@@ -250,7 +304,6 @@ class PaymentService
         if (!isset($metadata->payment_id)) {
 
             return;
-
         }
 
 
@@ -264,31 +317,29 @@ class PaymentService
 
         $existingTransaction =
             $this->stripeTransactionRepository
-                ->findByPaymentIntent(
-                    $session->payment_intent
-                );
+            ->findByPaymentIntent(
+                $session->payment_intent
+            );
 
 
 
         if ($existingTransaction) {
 
             return;
-
         }
 
 
         $attempt =
             $this->paymentAttemptRepository
-                ->findByPaymentId(
-                    $paymentId
-                );
+            ->findByPaymentId(
+                $paymentId
+            );
 
 
 
         if (!$attempt) {
 
             return;
-
         }
 
         $this->fulfillPaymentBySession(
@@ -312,60 +363,60 @@ class PaymentService
 
         $transactionId =
             $this->stripeTransactionRepository
-                ->create([
+            ->create([
 
-                    'payment_id' =>
-                        $paymentId,
-
-
-                    'payment_attempt_id' =>
-                        $attempt->id,
+                'payment_id' =>
+                $paymentId,
 
 
-                    'webhook_event_id' =>
-                        $webhookId,
+                'payment_attempt_id' =>
+                $attempt->id,
 
 
-                    'stripe_session_id' =>
-                        $session->id,
+                'webhook_event_id' =>
+                $webhookId,
 
 
-                    'payment_intent_id' =>
-                        $session->payment_intent,
+                'stripe_session_id' =>
+                $session->id,
 
 
-                    'charge_id' =>
-                        $chargeId,
+                'payment_intent_id' =>
+                $session->payment_intent,
 
 
-                    'provider' =>
-                        'stripe',
+                'charge_id' =>
+                $chargeId,
 
 
-                    'currency' =>
-                        strtoupper($session->currency),
+                'provider' =>
+                'stripe',
 
 
-                    'amount' =>
-                        $session->amount_total / 100,
+                'currency' =>
+                strtoupper($session->currency),
 
 
-                    'provider_status' =>
-                        'paid',
+                'amount' =>
+                $session->amount_total / 100,
 
 
-                    'raw_payload' =>
-                        json_encode($event),
+                'provider_status' =>
+                'paid',
 
 
-                    'created_at' =>
-                        date('Y-m-d H:i:s'),
+                'raw_payload' =>
+                json_encode($event),
 
 
-                    'updated_at' =>
-                        date('Y-m-d H:i:s')
+                'created_at' =>
+                date('Y-m-d H:i:s'),
 
-                ]);
+
+                'updated_at' =>
+                date('Y-m-d H:i:s')
+
+            ]);
 
 
 
@@ -377,23 +428,23 @@ class PaymentService
             ->create([
 
                 'payment_id' =>
-                    $paymentId,
+                $paymentId,
 
 
                 'event_type' =>
-                    'checkout.session.completed',
+                'checkout.session.completed',
 
 
                 'event_source' =>
-                    'stripe',
+                'stripe',
 
 
                 'payload' =>
-                    json_encode($event),
+                json_encode($event),
 
 
                 'created_at' =>
-                    date('Y-m-d H:i:s')
+                date('Y-m-d H:i:s')
 
             ]);
 
@@ -413,9 +464,9 @@ class PaymentService
 
             $items =
                 $this->orderItemRepository
-                    ->getByOrderId(
-                        $orderId
-                    );
+                ->getByOrderId(
+                    $orderId
+                );
 
 
 
@@ -430,11 +481,8 @@ class PaymentService
                         $item->quantity
 
                     );
-
             }
-
         }
-
     }
 
     /**
@@ -451,7 +499,6 @@ class PaymentService
         if (!isset($intent->metadata->payment_id)) {
 
             return;
-
         }
 
 
@@ -473,7 +520,7 @@ class PaymentService
                     'status_lookup_id' => 3,
 
                     'updated_at' =>
-                        date('Y-m-d H:i:s')
+                    date('Y-m-d H:i:s')
 
                 ]
 
@@ -487,26 +534,25 @@ class PaymentService
             ->create([
 
                 'payment_id' =>
-                    $paymentId,
+                $paymentId,
 
 
                 'event_type' =>
-                    'payment_intent.payment_failed',
+                'payment_intent.payment_failed',
 
 
                 'event_source' =>
-                    'stripe',
+                'stripe',
 
 
                 'payload' =>
-                    json_encode($event),
+                json_encode($event),
 
 
                 'created_at' =>
-                    date('Y-m-d H:i:s')
+                date('Y-m-d H:i:s')
 
             ]);
-
     }
 
     /**
@@ -523,20 +569,19 @@ class PaymentService
                 [
 
                     'processed' =>
-                        1,
+                    1,
 
 
                     'processed_at' =>
-                        date('Y-m-d H:i:s'),
+                    date('Y-m-d H:i:s'),
 
 
                     'processing_completed_at' =>
-                        date('Y-m-d H:i:s')
+                    date('Y-m-d H:i:s')
 
                 ]
 
             );
-
     }
 
     /**
@@ -547,9 +592,9 @@ class PaymentService
 
         $attempt =
             $this->paymentAttemptRepository
-                ->findBySessionId(
-                    $sessionId
-                );
+            ->findBySessionId(
+                $sessionId
+            );
 
 
 
@@ -558,7 +603,6 @@ class PaymentService
             throw new Exception(
                 "Payment attempt not found"
             );
-
         }
 
 
@@ -567,21 +611,21 @@ class PaymentService
 
         $paymentAttemptPaidStatus =
             $this->CI->db
-                ->get_where(
+            ->get_where(
 
-                    'lookups',
+                'lookups',
 
-                    [
+                [
 
-                        'group_id'=>4,
+                    'group_id' => 4,
 
-                        'code'=>'paid'
+                    'code' => 'paid'
 
-                    ]
+                ]
 
-                )
-                ->row()
-                ->id;
+            )
+            ->row()
+            ->id;
 
 
 
@@ -589,21 +633,21 @@ class PaymentService
 
         $paymentPaidStatus =
             $this->CI->db
-                ->get_where(
+            ->get_where(
 
-                    'lookups',
+                'lookups',
 
-                    [
+                [
 
-                        'group_id'=>3,
+                    'group_id' => 3,
 
-                        'code'=>'paid'
+                    'code' => 'paid'
 
-                    ]
+                ]
 
-                )
-                ->row()
-                ->id;
+            )
+            ->row()
+            ->id;
 
 
 
@@ -617,7 +661,6 @@ class PaymentService
         ) {
 
             return true;
-
         }
 
 
@@ -626,9 +669,9 @@ class PaymentService
 
         $payment =
             $this->paymentRepository
-                ->find(
-                    $attempt->payment_id
-                );
+            ->find(
+                $attempt->payment_id
+            );
 
 
 
@@ -670,10 +713,10 @@ class PaymentService
                     [
 
                         'status_lookup_id' =>
-                            $paymentAttemptPaidStatus,
+                        $paymentAttemptPaidStatus,
 
                         'updated_at' =>
-                            date('Y-m-d H:i:s')
+                        date('Y-m-d H:i:s')
 
                     ]
 
@@ -691,10 +734,10 @@ class PaymentService
                     [
 
                         'status_lookup_id' =>
-                            $paymentPaidStatus,
+                        $paymentPaidStatus,
 
                         'updated_at' =>
-                            date('Y-m-d H:i:s')
+                        date('Y-m-d H:i:s')
 
                     ]
 
@@ -723,20 +766,13 @@ class PaymentService
 
 
             return true;
-
-
-
-        } catch(Exception $e) {
+        } catch (Exception $e) {
 
 
             $this->CI->db->trans_rollback();
 
 
             throw $e;
-
         }
-
     }
-
-
 }

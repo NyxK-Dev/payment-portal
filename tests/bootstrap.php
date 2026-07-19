@@ -112,3 +112,11 @@ require_once APPPATH . 'services/ReceiptService.php';
 require_once APPPATH . 'services/LookupGroupService.php';
 
 require_once APPPATH . 'services/LookupService.php';
+require_once APPPATH . 'services/Recaptcha_service.php';
+require_once APPPATH . 'services/Verification_service.php';
+require_once APPPATH . 'services/EmailLogService.php';
+require_once APPPATH . 'services/Auth_Service.php';
+require_once APPPATH . 'services/EmailService.php';
+require_once APPPATH . 'services/RegisterService.php';
+require_once APPPATH . 'repositories/LookupRepository.php';
+require_once APPPATH . 'validators/RegisterValidator.php';

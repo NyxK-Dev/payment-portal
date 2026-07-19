@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 class MY_Loader extends CI_Loader
@@ -23,14 +23,13 @@ class MY_Loader extends CI_Loader
         require_once $path;
 
 
-        $CI =& get_instance();
+        $CI = &get_instance();
 
 
         $property = strtolower($service);
 
 
         $CI->$property = $this->resolve($service);
-
     }
 
 
@@ -53,15 +52,13 @@ class MY_Loader extends CI_Loader
         require_once $path;
 
 
-        $CI =& get_instance();
+        $CI = &get_instance();
 
 
         $property = strtolower($repository);
 
 
         $CI->$property = new $repository();
-
-
     }
 
 
@@ -71,88 +68,174 @@ class MY_Loader extends CI_Loader
     /**
      * Resolve class dependencies
      */
- protected function resolve($class)
-{
+    protected function resolve($class)
+    {
 
-    // Load interface files first
-    foreach (glob(APPPATH . 'interfaces/*.php') as $file) {
-        require_once $file;
-    }
+        /*
+    |--------------------------------------------------------------------------
+    | Load interfaces
+    |--------------------------------------------------------------------------
+    */
 
+        foreach (
+            glob(APPPATH . 'interfaces/*.php')
+            as $file
+        ) {
 
-    // If interface is requested
-    if (interface_exists($class)) {
-
-        $implementation = $this->findImplementation($class);
-
-        return $this->resolve($implementation);
-
-    }
-
-
-
-    if (!class_exists($class)) {
-
-        throw new Exception(
-            "Class {$class} does not exist"
-        );
-
-    }
-
-
-
-    $reflection = new ReflectionClass($class);
-
-
-    $constructor = $reflection->getConstructor();
-
-
-
-    if (!$constructor) {
-
-        return new $class();
-
-    }
-
-
-
-    $dependencies = [];
-
-
-
-    foreach ($constructor->getParameters() as $parameter) {
-
-
-        $type = $parameter->getType();
-
-
-
-        if (!$type) {
-
-            throw new Exception(
-                "Cannot resolve dependency: " .
-                $parameter->getName()
-            );
-
+            require_once $file;
         }
 
 
 
-        $dependency = $type->getName();
+        /*
+    |--------------------------------------------------------------------------
+    | Load requested class file automatically
+    |--------------------------------------------------------------------------
+    */
+
+
+        if (!class_exists($class)) {
+
+
+            $servicePath =
+                APPPATH .
+                'services/' .
+                $class .
+                '.php';
 
 
 
-        $dependencies[] = $this->resolve(
-            $dependency
+            if (file_exists($servicePath)) {
+
+                require_once $servicePath;
+            }
+
+
+
+            $repositoryPath =
+                APPPATH .
+                'repositories/' .
+                $class .
+                '.php';
+
+
+
+            if (file_exists($repositoryPath)) {
+
+                require_once $repositoryPath;
+            }
+        }
+
+
+
+        /*
+    |--------------------------------------------------------------------------
+    | Interface resolution
+    |--------------------------------------------------------------------------
+    */
+
+        if (interface_exists($class)) {
+
+
+            $implementation =
+                $this->findImplementation($class);
+
+
+
+            return $this->resolve(
+                $implementation
+            );
+        }
+
+
+
+
+
+        /*
+    |--------------------------------------------------------------------------
+    | Class still not found
+    |--------------------------------------------------------------------------
+    */
+
+        if (!class_exists($class)) {
+
+            throw new Exception(
+                "Class {$class} does not exist"
+            );
+        }
+
+
+
+
+        /*
+    |--------------------------------------------------------------------------
+    | Reflection dependency injection
+    |--------------------------------------------------------------------------
+    */
+
+
+        $reflection =
+            new ReflectionClass($class);
+
+
+
+        $constructor =
+            $reflection->getConstructor();
+
+
+
+        if (!$constructor) {
+
+            return new $class();
+        }
+
+
+
+
+        $dependencies = [];
+
+
+
+        foreach (
+            $constructor->getParameters()
+            as $parameter
+        ) {
+
+
+            $type =
+                $parameter->getType();
+
+
+
+            if (!$type) {
+
+                throw new Exception(
+                    "Cannot resolve dependency: "
+                        .
+                        $parameter->getName()
+                );
+            }
+
+
+
+            $dependency =
+                $type->getName();
+
+
+
+            $dependencies[] =
+                $this->resolve(
+                    $dependency
+                );
+        }
+
+
+
+
+        return new $class(
+            ...$dependencies
         );
-
     }
-
-
-
-    return new $class(...$dependencies);
-
-}
 
 
 
@@ -161,60 +244,56 @@ class MY_Loader extends CI_Loader
     /**
      * Find interface implementation
      */
-   protected function findImplementation($interface)
-{
+    protected function findImplementation($interface)
+    {
 
-    // Load all interfaces first
-    $interfaceFiles = glob(
-        APPPATH . 'interfaces/*.php'
-    );
-
-
-    foreach ($interfaceFiles as $file) {
-        require_once $file;
-    }
+        // Load all interfaces first
+        $interfaceFiles = glob(
+            APPPATH . 'interfaces/*.php'
+        );
 
 
-
-    // Load all repositories
-    $repositoryFiles = glob(
-        APPPATH . 'repositories/*.php'
-    );
-
-
-    foreach ($repositoryFiles as $file) {
-
-        require_once $file;
-
-    }
-
-
-
-    // Find implementation
-    foreach (get_declared_classes() as $class) {
-
-
-        $reflection = new ReflectionClass($class);
-
-
-
-        if (
-            $reflection->implementsInterface($interface)
-        ) {
-
-            return $class;
-
+        foreach ($interfaceFiles as $file) {
+            require_once $file;
         }
 
+
+
+        // Load all repositories
+        $repositoryFiles = glob(
+            APPPATH . 'repositories/*.php'
+        );
+
+
+        foreach ($repositoryFiles as $file) {
+
+            require_once $file;
+        }
+
+
+
+        // Find implementation
+        foreach (get_declared_classes() as $class) {
+
+
+            $reflection = new ReflectionClass($class);
+
+
+
+            if (
+                $reflection->implementsInterface($interface)
+            ) {
+
+                return $class;
+            }
+        }
+
+
+
+        throw new Exception(
+            "No implementation found for {$interface}"
+        );
     }
-
-
-
-    throw new Exception(
-        "No implementation found for {$interface}"
-    );
-
-}
 
 
 
@@ -238,14 +317,12 @@ class MY_Loader extends CI_Loader
         require_once $path;
 
 
-        $CI =& get_instance();
+        $CI = &get_instance();
 
 
         $property = strtolower($request);
 
 
         $CI->$property = new $request();
-
     }
-
 }

@@ -8,11 +8,10 @@ require_once APPPATH . 'services/BaseService.php';
 class LookupGroupService extends BaseService
 {
 
-     public function __construct(
+    public function __construct(
         LookupGroupRepositoryInterface $repository,
         AuditLogService $auditService
-    )
-    {
+    ) {
         parent::__construct(
             $repository,
             'LOOKUP_GROUP',
@@ -22,6 +21,21 @@ class LookupGroupService extends BaseService
 
     public function create(array $data)
     {
+        if (empty($data['code'])) {
+
+            throw new InvalidArgumentException(
+                'Lookup group code is required'
+            );
+        }
+
+
+        if (empty($data['name'])) {
+
+            throw new InvalidArgumentException(
+                'Lookup group name is required'
+            );
+        }
+
         $payload = [
             'code'        => $data['code'] ?? null,
             'name'        => $data['name'] ?? null,

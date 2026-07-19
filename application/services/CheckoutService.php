@@ -1,6 +1,6 @@
 <?php
 
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 class CheckoutService
@@ -28,7 +28,7 @@ class CheckoutService
         $this->idempotencyService = $idempotencyService;
         $this->idempotencyRepository = $idempotencyRepository;
 
-        $this->CI =& get_instance();
+        $this->CI = &get_instance();
     }
 
 
@@ -38,11 +38,24 @@ class CheckoutService
         array $cart
     ) {
 
+        if ($userId <= 0) {
 
+            throw new Exception(
+                'Invalid user'
+            );
+        }
+
+
+        if (empty($cart)) {
+
+            throw new Exception(
+                'Cart is required'
+            );
+        }
         $key =
             $this->CI
-                ->input
-                ->post('idempotency_key');
+            ->input
+            ->post('idempotency_key');
 
 
         if (empty($key)) {
@@ -56,18 +69,17 @@ class CheckoutService
 
         $idem =
             $this->idempotencyService
-                ->start(
-                    $key,
-                    $userId,
-                    $cart
-                );
+            ->start(
+                $key,
+                $userId,
+                $cart
+            );
 
 
 
         if ($idem['duplicate']) {
 
             return $idem['response'];
-
         }
 
 
@@ -80,29 +92,29 @@ class CheckoutService
 
             $order =
                 $this->orderService
-                    ->createOrder(
-                        $userId,
-                        $cart
-                    );
+                ->createOrder(
+                    $userId,
+                    $cart
+                );
 
 
 
             $payment =
                 $this->paymentService
-                    ->createPayment(
-                        $order
-                    );
+                ->createPayment(
+                    $order
+                );
 
 
 
             $stripe =
                 $this->stripeService
-                    ->createCheckoutSession(
-                        $order,
-                        $payment,
-                        $cart,
-                        $key
-                    );
+                ->createCheckoutSession(
+                    $order,
+                    $payment,
+                    $cart,
+                    $key
+                );
 
 
 
@@ -111,7 +123,6 @@ class CheckoutService
                 throw new Exception(
                     $stripe['message']
                 );
-
             }
 
 
@@ -147,10 +158,7 @@ class CheckoutService
 
 
             return $response;
-
-
-
-        } catch(Exception $e) {
+        } catch (Exception $e) {
 
 
             $this->CI->db->trans_rollback();
@@ -164,9 +172,6 @@ class CheckoutService
 
 
             throw $e;
-
         }
-
     }
-
 }

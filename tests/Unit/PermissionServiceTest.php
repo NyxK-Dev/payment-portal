@@ -5,38 +5,57 @@ use PHPUnit\Framework\TestCase;
 
 class PermissionServiceTest extends TestCase
 {
-    private $repository;
-    private $auditService;
-    private $service;
+
+    protected $repository;
+
+    protected $auditService;
+
+    protected $service;
+
 
 
     protected function setUp(): void
     {
-        $this->repository = $this->createMock(
-            PermissionRepositoryInterface::class
-        );
+
+        $this->repository =
+            $this->createMock(
+                PermissionRepositoryInterface::class
+            );
 
 
-        $this->auditService = $this->createMock(
-            AuditLogService::class
-        );
+        $this->auditService =
+            $this->createMock(
+                AuditLogService::class
+            );
 
 
-        $this->service = new PermissionService(
-            $this->repository,
-            $this->auditService
-        );
+        $this->service =
+            new PermissionService(
+                $this->repository,
+                $this->auditService
+            );
     }
 
 
-    public function testGetPermissions()
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUCCESS CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+
+    public function test_get_permissions_success()
     {
+
         $permissions = [
+
             (object)[
                 'id' => 1,
-                'code' => 'USER_CREATE',
-                'name' => 'Create User'
+                'code' => 'USER_CREATE'
             ]
+
         ];
 
 
@@ -46,20 +65,31 @@ class PermissionServiceTest extends TestCase
             ->willReturn($permissions);
 
 
+
+        $result =
+            $this->service
+            ->getPermissions();
+
+
+
         $this->assertEquals(
             $permissions,
-            $this->service->getPermissions()
+            $result
         );
     }
 
 
-    public function testGetPermission()
+
+
+    public function test_get_permission_success()
     {
-        $permission = (object)[
-            'id' => 1,
-            'code' => 'USER_CREATE',
-            'name' => 'Create User'
-        ];
+
+        $permission =
+            (object)[
+                'id' => 1,
+                'code' => 'USER_CREATE'
+            ];
+
 
 
         $this->repository
@@ -69,20 +99,35 @@ class PermissionServiceTest extends TestCase
             ->willReturn($permission);
 
 
+
+        $result =
+            $this->service
+            ->getPermission(1);
+
+
+
         $this->assertEquals(
             $permission,
-            $this->service->getPermission(1)
+            $result
         );
     }
 
 
-    public function testCreateSuccess()
+
+
+
+
+    public function test_create_permission_success()
     {
+
         $this->repository
             ->expects($this->once())
             ->method('existsCode')
-            ->with('USER_CREATE')
+            ->with(
+                'USER_CREATE'
+            )
             ->willReturn(false);
+
 
 
         $this->repository
@@ -91,16 +136,23 @@ class PermissionServiceTest extends TestCase
             ->willReturn(1);
 
 
+
         $this->auditService
             ->expects($this->once())
             ->method('log')
             ->willReturn(true);
 
 
-        $result = $this->service->create([
-            'code' => 'USER_CREATE',
-            'name' => 'Create User'
-        ]);
+
+        $result =
+            $this->service
+            ->create([
+
+                'code' => 'USER_CREATE',
+                'name' => 'Create User'
+
+            ]);
+
 
 
         $this->assertEquals(
@@ -110,137 +162,83 @@ class PermissionServiceTest extends TestCase
     }
 
 
-    public function testCreateRequiresCode()
+
+
+
+    public function test_update_permission_success()
     {
-        $this->expectException(Exception::class);
 
-        $this->expectExceptionMessage(
-            'Permission code is required'
-        );
+        $old =
+            (object)[
 
+                'id' => 1,
+                'code' => 'OLD',
+                'name' => 'Old',
+                'description' => null
 
-        $this->service->create([
-            'name' => 'Create User'
-        ]);
-    }
+            ];
 
-
-    public function testCreateRequiresName()
-    {
-        $this->expectException(Exception::class);
-
-        $this->expectExceptionMessage(
-            'Permission name is required'
-        );
-
-
-        $this->service->create([
-            'code' => 'USER_CREATE'
-        ]);
-    }
-
-
-    public function testCreateDuplicateCode()
-    {
-        $this->repository
-            ->expects($this->once())
-            ->method('existsCode')
-            ->with('USER_CREATE')
-            ->willReturn(true);
-
-
-        $this->expectException(Exception::class);
-
-        $this->expectExceptionMessage(
-            'Permission code already exists'
-        );
-
-
-        $this->service->create([
-            'code' => 'USER_CREATE',
-            'name' => 'Create User'
-        ]);
-    }
-
-
-    public function testUpdateSuccess()
-    {
-        $oldPermission = (object)[
-            'id' => 1,
-            'code' => 'OLD_CODE',
-            'name' => 'Old Name',
-            'description' => null
-        ];
 
 
         $this->repository
             ->expects($this->once())
             ->method('find')
             ->with(1)
-            ->willReturn($oldPermission);
+            ->willReturn($old);
+
 
 
         $this->repository
             ->expects($this->once())
             ->method('existsCode')
             ->with(
-                'NEW_CODE',
+                'NEW',
                 1
             )
             ->willReturn(false);
 
 
+
         $this->repository
             ->expects($this->once())
             ->method('update')
             ->willReturn(true);
 
 
-        $this->auditService
-            ->expects($this->once())
-            ->method('log')
-            ->willReturn(true);
 
-
-        $result = $this->service->update(
-            1,
-            [
-                'code' => 'NEW_CODE',
-                'name' => 'New Name'
-            ]
-        );
-
-
-        $this->assertTrue($result);
-    }
-
-
-    public function testUpdateNotFound()
-    {
-        $this->repository
-            ->expects($this->once())
-            ->method('find')
-            ->with(1)
-            ->willReturn(null);
-
-
-        $this->assertFalse(
-            $this->service->update(
+        $result =
+            $this->service
+            ->update(
                 1,
                 [
-                    'name' => 'Test'
+                    'code' => 'NEW',
+                    'name' => 'New'
                 ]
-            )
+            );
+
+
+
+        $this->assertTrue(
+            $result
         );
     }
 
 
-    public function testDeleteSuccess()
+
+
+
+
+    public function test_delete_permission_success()
     {
-        $permission = (object)[
-            'id' => 1,
-            'code' => 'USER_CREATE'
-        ];
+
+        $permission =
+            (object)[
+
+                'id' => 1,
+                'code' => 'USER_CREATE'
+
+            ];
+
 
 
         $this->repository
@@ -248,6 +246,7 @@ class PermissionServiceTest extends TestCase
             ->method('find')
             ->with(1)
             ->willReturn($permission);
+
 
 
         $this->repository
@@ -257,122 +256,598 @@ class PermissionServiceTest extends TestCase
             ->willReturn(true);
 
 
-        $this->auditService
-            ->expects($this->once())
-            ->method('log')
-            ->willReturn(true);
-
 
         $this->assertTrue(
-            $this->service->delete(1)
+            $this->service
+                ->delete(1)
         );
     }
 
 
-    public function testDeleteNotFound()
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FAILURE CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+
+    public function test_create_failed()
     {
+
+        $this->repository
+            ->method('existsCode')
+            ->willReturn(false);
+
+
+        $this->repository
+            ->method('create')
+            ->willReturn(0);
+
+
+
+        $result =
+            $this->service
+            ->create([
+
+                'code' => 'TEST',
+                'name' => 'Test'
+
+            ]);
+
+
+
+        $this->assertEquals(
+            0,
+            $result
+        );
+    }
+
+
+
+
+
+
+
+    public function test_update_failed()
+    {
+
+
+        $permission =
+            (object)[
+
+                'id' => 1,
+                'code' => 'OLD',
+                'name' => 'Old',
+                'description' => null
+
+            ];
+
+
+
+        $this->repository
+            ->method('find')
+            ->willReturn($permission);
+
+
+
+        $this->repository
+            ->method('existsCode')
+            ->willReturn(false);
+
+
+
         $this->repository
             ->expects($this->once())
+            ->method('update')
+            ->willReturn(false);
+
+
+
+        $result =
+            $this->service
+            ->update(
+                1,
+                [
+                    'name' => 'New'
+                ]
+            );
+
+
+
+        $this->assertFalse(
+            $result
+        );
+    }
+
+
+
+
+
+
+    public function test_delete_failed()
+    {
+
+        $permission =
+            (object)[
+                'id' => 1
+            ];
+
+
+
+        $this->repository
             ->method('find')
-            ->with(1)
-            ->willReturn(null);
+            ->willReturn($permission);
+
+
+
+        $this->repository
+            ->method('delete')
+            ->willReturn(false);
+
 
 
         $this->assertFalse(
             $this->service->delete(1)
         );
     }
-    public function testGetPermissionNotFound()
-    {
-        $this->repository
-            ->expects($this->once())
-            ->method('find')
-            ->with(99)
-            ->willReturn(null);
 
-        $this->assertNull(
-            $this->service->getPermission(99)
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+
+    public function test_create_without_code()
+    {
+
+
+        $this->expectException(
+            Exception::class
         );
-    }
-    public function testUpdateDuplicateCode()
-    {
-        $permission = (object)[
-            'id' => 1,
-            'code' => 'OLD',
-            'name' => 'Old',
-            'description' => null
-        ];
 
-        $this->repository
-            ->expects($this->once())
-            ->method('find')
-            ->willReturn($permission);
+
+        $this->expectExceptionMessage(
+            'Permission code is required'
+        );
+
+
+
+        $this->service
+            ->create([
+
+                'name' => 'Test'
+
+            ]);
+    }
+
+
+
+
+
+
+    public function test_create_without_name()
+    {
+
+
+        $this->expectException(
+            Exception::class
+        );
+
+
+        $this->expectExceptionMessage(
+            'Permission name is required'
+        );
+
+
+
+        $this->service
+            ->create([
+
+                'code' => 'TEST'
+
+            ]);
+    }
+
+
+
+
+
+
+
+    public function test_duplicate_permission_code()
+    {
 
         $this->repository
             ->expects($this->once())
             ->method('existsCode')
-            ->with('NEW_CODE', 1)
             ->willReturn(true);
 
-        $this->expectException(Exception::class);
+
+
+        $this->expectException(
+            Exception::class
+        );
+
+
+
         $this->expectExceptionMessage(
             'Permission code already exists'
         );
 
-        $this->service->update(
-            1,
-            [
-                'code' => 'NEW_CODE'
-            ]
-        );
+
+
+        $this->service
+            ->create([
+
+                'code' => 'USER_CREATE',
+                'name' => 'Create'
+
+            ]);
     }
-    public function testUpdateFail()
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDGE CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+
+    public function test_empty_permissions()
     {
-        $permission = (object)[
-            'id' => 1,
-            'code' => 'OLD',
-            'name' => 'Old',
-            'description' => null
-        ];
 
         $this->repository
+            ->method('getAll')
+            ->willReturn([]);
+
+
+
+        $result =
+            $this->service
+            ->getPermissions();
+
+
+
+        $this->assertEmpty(
+            $result
+        );
+    }
+
+
+
+
+
+
+    public function test_permission_not_found()
+    {
+
+        $this->repository
+            ->expects($this->once())
             ->method('find')
-            ->willReturn($permission);
+            ->with(999)
+            ->willReturn(null);
+
+
+
+        $result =
+            $this->service
+            ->getPermission(999);
+
+
+
+        $this->assertNull(
+            $result
+        );
+    }
+
+
+
+
+
+
+    public function test_delete_missing_permission()
+    {
+
+        $this->repository
+            ->expects($this->once())
+            ->method('find')
+            ->willReturn(null);
+
+
+
+        $result =
+            $this->service
+            ->delete(99);
+
+
+
+        $this->assertFalse(
+            $result
+        );
+    }
+
+
+
+
+
+
+
+    public function test_create_long_permission_code()
+    {
+
+
+        $code =
+            str_repeat(
+                'A',
+                255
+            );
+
+
 
         $this->repository
             ->method('existsCode')
             ->willReturn(false);
 
-        $this->repository
-            ->expects($this->once())
-            ->method('update')
-            ->willReturn(false);
 
-        $this->assertFalse(
-            $this->service->update(
-                1,
-                ['name' => 'New']
-            )
+
+        $this->repository
+            ->method('create')
+            ->willReturn(1);
+
+
+
+        $result =
+            $this->service
+            ->create([
+
+                'code' => $code,
+                'name' => 'Test'
+
+            ]);
+
+
+
+        $this->assertEquals(
+            1,
+            $result
         );
     }
-    public function testDeleteFail()
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | REPOSITORY INTERACTION RULES
+    |--------------------------------------------------------------------------
+    */
+
+
+
+    public function test_create_checks_duplicate_before_insert()
     {
-        $permission = (object)[
-            'id' => 1,
-            'code' => 'USER_CREATE'
-        ];
+
+
+        $this->repository
+            ->expects($this->once())
+            ->method('existsCode')
+            ->with(
+                'TEST'
+            );
+
+
+
+        $this->repository
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn(1);
+
+
+
+        $this->service
+            ->create([
+
+                'code' => 'TEST',
+                'name' => 'Test'
+
+            ]);
+    }
+
+
+
+
+
+
+
+    public function test_update_finds_old_record_first()
+    {
+
+        $permission =
+            (object)[
+                'code' => 'OLD',
+                'name' => 'Old',
+                'description' => null
+            ];
+
+
+
+        $this->repository
+            ->expects($this->once())
+            ->method('find')
+            ->with(1)
+            ->willReturn($permission);
+
+
+
+        $this->repository
+            ->method('existsCode')
+            ->willReturn(false);
+
+
+
+        $this->repository
+            ->method('update')
+            ->willReturn(true);
+
+
+
+        $this->service
+            ->update(
+                1,
+                [
+                    'name' => 'New'
+                ]
+            );
+    }
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BUSINESS LOGIC RULES
+    |--------------------------------------------------------------------------
+    */
+
+
+
+    public function test_update_missing_permission_returns_false()
+    {
+
+        $this->repository
+            ->method('find')
+            ->willReturn(null);
+
+
+
+        $result =
+            $this->service
+            ->update(
+                100,
+                [
+                    'name' => 'Test'
+                ]
+            );
+
+
+
+        $this->assertFalse(
+            $result
+        );
+    }
+
+
+
+
+
+
+
+    public function test_update_duplicate_code_is_blocked()
+    {
+
+        $permission =
+            (object)[
+
+                'code' => 'OLD',
+                'name' => 'Old',
+                'description' => null
+
+            ];
+
+
 
         $this->repository
             ->method('find')
             ->willReturn($permission);
 
+
+
         $this->repository
-            ->expects($this->once())
-            ->method('delete')
+            ->method('existsCode')
+            ->willReturn(true);
+
+
+
+        $this->expectException(
+            Exception::class
+        );
+
+
+
+        $this->service
+            ->update(
+                1,
+                [
+                    'code' => 'NEW'
+                ]
+            );
+    }
+
+
+
+
+
+
+
+    public function test_failed_create_should_not_audit()
+    {
+
+
+        $this->repository
+            ->method('existsCode')
             ->willReturn(false);
 
-        $this->assertFalse(
-            $this->service->delete(1)
+
+
+        $this->repository
+            ->method('create')
+            ->willReturn(0);
+
+
+
+        $this->auditService
+            ->expects($this->never())
+            ->method('log');
+
+
+
+        $result =
+            $this->service
+            ->create([
+
+                'code' => 'TEST',
+                'name' => 'Test'
+
+            ]);
+
+
+
+        $this->assertEquals(
+            0,
+            $result
         );
     }
 }

@@ -128,6 +128,17 @@ class RoleRepository implements RoleRepositoryInterface
     }
 
 
+    public function findByName(string $name)
+{
+    return $this->roleQuery()
+        ->where(
+            'roles.name',
+            trim($name)
+        )
+        ->limit(1)
+        ->get()
+        ->row();
+}
 
     public function update(
         int $id,

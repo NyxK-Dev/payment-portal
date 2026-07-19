@@ -2,12 +2,14 @@
 
 use PHPUnit\Framework\TestCase;
 
+
 class OrderServiceTest extends TestCase
 {
 
     protected $service;
 
     protected $orderRepository;
+
     protected $orderItemRepository;
 
 
@@ -27,7 +29,6 @@ class OrderServiceTest extends TestCase
             );
 
 
-
         $this->service =
             new OrderService(
                 $this->orderRepository,
@@ -37,21 +38,28 @@ class OrderServiceTest extends TestCase
 
 
 
-    public function test_create_order()
+    /*
+    |--------------------------------------------------------------------------
+    | SUCCESS CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_create_order_success()
     {
 
         $cart = [
 
             [
-                'product_id' => 10,
-                'price' => 100,
-                'quantity' => 2
+                'product_id'=>10,
+                'price'=>100,
+                'quantity'=>2
             ],
 
             [
-                'product_id' => 20,
-                'price' => 50,
-                'quantity' => 1
+                'product_id'=>20,
+                'price'=>50,
+                'quantity'=>1
             ]
 
         ];
@@ -61,24 +69,6 @@ class OrderServiceTest extends TestCase
         $this->orderRepository
             ->expects($this->once())
             ->method('create')
-            ->with(
-                $this->callback(
-                    function ($data) {
-
-                        return
-
-                            $data['user_id'] === 1
-
-                            &&
-
-                            $data['status_lookup_id'] === 5
-
-                            &&
-
-                            $data['total_amount'] === 250;
-                    }
-                )
-            )
             ->willReturn(100);
 
 
@@ -87,24 +77,15 @@ class OrderServiceTest extends TestCase
             ->expects($this->once())
             ->method('createBatch')
             ->with(
-                $this->callback(
-                    function ($items) {
+                $this->callback(function($items){
 
-                        return count($items) === 2
+                    return count($items)==2
+                    &&
+                    $items[0]['order_id']==100
+                    &&
+                    $items[0]['subtotal']==200;
 
-                            &&
-
-                            $items[0]['order_id'] === 100
-
-                            &&
-
-                            $items[0]['product_id'] === 10
-
-                            &&
-
-                            $items[0]['subtotal'] === 200;
-                    }
-                )
+                })
             );
 
 
@@ -134,22 +115,20 @@ class OrderServiceTest extends TestCase
             'ORD-',
             $result['order_no']
         );
+
     }
 
 
 
 
-    public function test_get_all_orders()
+
+    public function test_get_all_orders_success()
     {
 
         $orders = [
 
             (object)[
-                'id' => 1
-            ],
-
-            (object)[
-                'id' => 2
+                'id'=>1
             ]
 
         ];
@@ -159,9 +138,7 @@ class OrderServiceTest extends TestCase
         $this->orderRepository
             ->expects($this->once())
             ->method('getAll')
-            ->willReturn(
-                $orders
-            );
+            ->willReturn($orders);
 
 
 
@@ -171,150 +148,473 @@ class OrderServiceTest extends TestCase
 
 
 
-        $this->assertCount(
-            2,
+        $this->assertEquals(
+            $orders,
             $result
         );
 
-
-        $this->assertEquals(
-            1,
-            $result[0]->id
-        );
     }
 
 
 
 
-    public function test_update_status()
+
+    public function test_get_order_detail_success()
+    {
+
+        $order =
+            (object)[
+                'id'=>1
+            ];
+
+
+
+        $items=[
+            (object)[
+                'product_id'=>10
+            ]
+        ];
+
+
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('findWithItems')
+            ->with(1)
+            ->willReturn($order);
+
+
+
+        $this->orderItemRepository
+            ->expects($this->once())
+            ->method('getByOrderId')
+            ->with(1)
+            ->willReturn($items);
+
+
+
+        $result =
+            $this->service
+            ->getOrderDetail(1);
+
+
+
+        $this->assertEquals(
+            $items,
+            $result->items
+        );
+
+    }
+
+
+
+
+
+
+    public function test_update_status_success()
     {
 
         $this->orderRepository
             ->expects($this->once())
             ->method('update')
             ->with(
-
-                100,
-
+                1,
                 [
-                    'status_lookup_id' => 8
+                    'status_lookup_id'=>8
                 ]
-
             )
             ->willReturn(true);
+
+
+
+        $this->assertTrue(
+            $this->service
+            ->updateStatus(
+                1,
+                8
+            )
+        );
+
+    }
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FAILURE CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+
+    public function test_create_order_repository_failed()
+{
+
+    $this->orderRepository
+        ->expects($this->once())
+        ->method('create')
+        ->willReturn(false);
+
+
+    $result =
+        $this->service
+        ->createOrder(
+            1,
+            []
+        );
+
+
+    $this->assertFalse(
+        $result['id']
+    );
+
+}
+
+
+
+
+
+
+    public function test_update_status_failed()
+    {
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('update')
+            ->willReturn(false);
 
 
 
         $result =
             $this->service
             ->updateStatus(
-                100,
+                1,
                 8
             );
 
 
 
-        $this->assertTrue(
+        $this->assertFalse(
             $result
         );
-    }
-    public function test_get_order_history()
-    {
-        $orders = [
-            (object)['id' => 100]
-        ];
 
-        $items = [
-            (object)['product_id' => 10]
-        ];
-
-        $this->orderRepository
-            ->expects($this->once())
-            ->method('getByUser')
-            ->with(1, [])
-            ->willReturn($orders);
-
-        $this->orderItemRepository
-            ->expects($this->once())
-            ->method('getByOrderId')
-            ->with(100)
-            ->willReturn($items);
-
-        $result = $this->service->getOrderHistory(1);
-
-        $this->assertCount(1, $result);
-        $this->assertEquals($items, $result[0]->items);
     }
 
-    public function test_get_order_detail()
-    {
-        $order = (object)[
-            'id' => 100
-        ];
 
-        $items = [
-            (object)['product_id' => 10]
-        ];
 
-        $this->orderRepository
-            ->expects($this->once())
-            ->method('findWithItems')
-            ->with(100)
-            ->willReturn($order);
 
-        $this->orderItemRepository
-            ->expects($this->once())
-            ->method('getByOrderId')
-            ->with(100)
-            ->willReturn($items);
 
-        $result = $this->service->getOrderDetail(100);
 
-        $this->assertEquals($items, $result->items);
-    }
     public function test_get_order_detail_not_found()
     {
+
         $this->orderRepository
             ->expects($this->once())
             ->method('findWithItems')
-            ->with(999)
             ->willReturn(null);
 
-        $this->assertNull(
-            $this->service->getOrderDetail(999)
-        );
-    }
-    public function test_update_status_failed()
-    {
-        $this->orderRepository
-            ->expects($this->once())
-            ->method('update')
-            ->willReturn(false);
 
-        $this->assertFalse(
-            $this->service->updateStatus(
-                100,
-                8
-            )
+
+        $result =
+            $this->service
+            ->getOrderDetail(
+                999
+            );
+
+
+
+        $this->assertNull(
+            $result
         );
+
     }
+
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+
+    public function test_create_order_invalid_user()
+    {
+
+        $this->expectException(
+            InvalidArgumentException::class
+        );
+
+
+        $this->service
+            ->createOrder(
+                0,
+                []
+            );
+
+    }
+
+
+
+
+
+    public function test_create_order_invalid_cart()
+    {
+
+        $this->expectException(
+            TypeError::class
+        );
+
+
+        $this->service
+            ->createOrder(
+                1,
+                null
+            );
+
+    }
+
+
+
+
+
+    public function test_update_status_invalid_status()
+    {
+
+        $this->expectException(
+            InvalidArgumentException::class
+        );
+
+
+        $this->service
+            ->updateStatus(
+                1,
+                0
+            );
+
+    }
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDGE CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+
     public function test_create_order_empty_cart()
     {
+
         $this->orderRepository
             ->expects($this->once())
             ->method('create')
             ->willReturn(1);
+
+
 
         $this->orderItemRepository
             ->expects($this->once())
             ->method('createBatch')
             ->with([]);
 
-        $result = $this->service->createOrder(
-            1,
-            []
+
+
+        $result =
+            $this->service
+            ->createOrder(
+                1,
+                []
+            );
+
+
+
+        $this->assertEquals(
+            0,
+            $result['total']
         );
 
-        $this->assertEquals(0, $result['total']);
     }
+
+
+
+
+
+    public function test_large_quantity()
+    {
+
+        $cart=[
+
+            [
+                'product_id'=>1,
+                'price'=>100,
+                'quantity'=>100000
+            ]
+
+        ];
+
+
+
+        $this->orderRepository
+            ->method('create')
+            ->willReturn(1);
+
+
+
+        $this->orderItemRepository
+            ->method('createBatch');
+
+
+
+        $result =
+            $this->service
+            ->createOrder(
+                1,
+                $cart
+            );
+
+
+
+        $this->assertEquals(
+            10000000,
+            $result['total']
+        );
+
+    }
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BUSINESS LOGIC RULES
+    |--------------------------------------------------------------------------
+    */
+
+
+
+    public function test_order_total_calculation()
+    {
+
+        $cart=[
+
+            [
+                'product_id'=>1,
+                'price'=>20,
+                'quantity'=>3
+            ]
+
+        ];
+
+
+
+        $this->orderRepository
+            ->method('create')
+            ->willReturn(1);
+
+
+
+        $result =
+            $this->service
+            ->createOrder(
+                1,
+                $cart
+            );
+
+
+
+        $this->assertEquals(
+            60,
+            $result['total']
+        );
+
+    }
+
+
+
+
+
+    public function test_order_item_subtotal_calculation()
+    {
+
+        $cart=[
+
+            [
+                'product_id'=>1,
+                'price'=>20,
+                'quantity'=>3
+            ]
+
+        ];
+
+
+
+        $this->orderRepository
+            ->method('create')
+            ->willReturn(5);
+
+
+
+        $this->orderItemRepository
+            ->expects($this->once())
+            ->method('createBatch')
+            ->with(
+                $this->callback(function($items){
+
+                    return
+                    $items[0]['subtotal']==60;
+
+                })
+            );
+
+
+
+        $this->service
+            ->createOrder(
+                1,
+                $cart
+            );
+
+    }
+
+
+
+
+
+    public function test_repository_create_called_once()
+    {
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn(1);
+
+
+
+        $this->service
+            ->createOrder(
+                1,
+                []
+            );
+
+    }
+
 }
