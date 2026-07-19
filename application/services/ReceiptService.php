@@ -7,11 +7,10 @@ require_once APPPATH . 'services/BaseService.php';
 
 class ReceiptService extends BaseService
 {
-      public function __construct(
+    public function __construct(
         ReceiptRepositoryInterface $repository,
         AuditLogService $auditService
-    )
-    {
+    ) {
         parent::__construct(
             $repository,
             'RECEIPT',
@@ -65,17 +64,61 @@ class ReceiptService extends BaseService
     public function create(array $data)
     {
 
+        if (!isset($data['invoice_id'])) {
+            throw new InvalidArgumentException(
+                'Invoice ID is required'
+            );
+        }
+
+
+        if (!isset($data['receipt_no'])) {
+            throw new InvalidArgumentException(
+                'Receipt number is required'
+            );
+        }
+
+
+        if (!isset($data['amount'])) {
+            throw new InvalidArgumentException(
+                'Amount is required'
+            );
+        }
+
+
+        if (!isset($data['status_lookup_id'])) {
+            throw new InvalidArgumentException(
+                'Status is required'
+            );
+        }
+
+
+        if (!isset($data['issued_by'])) {
+            throw new InvalidArgumentException(
+                'Issued by is required'
+            );
+        }
+
+
+
         $payload = [
 
-            'invoice_id'       => $data['invoice_id'],
-            'receipt_no'       => $data['receipt_no'],
-            'amount'           => $data['amount'],
+            'invoice_id' => $data['invoice_id'],
+
+            'receipt_no' => $data['receipt_no'],
+
+            'amount' => $data['amount'],
+
             'status_lookup_id' => $data['status_lookup_id'],
-            'issued_at'        => $data['issued_at'] ?? date('Y-m-d H:i:s'),
-            'issued_by'        => $data['issued_by'],
-            'created_at'       => date('Y-m-d H:i:s')
+
+            'issued_at' => $data['issued_at']
+                ?? date('Y-m-d H:i:s'),
+
+            'issued_by' => $data['issued_by'],
+
+            'created_at' => date('Y-m-d H:i:s')
 
         ];
+
 
         return $this->repository->create($payload);
     }

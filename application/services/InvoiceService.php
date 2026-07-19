@@ -8,12 +8,7 @@ class InvoiceService extends BaseService
     public function __construct(
         InvoiceRepositoryInterface $repository,
         AuditLogService $auditService
-    )
-    {
-        $CI = &get_instance();
-
-        $CI->load->repository('InvoiceRepository');
-
+    ) {
         parent::__construct(
             $repository,
             'INVOICE',
@@ -79,6 +74,29 @@ class InvoiceService extends BaseService
 
     public function create(array $data)
     {
+        if (empty($data['order_id'])) {
+
+            throw new InvalidArgumentException(
+                'Order id is required'
+            );
+        }
+
+
+        if (empty($data['invoice_no'])) {
+
+            throw new InvalidArgumentException(
+                'Invoice number is required'
+            );
+        }
+
+
+        if (!isset($data['amount'])) {
+
+            throw new InvalidArgumentException(
+                'Amount is required'
+            );
+        }
+
         $payload = [
 
             'order_id'         => $data['order_id'],

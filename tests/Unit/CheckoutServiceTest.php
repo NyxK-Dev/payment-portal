@@ -573,4 +573,513 @@ class CheckoutServiceTest extends TestCase
             ['product_id' => 10]
         );
     }
+    /*
+    |--------------------------------------------------------------------------
+    | SUCCESS CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_checkout_success_commits_transaction()
+    {
+
+        global $CI;
+
+
+        $CI->db
+            ->expects($this->once())
+            ->method('trans_commit');
+
+
+
+        $this->idempotencyService
+            ->method('start')
+            ->willReturn([
+                'duplicate' => false
+            ]);
+
+
+
+        $this->orderService
+            ->method('createOrder')
+            ->willReturn([
+                'id' => 100
+            ]);
+
+
+
+        $this->paymentService
+            ->method('createPayment')
+            ->willReturn([
+                'attempt_id' => 50
+            ]);
+
+
+
+        $this->stripeService
+            ->method('createCheckoutSession')
+            ->willReturn([
+                'success' => true,
+                'url' => 'url',
+                'session_id' => 'session'
+            ]);
+
+
+
+        $this->service
+            ->checkout(
+                1,
+                [
+                    'product_id' => 10
+                ]
+            );
+    }
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FAILURE CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_checkout_rollbacks_when_order_failed()
+    {
+
+        global $CI;
+
+
+        $CI->db
+            ->expects($this->once())
+            ->method('trans_rollback');
+
+
+
+        $this->idempotencyService
+            ->method('start')
+            ->willReturn([
+                'duplicate' => false
+            ]);
+
+
+
+        $this->orderService
+            ->method('createOrder')
+            ->willThrowException(
+                new Exception('Order Error')
+            );
+
+
+
+        $this->idempotencyRepository
+            ->expects($this->once())
+            ->method('fail')
+            ->with(
+                'test-key',
+                'Order Error'
+            );
+
+
+
+        $this->expectException(
+            Exception::class
+        );
+
+
+
+        $this->service
+            ->checkout(
+                1,
+                [
+                    'product_id' => 10
+                ]
+            );
+    }
+
+
+
+
+
+
+
+    public function test_checkout_stripe_exception()
+    {
+
+        $this->idempotencyService
+            ->method('start')
+            ->willReturn([
+                'duplicate' => false
+            ]);
+
+
+
+        $this->orderService
+            ->method('createOrder')
+            ->willReturn([
+                'id' => 1
+            ]);
+
+
+
+        $this->paymentService
+            ->method('createPayment')
+            ->willReturn([
+                'attempt_id' => 10
+            ]);
+
+
+
+        $this->stripeService
+            ->method('createCheckoutSession')
+            ->willThrowException(
+                new Exception('Stripe Error')
+            );
+
+
+
+        $this->idempotencyRepository
+            ->expects($this->once())
+            ->method('fail')
+            ->with(
+                'test-key',
+                'Stripe Error'
+            );
+
+
+
+        $this->expectException(
+            Exception::class
+        );
+
+
+
+        $this->service
+            ->checkout(
+                1,
+                [
+                    'product_id' => 10
+                ]
+            );
+    }
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | IDEMPOTENCY CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_duplicate_checkout_does_not_create_order()
+    {
+
+
+        $this->idempotencyService
+            ->expects($this->once())
+            ->method('start')
+            ->willReturn([
+
+                'duplicate' => true,
+
+                'response' => [
+                    'success' => true
+                ]
+
+            ]);
+
+
+
+        $this->orderService
+            ->expects($this->never())
+            ->method('createOrder');
+
+
+
+        $result =
+            $this->service
+            ->checkout(
+                1,
+                [
+                    'product_id' => 10
+                ]
+            );
+
+
+
+        $this->assertTrue(
+            $result['success']
+        );
+    }
+
+
+
+
+
+
+
+
+    public function test_failed_checkout_does_not_complete_idempotency()
+    {
+
+        $this->idempotencyService
+            ->method('start')
+            ->willReturn([
+                'duplicate' => false
+            ]);
+
+
+
+        $this->orderService
+            ->method('createOrder')
+            ->willThrowException(
+                new Exception('failed')
+            );
+
+
+
+        $this->idempotencyRepository
+            ->expects($this->never())
+            ->method('complete');
+
+
+
+        $this->expectException(
+            Exception::class
+        );
+
+
+
+        $this->service
+            ->checkout(
+                1,
+                [
+                    'product_id' => 10
+                ]
+            );
+    }
+
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_checkout_empty_cart()
+    {
+
+        $this->expectException(
+            Exception::class
+        );
+
+
+
+        $this->expectExceptionMessage(
+            'Cart is required'
+        );
+
+
+
+        $this->service
+            ->checkout(
+                1,
+                []
+            );
+    }
+
+
+
+
+
+
+
+
+    public function test_checkout_invalid_user()
+    {
+
+        $this->expectException(
+            Exception::class
+        );
+
+
+
+        $this->service
+            ->checkout(
+                0,
+                [
+                    'product_id' => 10
+                ]
+            );
+    }
+
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDGE CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_checkout_multiple_products()
+    {
+
+
+        $this->idempotencyService
+            ->method('start')
+            ->willReturn([
+                'duplicate' => false
+            ]);
+
+
+
+        $this->orderService
+            ->method('createOrder')
+            ->willReturn([
+                'id' => 100
+            ]);
+
+
+
+        $this->paymentService
+            ->method('createPayment')
+            ->willReturn([
+                'attempt_id' => 1
+            ]);
+
+
+
+        $this->stripeService
+            ->method('createCheckoutSession')
+            ->with(
+                [
+                    'id' => 100
+                ],
+                [
+                    'attempt_id' => 1
+                ],
+                [
+                    [
+                        'product_id' => 10
+                    ],
+                    [
+                        'product_id' => 20
+                    ]
+                ],
+                'test-key'
+            )
+            ->willReturn([
+                'success' => true,
+                'url' => 'url',
+                'session_id' => 'abc'
+            ]);
+
+
+
+        $result =
+            $this->service
+            ->checkout(
+                1,
+                [
+                    [
+                        'product_id' => 10
+                    ],
+                    [
+                        'product_id' => 20
+                    ]
+                ]
+            );
+
+
+
+        $this->assertTrue(
+            $result['success']
+        );
+    }
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | REPOSITORY INTERACTION RULES
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_complete_called_only_after_payment_success()
+    {
+
+        $this->idempotencyService
+            ->method('start')
+            ->willReturn([
+                'duplicate' => false
+            ]);
+
+
+
+        $this->orderService
+            ->method('createOrder')
+            ->willReturn([
+                'id' => 10
+            ]);
+
+
+
+        $this->paymentService
+            ->method('createPayment')
+            ->willReturn([
+                'attempt_id' => 5
+            ]);
+
+
+
+        $this->stripeService
+            ->method('createCheckoutSession')
+            ->willReturn([
+                'success' => true,
+                'url' => 'url',
+                'session_id' => 'abc'
+            ]);
+
+
+
+        $this->idempotencyRepository
+            ->expects($this->once())
+            ->method('complete');
+
+
+
+        $this->service
+            ->checkout(
+                1,
+                [
+                    'product_id' => 10
+                ]
+            );
+    }
 }

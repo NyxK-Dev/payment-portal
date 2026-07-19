@@ -27,14 +27,28 @@ class AccountingService
      */
     public function createPendingInvoice(array $order): int
     {
+        if (!isset($order['id'])) {
+
+            throw new InvalidArgumentException(
+                'Order id is required'
+            );
+        }
+
+
+        if (!isset($order['total'])) {
+
+            throw new InvalidArgumentException(
+                'Order total is required'
+            );
+        }
 
         $invoicePendingStatus =
             $this->lookupRepository
-                ->findByGroupAndCode(
-                    6,
-                    'pending'
-                )
-                ->id;
+            ->findByGroupAndCode(
+                6,
+                'pending'
+            )
+            ->id;
 
 
 
@@ -67,20 +81,33 @@ class AccountingService
         float $amount
     ): void {
 
+        if ($orderId <= 0) {
 
+            throw new InvalidArgumentException(
+                'Order id is required'
+            );
+        }
+
+
+        if ($amount <= 0) {
+
+            throw new InvalidArgumentException(
+                'Amount must be greater than zero'
+            );
+        }
         $paidStatus =
             $this->lookupRepository
-                ->findByGroupAndCode(
-                    6,
-                    'paid'
-                )
-                ->id;
+            ->findByGroupAndCode(
+                6,
+                'paid'
+            )
+            ->id;
 
 
 
         $invoice =
             $this->invoiceRepository
-                ->findByOrderId($orderId);
+            ->findByOrderId($orderId);
 
 
 
@@ -89,16 +116,20 @@ class AccountingService
 
             $invoiceId =
                 $this->invoiceRepository
-                    ->create([
-                        'order_id'         => $orderId,
-                        'invoice_no'       => $this->generateInvoiceNumber(),
-                        'amount'           => $amount,
-                        'status_lookup_id' => $paidStatus,
-                        'issued_at'        => date('Y-m-d H:i:s'),
-                        'created_at'       => date('Y-m-d H:i:s')
-                    ]);
+                ->create([
+                    'order_id'         => $orderId,
+                    'invoice_no'       => $this->generateInvoiceNumber(),
+                    'amount'           => $amount,
+                    'status_lookup_id' => $paidStatus,
+                    'issued_at'        => date('Y-m-d H:i:s'),
+                    'created_at'       => date('Y-m-d H:i:s')
+                ]);
+            if (!$invoiceId) {
 
-
+                throw new Exception(
+                    'Failed to create invoice'
+                );
+            }
         } else {
 
 
@@ -127,7 +158,6 @@ class AccountingService
                 'issued_at'        => date('Y-m-d H:i:s'),
                 'created_at'       => date('Y-m-d H:i:s')
             ]);
-
     }
 
 
@@ -140,7 +170,7 @@ class AccountingService
             'INV-' .
             date('YmdHis') .
             '-' .
-            random_int(100,999);
+            random_int(100, 999);
     }
 
 
@@ -152,7 +182,6 @@ class AccountingService
             'RCT-' .
             date('YmdHis') .
             '-' .
-            random_int(100,999);
+            random_int(100, 999);
     }
-
 }

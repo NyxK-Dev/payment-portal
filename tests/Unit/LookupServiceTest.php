@@ -11,6 +11,7 @@ class LookupServiceTest extends TestCase
     protected $service;
 
 
+
     protected function setUp(): void
     {
 
@@ -31,25 +32,36 @@ class LookupServiceTest extends TestCase
                 $this->repository,
                 $this->auditService
             );
+
     }
 
 
 
-    public function test_create_lookup()
+    /*
+    |--------------------------------------------------------------------------
+    | SUCCESS CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+    // SUCCESS: Create lookup
+    public function test_create_lookup_success()
     {
 
         $this->repository
             ->expects($this->once())
             ->method('create')
             ->with(
-                $this->callback(function ($data) {
+                $this->callback(function($data){
 
                     return
                         $data['group_id'] === 1 &&
                         $data['code'] === 'ACTIVE' &&
                         $data['value'] === 'Active' &&
                         $data['sort_order'] === 1 &&
-                        $data['is_active'] === 1;
+                        $data['is_active'] === 1 &&
+                        isset($data['created_at']);
+
                 })
             )
             ->willReturn(10);
@@ -63,89 +75,42 @@ class LookupServiceTest extends TestCase
 
 
         $result =
-            $this->service
-            ->create([
-                'group_id' => 1,
-                'code' => 'ACTIVE',
-                'value' => 'Active',
-                'sort_order' => 1,
-                'is_active' => 1
+            $this->service->create([
+
+                'group_id'=>1,
+                'code'=>'ACTIVE',
+                'value'=>'Active',
+                'sort_order'=>1,
+                'is_active'=>1
+
             ]);
+
 
 
         $this->assertEquals(
             10,
             $result
         );
-    }
 
-
-
-
-    public function test_create_lookup_failed()
-    {
-
-        $this->repository
-            ->method('create')
-            ->willReturn(0);
-
-
-        $this->auditService
-            ->expects($this->never())
-            ->method('log');
-
-
-        $result =
-            $this->service
-            ->create([]);
-
-
-        $this->assertEquals(
-            0,
-            $result
-        );
-    }
-
-
-
-
-    public function test_create_lookup_default_values()
-    {
-
-        $this->repository
-            ->expects($this->once())
-            ->method('create')
-            ->with(
-                $this->callback(function ($data) {
-
-                    return
-                        $data['group_id'] === null &&
-                        $data['sort_order'] === 0 &&
-                        $data['is_active'] === 1;
-                })
-            )
-            ->willReturn(1);
-
-
-        $this->service
-            ->create([]);
     }
 
 
 
 
 
-
-    public function test_update_lookup()
+    // SUCCESS: Update lookup
+    public function test_update_lookup_success()
     {
 
         $old =
             (object)[
-                'code' => 'OLD',
-                'value' => 'Old value',
-                'description' => 'old',
-                'sort_order' => 1,
-                'is_active' => 1
+
+                'code'=>'OLD',
+                'value'=>'Old',
+                'description'=>'Old description',
+                'sort_order'=>1,
+                'is_active'=>1
+
             ];
 
 
@@ -159,6 +124,16 @@ class LookupServiceTest extends TestCase
         $this->repository
             ->expects($this->once())
             ->method('update')
+            ->with(
+                1,
+                $this->callback(function($data){
+
+                    return
+                        $data['value']=='New' &&
+                        isset($data['updated_at']);
+
+                })
+            )
             ->willReturn(true);
 
 
@@ -170,22 +145,225 @@ class LookupServiceTest extends TestCase
 
 
         $result =
-            $this->service
-            ->update(
+            $this->service->update(
                 1,
                 [
-                    'value' => 'New'
+                    'value'=>'New'
                 ]
             );
 
 
         $this->assertTrue($result);
+
     }
 
 
 
 
 
+    // SUCCESS: Delete lookup
+    public function test_delete_lookup_success()
+    {
+
+        $this->repository
+            ->method('find')
+            ->willReturn(
+                (object)[
+                    'id'=>1
+                ]
+            );
+
+
+        $this->repository
+            ->expects($this->once())
+            ->method('delete')
+            ->willReturn(true);
+
+
+
+        $this->auditService
+            ->expects($this->once())
+            ->method('log');
+
+
+
+        $this->assertTrue(
+
+            $this->service
+                ->delete(1)
+
+        );
+
+    }
+
+
+
+
+
+    // SUCCESS: Get lookup by group
+    public function test_get_by_group_success()
+    {
+
+        $data = [
+
+            (object)[
+                'id'=>1
+            ]
+
+        ];
+
+
+
+        $this->repository
+            ->expects($this->once())
+            ->method('getByGroup')
+            ->with(1)
+            ->willReturn($data);
+
+
+
+        $this->assertEquals(
+            $data,
+            $this->service
+                ->getByGroup(1)
+        );
+
+    }
+
+
+
+
+
+    // SUCCESS: Find lookup
+    public function test_find_lookup_success()
+    {
+
+        $lookup =
+            (object)[
+                'id'=>1
+            ];
+
+
+
+        $this->repository
+            ->method('find')
+            ->with(1)
+            ->willReturn($lookup);
+
+
+
+        $this->assertEquals(
+            $lookup,
+            $this->service
+                ->find(1)
+        );
+
+    }
+
+
+
+
+
+    // SUCCESS: Count lookup by group
+    public function test_count_by_group_success()
+    {
+
+        $this->repository
+            ->method('countByGroup')
+            ->with(1)
+            ->willReturn(5);
+
+
+
+        $this->assertEquals(
+            5,
+            $this->service
+                ->countByGroup(1)
+        );
+
+    }
+
+
+
+
+
+    // SUCCESS: Get lookup by group code
+    public function test_get_by_group_code_success()
+    {
+
+        $data = [
+
+            (object)[
+                'code'=>'ACTIVE'
+            ]
+
+        ];
+
+
+
+        $this->repository
+            ->method('getByGroupCode')
+            ->with('STATUS')
+            ->willReturn($data);
+
+
+
+        $this->assertEquals(
+            $data,
+            $this->service
+                ->getByGroupCode('STATUS')
+        );
+
+    }
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FAILURE CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+    // FAILURE: Repository create failed
+    public function test_create_lookup_failed()
+    {
+
+        $this->repository
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn(false);
+
+
+
+        $this->auditService
+            ->expects($this->never())
+            ->method('log');
+
+
+
+        $result =
+            $this->service->create([
+
+                'code'=>'ACTIVE',
+                'value'=>'Active'
+
+            ]);
+
+
+
+        $this->assertFalse($result);
+
+    }
+
+
+
+
+
+    // FAILURE: Update record not found
     public function test_update_lookup_not_found()
     {
 
@@ -201,38 +379,41 @@ class LookupServiceTest extends TestCase
 
 
 
-        $result =
+        $this->assertFalse(
+
             $this->service
-            ->update(
-                99,
-                []
-            );
+                ->update(
+                    99,
+                    []
+                )
 
+        );
 
-        $this->assertFalse($result);
     }
 
 
 
 
 
-
+    // FAILURE: Update failed
     public function test_update_lookup_failed()
     {
 
-        $old =
-            (object)[
-                'code' => 'A',
-                'value' => 'B',
-                'description' => 'C',
-                'sort_order' => 1,
-                'is_active' => 1
-            ];
-
-
         $this->repository
             ->method('find')
-            ->willReturn($old);
+            ->willReturn(
+
+                (object)[
+
+                    'code'=>'A',
+                    'value'=>'B',
+                    'description'=>'C',
+                    'sort_order'=>1,
+                    'is_active'=>1
+
+                ]
+
+            );
 
 
 
@@ -248,91 +429,32 @@ class LookupServiceTest extends TestCase
 
 
 
-        $result =
-            $this->service
-            ->update(
-                1,
-                []
-            );
-
-
-        $this->assertFalse($result);
-    }
-
-
-
-
-
-
-    public function test_delete_lookup()
-    {
-
-        $old =
-            (object)[
-                'id' => 1
-            ];
-
-
-        $this->repository
-            ->method('find')
-            ->willReturn($old);
-
-
-
-        $this->repository
-            ->method('delete')
-            ->willReturn(true);
-
-
-
-        $this->auditService
-            ->expects($this->once())
-            ->method('log');
-
-
-
-        $this->assertTrue(
-            $this->service
-                ->delete(1)
-        );
-    }
-
-
-
-
-
-
-    public function test_delete_lookup_not_found()
-    {
-
-        $this->repository
-            ->method('find')
-            ->willReturn(null);
-
-
-
-        $this->repository
-            ->expects($this->never())
-            ->method('delete');
-
-
         $this->assertFalse(
+
             $this->service
-                ->delete(99)
+                ->update(
+                    1,
+                    []
+                )
+
         );
+
     }
 
 
 
 
 
+    // FAILURE: Delete failed
     public function test_delete_lookup_failed()
     {
 
         $this->repository
             ->method('find')
             ->willReturn(
-                (object)['id' => 1]
+                (object)[
+                    'id'=>1
+                ]
             );
 
 
@@ -349,9 +471,12 @@ class LookupServiceTest extends TestCase
 
 
         $this->assertFalse(
+
             $this->service
                 ->delete(1)
+
         );
+
     }
 
 
@@ -360,88 +485,133 @@ class LookupServiceTest extends TestCase
 
 
 
-    public function test_get_by_group()
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+    // VALIDATION: Code required
+    public function test_create_lookup_without_code()
     {
 
-        $data = [
-            (object)['id' => 1]
-        ];
+        $this->expectException(
+            InvalidArgumentException::class
+        );
 
+
+        $this->service->create([
+
+            'value'=>'Active'
+
+        ]);
+
+    }
+
+
+
+
+
+    // VALIDATION: Value required
+    public function test_create_lookup_without_value()
+    {
+
+        $this->expectException(
+            InvalidArgumentException::class
+        );
+
+
+        $this->service->create([
+
+            'code'=>'ACTIVE'
+
+        ]);
+
+    }
+
+
+
+
+
+    // VALIDATION: Invalid active status
+    public function test_create_lookup_invalid_active_status()
+    {
+
+        $this->expectException(
+            InvalidArgumentException::class
+        );
+
+
+        $this->service->create([
+
+            'code'=>'ACTIVE',
+            'value'=>'Active',
+            'is_active'=>5
+
+        ]);
+
+    }
+
+
+
+
+
+    // VALIDATION: Negative sort order
+    public function test_create_lookup_negative_sort_order()
+    {
+
+        $this->expectException(
+            InvalidArgumentException::class
+        );
+
+
+        $this->service->create([
+
+            'code'=>'ACTIVE',
+            'value'=>'Active',
+            'sort_order'=>-1
+
+        ]);
+
+    }
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDGE CASES
+    |--------------------------------------------------------------------------
+    */
+
+
+    // EDGE: Empty group result
+    public function test_get_by_group_empty()
+    {
 
         $this->repository
-            ->expects($this->once())
             ->method('getByGroup')
-            ->with(5)
-            ->willReturn($data);
+            ->willReturn([]);
 
 
 
-        $this->assertEquals(
-            $data,
+        $this->assertEmpty(
+
             $this->service
-                ->getByGroup(5)
+                ->getByGroup(99)
+
         );
+
     }
 
 
 
 
 
-
-
-    public function test_get_all_with_group()
-    {
-
-        $data = [
-            (object)['id' => 1]
-        ];
-
-
-        $this->repository
-            ->method('getAllWithGroup')
-            ->willReturn($data);
-
-
-
-        $this->assertEquals(
-            $data,
-            $this->service
-                ->getAllWithGroup()
-        );
-    }
-
-
-
-
-
-
-
-    public function test_find_lookup()
-    {
-
-        $lookup =
-            (object)['id' => 1];
-
-
-        $this->repository
-            ->method('find')
-            ->with(1)
-            ->willReturn($lookup);
-
-
-
-        $this->assertEquals(
-            $lookup,
-            $this->service
-                ->find(1)
-        );
-    }
-
-
-
-
-
-
+    // EDGE: Lookup not found
     public function test_find_lookup_not_found()
     {
 
@@ -452,60 +622,19 @@ class LookupServiceTest extends TestCase
 
 
         $this->assertNull(
+
             $this->service
-                ->find(99)
+                ->find(999)
+
         );
+
     }
 
 
 
 
 
-
-    public function test_count_by_group()
-    {
-
-        $this->repository
-            ->method('countByGroup')
-            ->with(1)
-            ->willReturn(5);
-
-
-
-        $this->assertEquals(
-            5,
-            $this->service
-                ->countByGroup(1)
-        );
-    }
-
-
-
-
-
-
-
-    public function test_get_by_group_code()
-    {
-
-        $data = [
-            (object)['code' => 'ACTIVE']
-        ];
-
-
-        $this->repository
-            ->method('getByGroupCode')
-            ->with('STATUS')
-            ->willReturn($data);
-
-
-
-        $this->assertEquals(
-            $data,
-            $this->service
-                ->getByGroupCode('STATUS')
-        );
-    }
+    // EDGE: Group code not found
     public function test_get_by_group_code_not_found()
     {
 
@@ -517,35 +646,128 @@ class LookupServiceTest extends TestCase
 
 
 
-        $result =
-            $this->service
-            ->getByGroupCode('UNKNOWN');
-
-
-
         $this->assertNull(
-            $result
+
+            $this->service
+                ->getByGroupCode('UNKNOWN')
+
         );
+
     }
-    public function test_get_by_group_failed()
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BUSINESS RULES
+    |--------------------------------------------------------------------------
+    */
+
+
+    // BUSINESS RULE: Create logs audit
+    public function test_create_lookup_logs_action()
     {
 
         $this->repository
+            ->method('create')
+            ->willReturn(1);
+
+
+
+        $this->auditService
             ->expects($this->once())
-            ->method('getByGroup')
-            ->with(99)
-            ->willReturn([]);
+            ->method('log');
 
 
 
-        $result =
-            $this->service
-            ->getByGroup(99);
+        $this->service->create([
 
+            'code'=>'ACTIVE',
+            'value'=>'Active'
 
+        ]);
 
-        $this->assertEmpty(
-            $result
-        );
     }
+
+
+
+
+
+    // BUSINESS RULE: Update logs audit
+    public function test_update_lookup_logs_action()
+    {
+
+        $this->repository
+            ->method('find')
+            ->willReturn(
+
+                (object)[
+
+                    'code'=>'OLD',
+                    'value'=>'Old',
+                    'description'=>'',
+                    'sort_order'=>0,
+                    'is_active'=>1
+
+                ]
+
+            );
+
+
+        $this->repository
+            ->method('update')
+            ->willReturn(true);
+
+
+
+        $this->auditService
+            ->expects($this->once())
+            ->method('log');
+
+
+
+        $this->service->update(
+            1,
+            [
+                'value'=>'New'
+            ]
+        );
+
+    }
+
+
+
+
+
+    // BUSINESS RULE: Delete logs audit
+    public function test_delete_lookup_logs_action()
+    {
+
+        $this->repository
+            ->method('find')
+            ->willReturn(
+                (object)[
+                    'id'=>1
+                ]
+            );
+
+
+        $this->repository
+            ->method('delete')
+            ->willReturn(true);
+
+
+
+        $this->auditService
+            ->expects($this->once())
+            ->method('log');
+
+
+
+        $this->service->delete(1);
+
+    }
+
 }

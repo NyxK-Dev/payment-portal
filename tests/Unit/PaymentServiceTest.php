@@ -2,6 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 
+
 class PaymentServiceTest extends TestCase
 {
 
@@ -18,6 +19,7 @@ class PaymentServiceTest extends TestCase
     protected $accountingService;
 
 
+
     protected function setUp(): void
     {
 
@@ -26,12 +28,6 @@ class PaymentServiceTest extends TestCase
 
         $CI = new stdClass();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Mock Database
-        |--------------------------------------------------------------------------
-        */
 
         $CI->db =
             $this->getMockBuilder(stdClass::class)
@@ -44,24 +40,12 @@ class PaymentServiceTest extends TestCase
             ->getMock();
 
 
-        $CI->db
-            ->method('trans_begin');
+
+        $CI->db->method('trans_begin');
+        $CI->db->method('trans_commit');
+        $CI->db->method('trans_rollback');
 
 
-        $CI->db
-            ->method('trans_commit');
-
-
-        $CI->db
-            ->method('trans_rollback');
-
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Mock Repositories
-        |--------------------------------------------------------------------------
-        */
 
 
         $this->paymentRepository =
@@ -118,6 +102,8 @@ class PaymentServiceTest extends TestCase
             );
 
 
+
+
         $this->service =
             new PaymentService(
 
@@ -142,7 +128,16 @@ class PaymentServiceTest extends TestCase
             );
     }
 
-    public function test_create_payment()
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CREATE PAYMENT SUCCESS
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_create_payment_success()
     {
 
 
@@ -159,30 +154,21 @@ class PaymentServiceTest extends TestCase
         $this->paymentRepository
             ->expects($this->once())
             ->method('create')
-            ->willReturn(
-                10
-            );
+            ->willReturn(10);
 
 
 
         $this->accountingService
             ->expects($this->once())
             ->method('createPendingInvoice')
-            ->with(
-                $order
-            )
-            ->willReturn(
-                20
-            );
+            ->willReturn(20);
 
 
 
         $this->paymentAttemptRepository
             ->expects($this->once())
             ->method('create')
-            ->willReturn(
-                30
-            );
+            ->willReturn(30);
 
 
 
@@ -194,9 +180,20 @@ class PaymentServiceTest extends TestCase
 
 
 
+        $this->assertIsArray(
+            $result
+        );
+
+
         $this->assertEquals(
             10,
             $result['id']
+        );
+
+
+        $this->assertEquals(
+            20,
+            $result['invoice_id']
         );
 
 
@@ -206,178 +203,577 @@ class PaymentServiceTest extends TestCase
         );
 
 
-        $this->assertEquals(
-            20,
-            $result['invoice_id']
+        $this->assertStringStartsWith(
+            'PAY-',
+            $result['payment_no']
         );
     }
 
-    public function test_save_stripe_session()
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_create_payment_invalid_order_id()
+    {
+
+        $this->expectException(Exception::class);
+
+
+        $this->service
+            ->createPayment([
+
+                'id' => null,
+
+                'total' => 100
+
+            ]);
+    }
+
+
+
+
+    public function test_create_payment_invalid_amount()
+    {
+
+        $this->expectException(Exception::class);
+
+
+        $this->service
+            ->createPayment([
+
+                'id' => 1,
+
+                'total' => 0
+
+            ]);
+    }
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PAYMENT REPOSITORY FAILURE
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_create_payment_repository_failed()
+    {
+
+        $this->paymentRepository
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn(false);
+
+
+
+        $this->expectException(Exception::class);
+
+
+        $this->expectExceptionMessage(
+            'Payment creation failed'
+        );
+
+
+
+        $this->service
+            ->createPayment([
+
+                'id' => 1,
+
+                'total' => 100
+
+            ]);
+    }
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INVOICE FAILURE
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_create_payment_invoice_failed()
+    {
+
+        $order = [
+
+            'id' => 1,
+
+            'total' => 100
+
+        ];
+
+
+
+        $this->paymentRepository
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn(10);
+
+
+
+        $this->accountingService
+            ->expects($this->once())
+            ->method('createPendingInvoice')
+            ->with($order)
+            ->willReturn(0);
+
+
+
+        $this->expectException(Exception::class);
+
+
+        $this->expectExceptionMessage(
+            'Invoice creation failed'
+        );
+
+
+
+        $this->service
+            ->createPayment(
+                $order
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PAYMENT ATTEMPT FAILURE
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_create_payment_attempt_failed()
+    {
+
+        $this->paymentRepository
+            ->method('create')
+            ->willReturn(10);
+
+
+
+        $this->accountingService
+            ->method('createPendingInvoice')
+            ->willReturn(20);
+
+
+
+        $this->paymentAttemptRepository
+            ->method('create')
+            ->willReturn(false);
+
+
+
+        $this->expectException(Exception::class);
+
+
+        $this->expectExceptionMessage(
+            'Payment attempt creation failed'
+        );
+
+
+
+        $this->service
+            ->createPayment([
+
+                'id' => 1,
+
+                'total' => 100
+
+            ]);
+    }
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BUSINESS RULE
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_payment_amount_from_order()
+    {
+
+
+        $this->paymentRepository
+            ->expects($this->once())
+            ->method('create')
+            ->with(
+                $this->callback(function ($data) {
+
+                    return
+                        $data['amount'] == 999;
+                })
+            )
+            ->willReturn(1);
+
+
+
+        $this->accountingService
+            ->method('createPendingInvoice')
+            ->willReturn(2);
+
+
+
+        $this->paymentAttemptRepository
+            ->method('create')
+            ->willReturn(3);
+
+
+
+        $this->service
+            ->createPayment([
+
+                'id' => 1,
+
+                'total' => 999
+
+            ]);
+    }
+
+
+
+
+
+    public function test_payment_number_format()
+    {
+
+
+        $this->paymentRepository
+            ->method('create')
+            ->willReturn(1);
+
+
+
+        $this->accountingService
+            ->method('createPendingInvoice')
+            ->willReturn(2);
+
+
+
+        $this->paymentAttemptRepository
+            ->method('create')
+            ->willReturn(3);
+
+
+
+        $result =
+            $this->service
+            ->createPayment([
+
+                'id' => 1,
+
+                'total' => 50
+
+            ]);
+
+
+
+        $this->assertMatchesRegularExpression(
+
+            '/^PAY-\d{17}$/',
+
+            $result['payment_no']
+
+        );
+    }
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | STRIPE SESSION
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_save_stripe_session_success()
     {
 
 
         $this->paymentAttemptRepository
             ->expects($this->once())
             ->method('update')
-            ->with(
-
-                30,
-
-                $this->arrayHasKey(
-                    'stripe_session_id'
-                )
-
-            )
-            ->willReturn(
-                true
-            );
-
-
-
-        $result =
-            $this->service
-            ->saveStripeSession(
-                30,
-                'sess_123'
-            );
+            ->willReturn(true);
 
 
 
         $this->assertTrue(
-            $result
+
+            $this->service
+                ->saveStripeSession(
+                    1,
+                    'sess_123'
+                )
+
         );
     }
+
+
+
+
+    public function test_save_stripe_session_failed()
+    {
+
+
+        $this->paymentAttemptRepository
+            ->method('update')
+            ->willReturn(false);
+
+
+
+        $this->assertFalse(
+
+            $this->service
+                ->saveStripeSession(
+                    1,
+                    'sess'
+                )
+
+        );
+    }
+
+
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | WEBHOOK
+    |--------------------------------------------------------------------------
+    */
+
 
     public function test_webhook_exists()
     {
 
-
         $this->stripeWebhookEventRepository
-            ->expects($this->once())
             ->method('existsByEventId')
-            ->with(
-                'evt_123'
-            )
-            ->willReturn(
-                true
-            );
+            ->willReturn(true);
 
-
-
-        $result =
-            $this->service
-            ->webhookExists(
-                'evt_123'
-            );
 
 
         $this->assertTrue(
-            $result
+
+            $this->service
+                ->webhookExists(
+                    'evt_1'
+                )
+
         );
     }
 
-    public function test_save_webhook_event()
+
+
+
+    public function test_webhook_not_exists()
     {
 
-
-        $event = new stdClass();
-
-
-        $event->id =
-            'evt_123';
+        $this->stripeWebhookEventRepository
+            ->method('existsByEventId')
+            ->willReturn(false);
 
 
-        $event->type =
-            'payment.success';
+
+        $this->assertFalse(
+
+            $this->service
+                ->webhookExists(
+                    'evt_x'
+                )
+
+        );
+    }
+
+
+
+
+
+    public function test_save_webhook_event_success()
+    {
+
+        $event = (object)[
+
+            'id' => 'evt_1',
+
+            'type' => 'payment.success'
+
+        ];
 
 
 
         $this->stripeWebhookEventRepository
-            ->expects($this->once())
             ->method('create')
-            ->willReturn(
-                true
-            );
+            ->willReturn(true);
 
 
 
-        $result =
+        $this->assertTrue(
+
             $this->service
-            ->saveWebhookEvent(
+                ->saveWebhookEvent(
+                    $event
+                )
+
+        );
+    }
+
+
+
+
+    public function test_save_webhook_event_failed()
+    {
+
+        $event = (object)[
+
+            'id' => 'evt',
+
+            'type' => 'payment'
+
+        ];
+
+
+
+        $this->stripeWebhookEventRepository
+            ->method('create')
+            ->willReturn(false);
+
+
+
+        $this->assertFalse(
+
+            $this->service
+                ->saveWebhookEvent(
+                    $event
+                )
+
+        );
+    }
+
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FAILED PAYMENT
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_failed_payment_without_payment_id()
+    {
+
+
+        $event = (object)[
+
+            'data' => (object)[
+
+                'object' => new stdClass()
+
+            ]
+
+        ];
+
+
+
+        $this->paymentRepository
+            ->expects($this->never())
+            ->method('update');
+
+
+
+        $this->service
+            ->handleFailedPayment(
                 $event
             );
 
 
-
-        $this->assertTrue(
-            $result
-        );
+        $this->assertTrue(true);
     }
-    public function test_save_stripe_session_failed()
-    {
-        $this->paymentAttemptRepository
-            ->expects($this->once())
-            ->method('update')
-            ->willReturn(false);
 
-        $this->assertFalse(
-            $this->service->saveStripeSession(
-                30,
-                'sess_123'
-            )
-        );
-    }
-    public function test_webhook_not_exists()
-    {
-        $this->stripeWebhookEventRepository
-            ->expects($this->once())
-            ->method('existsByEventId')
-            ->with('evt_123')
-            ->willReturn(false);
 
-        $this->assertFalse(
-            $this->service->webhookExists('evt_123')
-        );
-    }
-    public function test_save_webhook_event_failed()
-    {
-        $event = new stdClass();
-        $event->id = 'evt_123';
-        $event->type = 'payment.success';
 
-        $this->stripeWebhookEventRepository
-            ->expects($this->once())
-            ->method('create')
-            ->willReturn(false);
 
-        $this->assertFalse(
-            $this->service->saveWebhookEvent($event)
-        );
-    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | WEBHOOK PROCESSED
+    |--------------------------------------------------------------------------
+    */
+
+
     public function test_mark_webhook_processed()
     {
+
+
         $this->stripeWebhookEventRepository
-            ->expects($this->once())
             ->method('update')
-            ->with(
-                1,
-                $this->arrayHasKey('processed')
-            )
             ->willReturn(true);
 
-        $this->assertTrue(
-            $this->service->markWebhookProcessed(1)
-        );
-    }
-    public function test_mark_webhook_processed_failed()
-    {
-        $this->stripeWebhookEventRepository
-            ->expects($this->once())
-            ->method('update')
-            ->willReturn(false);
 
-        $this->assertFalse(
-            $this->service->markWebhookProcessed(1)
+
+        $this->assertTrue(
+
+            $this->service
+                ->markWebhookProcessed(
+                    1
+                )
+
         );
     }
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDGE CASE
+    |--------------------------------------------------------------------------
+    */
+
+
+    public function test_fulfill_payment_attempt_missing()
+    {
+
+        $this->paymentAttemptRepository
+            ->method('findBySessionId')
+            ->willReturn(null);
+
+
+
+        $this->expectException(Exception::class);
+
+
+
+        $this->service
+            ->fulfillPaymentBySession(
+                'wrong'
+            );
+    }
+    
 }

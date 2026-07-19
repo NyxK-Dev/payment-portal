@@ -5,27 +5,34 @@ class Login extends MY_Controller
 {
     protected $authService;
     protected $recaptchaService;
+public function __construct()
+{
+    parent::__construct();
+
+    $this->load->library('session');
+    $this->load->library('auth');
+    $this->load->library('RequestValidator');
+
+    $this->load->helper('form');
 
 
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->load->library('session');
-        $this->load->library('auth');
-        $this->load->library('RequestValidator');
-
-        $this->load->helper('form');
+    require_once APPPATH.'interfaces/UserRepositoryInterface.php';
+    require_once APPPATH.'repositories/UserRepository.php';
+    require_once APPPATH.'services/Auth_Service.php';
+    require_once APPPATH.'services/Recaptcha_service.php';
 
 
-        require_once APPPATH.'services/Auth_Service.php';
-        require_once APPPATH.'services/Recaptcha_service.php';
+    $userRepository = new UserRepository();
 
 
-        $this->authService = new Auth_service();
+    $this->authService = new Auth_service(
+        $userRepository,
+        $this->auth
+    );
 
-        $this->recaptchaService = new Recaptcha_service();
-    }
+
+    $this->recaptchaService = new Recaptcha_service();
+}
 
 
 

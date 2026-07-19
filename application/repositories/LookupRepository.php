@@ -61,17 +61,100 @@ class LookupRepository implements LookupRepositoryInterface
         return $this->CI->Lookup_model->getByGroupCode($groupCode);
     }
 
-    public function findByGroupAndCode(
+    // public function findByGroupAndCode(
+    //     int $groupId,
+    //     string $code
+    // ) {
+
+    //     return $this->CI->db
+    //         ->where([
+    //             'group_id' => $groupId,
+    //             'code' => $code
+    //         ])
+    //         ->get('lookups')
+    //         ->row();
+    // }
+     public function findByGroupAndCode(
         int $groupId,
         string $code
-    ) {
+    )
+    {
 
         return $this->CI->db
-            ->where([
-                'group_id' => $groupId,
-                'code' => $code
+            ->select([
+                'lookups.id',
+                'lookups.code',
+                'lookups.value',
+                'lookups.description'
             ])
-            ->get('lookups')
+            ->from('lookups')
+            ->where(
+                'lookups.group_id',
+                $groupId
+            )
+            ->where(
+                'lookups.code',
+                $code
+            )
+            ->where(
+                'lookups.is_active',
+                1
+            )
+            ->limit(1)
+            ->get()
             ->row();
+
     }
+     public function findByCode(
+    string $groupCode,
+    string $code
+)
+{
+
+    return $this->CI->db
+        ->select([
+            'lookups.id',
+            'lookups.group_id',
+            'lookups.code'
+        ])
+        ->from('lookups')
+        ->join(
+            'lookup_groups',
+            'lookup_groups.id = lookups.group_id'
+        )
+        ->where(
+            'lookup_groups.code',
+            $groupCode
+        )
+        ->where(
+            'lookups.code',
+            $code
+        )
+        ->limit(1)
+        ->get()
+        ->row();
+
+}
+
+
+    /**
+     * Get user status
+     *
+     * Example:
+     * pending
+     * active
+     * blocked
+     */
+    public function getStatusLookup(string $status)
+    {
+        return $this->findByCode(
+            'user_status',
+            $status
+        );
+    }
+
+      /**
+     * Get all lookup values by group
+     */
+ 
 }

@@ -7,11 +7,10 @@ require_once APPPATH . 'services/BaseService.php';
 
 class LookupService extends BaseService
 {
-        public function __construct(
+    public function __construct(
         LookupRepositoryInterface $repository,
         AuditLogService $auditService
-    )
-    {
+    ) {
         parent::__construct(
             $repository,
             'LOOKUP',
@@ -21,22 +20,71 @@ class LookupService extends BaseService
 
     public function create(array $data)
     {
-        // Explicit payload compilation
+
+        if (empty($data['code'])) {
+
+            throw new InvalidArgumentException(
+                'Lookup code is required'
+            );
+        }
+
+
+        if (empty($data['value'])) {
+
+            throw new InvalidArgumentException(
+                'Lookup value is required'
+            );
+        }
+
+
+        if (
+            isset($data['is_active']) &&
+            !in_array($data['is_active'], [0, 1])
+        ) {
+
+            throw new InvalidArgumentException(
+                'Invalid active status'
+            );
+        }
+
+
+        if (
+            isset($data['sort_order']) &&
+            $data['sort_order'] < 0
+        ) {
+
+            throw new InvalidArgumentException(
+                'Invalid sort order'
+            );
+        }
+
+
+
         $payload = [
-            'group_id'    => $data['group_id'] ?? null,
-            'code'        => $data['code'] ?? null,
-            'value'       => $data['value'] ?? null,
+            'group_id' => $data['group_id'] ?? null,
+            'code' => $data['code'],
+            'value' => $data['value'],
             'description' => $data['description'] ?? null,
-            'sort_order'  => $data['sort_order'] ?? 0,
-            'is_active'   => $data['is_active'] ?? 1,
-            'created_at'  => date('Y-m-d H:i:s')
+            'sort_order' => $data['sort_order'] ?? 0,
+            'is_active' => $data['is_active'] ?? 1,
+            'created_at' => date('Y-m-d H:i:s')
         ];
 
-        $insertId = $this->repository->create($payload);
+
+        $insertId =
+            $this->repository
+            ->create($payload);
+
 
         if ($insertId) {
-            $this->logAction('CREATE', $insertId, null, $payload);
+            $this->logAction(
+                'CREATE',
+                $insertId,
+                null,
+                $payload
+            );
         }
+
 
         return $insertId;
     }

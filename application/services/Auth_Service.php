@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class Auth_service
 {
@@ -7,15 +7,17 @@ class Auth_service
      * @var CI_Controller
      */
     protected $CI;
+    protected $userrepository;
+    protected $auth;
 
-    public function __construct()
-    {
-        $this->CI =& get_instance();
+    public function __construct(
+        UserRepositoryInterface $userrepository,
+        Auth $auth
+    ) {
+        $this->CI = &get_instance();
 
-            $this->CI->load->repository(
-            'UserRepository'
-        );
-        $this->CI->load->library('auth');
+        $this->userrepository = $userrepository;
+        $this->auth = $auth;
     }
 
     /**
@@ -27,7 +29,23 @@ class Auth_service
      */
     public function attempt($email, $password)
     {
-        $user = $this->CI->userrepository->findByEmail($email);
+        if (empty($email) || empty($password)) {
+
+            return [
+                'success' => false,
+                'message' => 'Invalid email or password.'
+            ];
+        }
+
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+            return [
+                'success' => false,
+                'message' => 'Invalid email or password.'
+            ];
+        }
+        $user = $this->userrepository->findByEmail($email);
 
         if (!$user) {
             return [
@@ -66,9 +84,9 @@ class Auth_service
             ];
         }
 
-        $this->CI->userrepository->updateLastLogin($user->id);
+        $this->userrepository->updateLastLogin($user->id);
 
-        $this->CI->auth->login($user);
+        $this->auth->login($user);
 
         return [
             'success' => true,
@@ -81,7 +99,7 @@ class Auth_service
      */
     public function logout()
     {
-        $this->CI->auth->logout();
+        $this->auth->logout();
     }
 
     /**
